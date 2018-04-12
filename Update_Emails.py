@@ -5,7 +5,7 @@ import requests
 import json
 
 def main():
-    headers = {'Authorization' : 'Bearer 9870~whgKFoccltWnzegnHNscC9Z6ZBmJfhBt3Zu6Qu22inaf46JXpantxSEkakmvOgWZ'}
+    headers = {'Authorization' : 'Bearer ACTUAL_BEARER'}
     response = requests.get('https://coderacademy.instructure.com/api/v1/courses/92/users?per_page=100',
                 headers=headers)
 
