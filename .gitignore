@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+ Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -26,6 +26,7 @@ wheels/
 *.egg
 #Credential files
 token
+token.json
 credentials.json
 
 # PyInstaller
