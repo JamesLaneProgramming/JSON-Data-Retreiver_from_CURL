@@ -1,10 +1,16 @@
 #!usr/bin/python
-#Google OATH imports
 from __future__ import print_function
-from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
-#End Google OATH imports
+#Google OATH imports
+try:
+    from googleapiclient.discovery import build
+    from httplib2 import Http
+    from oauth2client import file, client, tools
+except Exception as error:
+    print('Please run the following command to install Google API modules:',
+          '\n')
+    print('pip3 install --upgrade google-api-python-client oauth2client')
+    raise error
+#End Google module imports
 
 import os
 import sys
@@ -17,9 +23,11 @@ except ImportError as error:
     raise error
 except Exception as error:
     raise error
-# If modifying these scopes, delete the file token.json.
+#If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
+#Opens the file at the specified directory and returns the first line.
+#Useful for integrating a .config file.
 def get_bearer_token(_dir):
     if os.path.exists(_dir):
         with open(_dir, 'r') as token_file:
@@ -64,23 +72,25 @@ def main():
 
     json_data = json.loads(response.text)
     
-
-    #Need to remove students that do not match the filter requirements
+    #Create an array of dictionaries from google sheet values
     students = []
-    new_emails =[]
     for each in values:
-        students.append(each[0])
-        new_emails.append(each[1])
-    print("{0} students extracted from spreadsheet".format(len(students)))
-        
-    students_found = list(filter(lambda x: x['name'] in students, json_data))
+        students.append({"name": each[0], "email": each[1]})
+    names = []
+    for each in students:
+        names.append(each['name'].lower())
+    print("{0} students extracted from spreadsheet".format(len(values)))
+    students_found = list(filter(lambda x: x['name'].lower() not in names, json_data))
+    #final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
+    #                                                  headers), students_found, students)
     print("{0} students after filter".format(len(students_found)))
-    
-    list(map(lambda x: print(x['id']), students_found))
+    print(students_found)
 
-def update_canvas_email(student_ID, email):
+def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
-    requests.put(url, headers = headers, data = parameters)
+    update_request = requests.put(url, headers = _headers, data = parameters)
+    print(update_request)
+
 if __name__ == "__main__":
     main()
