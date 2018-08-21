@@ -25,7 +25,7 @@ wheels/
 .installed.cfg
 *.egg
 #Credential files
-config
+config.yaml
 token.json
 credentials.json
 

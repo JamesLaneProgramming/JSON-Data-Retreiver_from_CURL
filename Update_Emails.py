@@ -13,6 +13,7 @@ except Exception as error:
 #End Google module imports
 
 import os
+import yaml
 import sys
 import requests
 import json
@@ -20,23 +21,28 @@ import json
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
-#Opens the file at the specified directory and returns the first line.
-#Useful for integrating a .config file.
-def get_config(_dir, line):
+#Opens the YAML file at the specified directory and returns the YAML object.
+def get_config(_dir):
     if os.path.exists(_dir):
-        with open(_dir, 'r') as token_file:
+        with open(_dir, 'r') as config_file:
             try:
                 print('Token file accessed and read')
-                file_content = token_file.read().splitlines()[line]
+                file_content = yaml.load(config_file)
             except IOError as error:
                 raise error
                 sys.exit()
             except EOFError as error:
                 raise error
                 sys.exit()
+    else:
+        print('Could not find config file')
+        sys.exit()
     return file_content
 
 def main():
+    #Loads the config file
+    config = get_config('./config.yaml')
+
     store = file.Storage('token.json')
     creds = store.get()
     if not creds or creds.invalid:
@@ -54,12 +60,12 @@ def main():
     if not values:
         print("No values found in spreadsheet, Exiting")
         sys.exit()
-
-    #Retrieves the bearer token from the config file
-    bearer_token = get_config('./config', 0)
-    headers = {'Authorization' : 'Bearer {0}'.format(bearer_token)}
-    response = requests.get('https://coderacademy.instructure.com/api/v1/courses/144/users?per_page=100',
-                headers=headers)
+    
+    course_ID = config['canvas']['course_id']
+    canvas_bearer_token = config['canvas']['bearer_token']
+    headers = {'Authorization' : 'Bearer{0}'.format(canvas_bearer_token)}
+    url = 'https://coderacademy.instructure.com/api/v1/courses/144/users?per_page=100'.format(course_ID)
+    response = requests.get(url, headers=headers)
 
     json_data = json.loads(response.text)
     
