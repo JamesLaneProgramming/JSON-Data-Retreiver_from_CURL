@@ -16,24 +16,18 @@ import os
 import sys
 import requests
 import json
-try:
-    import emailgenerator as EG
-except ImportError as error:
-    print("Error importing module")
-    raise error
-except Exception as error:
-    raise error
+
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
 #Opens the file at the specified directory and returns the first line.
 #Useful for integrating a .config file.
-def get_bearer_token(_dir):
+def get_config(_dir, line):
     if os.path.exists(_dir):
         with open(_dir, 'r') as token_file:
             try:
                 print('Token file accessed and read')
-                file_content = token_file.read().splitlines()[0]
+                file_content = token_file.read().splitlines()[line]
             except IOError as error:
                 raise error
                 sys.exit()
@@ -60,12 +54,9 @@ def main():
     if not values:
         print("No values found in spreadsheet, Exiting")
         sys.exit()
-    else:
-        for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            pass
 
-    bearer_token = get_bearer_token('./token')
+    #Retrieves the bearer token from the config file
+    bearer_token = get_config('./config', 0)
     headers = {'Authorization' : 'Bearer {0}'.format(bearer_token)}
     response = requests.get('https://coderacademy.instructure.com/api/v1/courses/144/users?per_page=100',
                 headers=headers)
