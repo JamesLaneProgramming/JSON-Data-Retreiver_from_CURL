@@ -155,9 +155,11 @@ def main():
     print("{0} staff or imposters in canvas".format(number_of_canvas_staff))
     #Returns all students in section 145(STAFF)
     print(get_students_in_section(canvas_bearer_token, course_ID, 149))
+    '''
     final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
                                                       headers), students_found,
                                                         students))
+    '''
 def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)

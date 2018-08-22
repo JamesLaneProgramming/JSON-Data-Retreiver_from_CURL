@@ -28,6 +28,7 @@ wheels/
 config.yaml
 token.json
 credentials.json
+aws_keys
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -103,3 +104,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
