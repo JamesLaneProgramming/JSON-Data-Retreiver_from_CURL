@@ -13,6 +13,7 @@ except Exception as error:
 #End Google module imports
 
 import os
+from os import environ
 import yaml
 import sys
 import requests
@@ -23,12 +24,13 @@ application = Flask(__name__)
 
 @application.route('/')
 def home():
-    return "Hello world"
+    return environ.get('token')
 
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
 #Opens the YAML file at the specified directory and returns the YAML object.
+'''
 def get_config(_dir):
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
@@ -45,6 +47,7 @@ def get_config(_dir):
         print('Could not find config file')
         sys.exit()
     return file_content
+'''
 
 def get_students_in_section(canvas_bearer_token, course_id, section_id):
     students = []
