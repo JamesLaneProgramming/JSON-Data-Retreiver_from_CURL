@@ -179,10 +179,6 @@ def update_canvas_email(student_ID, email, _headers):
     '''
 if __name__ == "__main__":
     application.debug = True
-    application.run()
-    main()
-'''
-if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-'''
+    main()
