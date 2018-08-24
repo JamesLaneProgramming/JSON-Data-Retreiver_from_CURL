@@ -18,13 +18,16 @@ import yaml
 import sys
 import requests
 import json
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 application = Flask(__name__)
 
 @application.route('/')
 def home():
     return environ.get('token')
+@application.route('/create-account')
+def create_account():
+    return request.data
 
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
