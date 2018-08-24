@@ -19,20 +19,23 @@ import sys
 import requests
 import json
 from flask import Flask, render_template, request
+import logging
 
 application = Flask(__name__)
 
 @application.route('/')
 def home():
     return environ.get('token')
-@application.route('/create-account')
+@application.route('/create-account', methods=['POST'])
 def create_account():
+    print(request.data)
     return request.data
 
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
 #Opens the YAML file at the specified directory and returns the YAML object.
+
 '''
 def get_config(_dir):
     if os.path.exists(_dir):
@@ -51,42 +54,8 @@ def get_config(_dir):
         sys.exit()
     return file_content
 '''
-
-def get_students_in_section(canvas_bearer_token, course_id, section_id):
-    students = []
-
-    pagination_level = 200
-    domain = 'https://coderacademy.instructure.com'
-    API_request = '/api/v1/courses/{0}/sections'.format(course_id)
-    payload = {'per_page':pagination_level, 
-               'include[]': 'students'
-              }
-    headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    print("Requesting {0} endpoint".format(domain + API_request))
-    response = requests.get(
-                            domain + API_request,
-                            params=payload,
-                            headers=headers
-                           )
-    #Converts the request into text format
-    response = response.text
-    #Converts the response text into JSON
-    response = json.loads(response)
-    #section is an dictionary that contains information about the section.
-    #Contains a field for students
-    for section in response:
-        #filters the sections by name
-        if section['id'] == section_id:
-            print(section['id'])
-            #student is a dictionary of student data.
-            #Check if section['students'] = null
-            for enrolled_student in section['students']:
-                print(enrolled_student['name'])
-    print("Found {0} students in section: {1}".format(len(students),
-                                                      section_id))
-    return students
-
 def main():
+    '''
     #Loads the config file
     config = get_config('./config.yaml')
 
@@ -106,6 +75,7 @@ def main():
     except KeyError as error:
         print('could not find config key specified')
         raise error
+    
     
     #Google credentials
     store = file.Storage('token.json')
@@ -167,6 +137,7 @@ def main():
     #Returns all students in section 145(STAFF)
     print(get_students_in_section(canvas_bearer_token, course_ID, 149))
     '''
+    '''
     final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
                                                       headers), students_found,
                                                         students))
@@ -175,7 +146,6 @@ def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
     update_request = requests.put(url, headers = _headers, data = parameters)
-    print(update_request)
     '''
     if(update_request.status == 200):
         print("Successfully updated canvas email")
@@ -186,5 +156,5 @@ def update_canvas_email(student_ID, email, _headers):
 if __name__ == "__main__":
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
+    logging.basicConfig(filename='error.log',level=logging.DEBUG)
     application.run(host='0.0.0.0', port=port)
-    main()
