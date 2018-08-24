@@ -17,9 +17,14 @@ import yaml
 import sys
 import requests
 import json
-from flask import Flask
+from flask import Flask, render_template
 
 application = Flask(__name__)
+
+@application.route('/')
+def home():
+    return render_template('pages/home.html')
+
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
@@ -176,3 +181,8 @@ if __name__ == "__main__":
     application.debug = True
     application.run()
     main()
+'''
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
+'''
