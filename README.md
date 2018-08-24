@@ -1,4 +1,4 @@
-# Script
-The simple python script that retreives key-value pairs from JSON arrays. Can be used simply with a libCURL request or in conjunction with Flask to handle webhooks in realtime.
+# Canvas Integration
+A simple Flask server that handles integration between the Canvas API and external endpoints.
 
-`This is some code for test`
+
