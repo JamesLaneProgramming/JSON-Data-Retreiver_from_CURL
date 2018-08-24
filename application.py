@@ -23,7 +23,7 @@ application = Flask(__name__)
 
 @application.route('/')
 def home():
-    return render_template('pages/home.html')
+    return "Hello world"
 
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
