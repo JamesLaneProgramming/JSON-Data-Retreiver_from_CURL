@@ -37,8 +37,8 @@ def create_account():
     
     _headers = environ.get('canvas_secret')
     if _headers:
-        request = create_canvas_login(student_name, student_email, _headers)
-        print(request, "Canvas Account Created")
+        post_request = create_canvas_login(student_name, student_email, _headers)
+        print(post_request, "Canvas Account Created")
         return "Canvas Account Created"
     else:
         return "Could not find token"
