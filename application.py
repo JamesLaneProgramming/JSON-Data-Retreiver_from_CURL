@@ -37,7 +37,8 @@ def create_account():
     
     _headers = environ.get('canvas_secret')
     if _headers:
-        create_canvas_login(student_name, student_email, _headers)
+        request = create_canvas_login(student_name, student_email, _headers)
+        print(request, "Canvas Account Created")
         return "Canvas Account Created"
     else:
         return "Could not find token"
@@ -161,6 +162,7 @@ def create_canvas_login(student_name, student_email, _headers):
     parameters = {'user[name]':student_name, 'user[email]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     update_request = requests.post(url, headers = _headers, data = parameters)
+    return update_request
 
 def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
