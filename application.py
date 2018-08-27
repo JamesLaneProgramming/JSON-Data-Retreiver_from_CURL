@@ -32,7 +32,9 @@ def create_account():
     json_data = json.loads(request.data)
     first_name = json_data['properties']['firstname']['value']
     last_name = json_data['properties']['lastname']['value']
+    student_name = first_name + " " + last_name
     email_address = json_data['properties']['email']['value']
+    create_canvas_login(student_name, student_email)
     print("Welcome: {0} {1}. Your email is: {2}".format(first_name,
                                                        last_name,
                                                        email_address))
@@ -163,10 +165,15 @@ def main():
                                                       headers), students_found,
                                                          students))
     '''
+def create_canvas_login(student_name, student_email):
+    parameters = {'user[name]':student_name, 'user[email]':student_email}
+    url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
+    update_request = requests.post(url, headers = _headers, data = parameters)
+
 def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
-    update_request = requests.put(url, headers = _headers, data = parameters)
+    update_request = requests.post(url, headers = _headers, data = parameters)
     '''
     if(update_request.status == 200):
         print("Successfully updated canvas email")
