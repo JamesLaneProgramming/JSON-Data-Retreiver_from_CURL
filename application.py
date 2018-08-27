@@ -34,22 +34,13 @@ def create_account():
     last_name = json_data['properties']['lastname']['value']
     student_name = first_name + " " + last_name
     email_address = json_data['properties']['email']['value']
-    create_canvas_login(student_name, student_email)
-    print("Welcome: {0} {1}. Your email is: {2}".format(first_name,
-                                                       last_name,
-                                                       email_address))
-    return request.data
-
-@application.route('/some-token-requirement', methods=['GET'])
-def get_some_token():
-    #Need to research handling heroku tokens without error on local machine.
-    #Environ.get() will return None instead of error. Use if statement instead
-    #of Try/Catch.
-    token = environ.get('token')
-    if token:
-        return token
+    
+    _headers = environ.get('canvas_secret')
+    if _headers:
+        create_canvas_login(student_name, student_email, _headers)
+        return "Canvas Account Created"
     else:
-        return "Token not found"
+        return "Could not find token"
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
@@ -165,9 +156,9 @@ def main():
                                                       headers), students_found,
                                                          students))
     '''
-def create_canvas_login(student_name, student_email):
+def create_canvas_login(student_name, student_email, _headers):
     parameters = {'user[name]':student_name, 'user[email]':student_email}
-    url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
+    url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     update_request = requests.post(url, headers = _headers, data = parameters)
 
 def update_canvas_email(student_ID, email, _headers):
