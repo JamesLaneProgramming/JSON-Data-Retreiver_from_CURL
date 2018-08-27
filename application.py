@@ -39,7 +39,10 @@ def create_account():
     if _headers:
         post_request = create_canvas_login(student_name, student_email,
                                            _headers)
-        print(post_request, "Canvas Account Created")
+        
+        user_data = json.loads(post_request)
+        print(user_data, "Canvas Account Created")
+        #enroll_post_request = enroll_canvas_student(create_post_request)
         return "Canvas Account Created"
     else:
         return "Could not find token"
@@ -158,13 +161,19 @@ def main():
                                                       headers), students_found,
                                                          students))
     '''
+def enroll_canvas_student(student_ID, course_ID, _headers):
+    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
+    parameters = {'enrollment[user_id]': student_id}
+    url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
+    post_request = requests.post(url, headers = _headers, data = parameters)
+    return post_request
+
 def create_canvas_login(student_name, student_email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
-    print(student_name, student_email, _headers, url)
-    update_request = requests.post(url, headers = _headers, data = parameters)
-    return update_request
+    post_request = requests.post(url, headers = _headers, data = parameters)
+    return post_request
 
 def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
