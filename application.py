@@ -33,7 +33,7 @@ def create_account():
     first_name = json_data['properties']['firstname']['value']
     last_name = json_data['properties']['lastname']['value']
     student_name = first_name + " " + last_name
-    email_address = json_data['properties']['email']['value']
+    student_email = json_data['properties']['email']['value']
     
     _headers = environ.get('canvas_secret')
     if _headers:
