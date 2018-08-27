@@ -30,7 +30,7 @@ def home():
 @application.route('/create-account', methods=['POST'])
 def create_account():
     json_data = json.loads(request.data)
-    print(json_data['properties'].keys())
+    print(json_data['properties'])
     return request.data
 
 @application.route('/some-token-requirement', methods=['GET'])
