@@ -40,7 +40,7 @@ def create_account():
         post_request = create_canvas_login(student_name, student_email,
                                            _headers)
         
-        user_data = json.loads(post_request)
+        user_data = json.loads(post_request.text)
         print(user_data, "Canvas Account Created")
         #enroll_post_request = enroll_canvas_student(create_post_request)
         return "Canvas Account Created"
