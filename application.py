@@ -39,7 +39,7 @@ def create_account():
     if _headers:
         post_request = create_canvas_login(student_name, student_email,
                                            _headers)
-        print(post_request, "Canvas Account Created")
+        print(post_request.text, "Canvas Account Created")
         return "Canvas Account Created"
     else:
         return "Could not find token"
