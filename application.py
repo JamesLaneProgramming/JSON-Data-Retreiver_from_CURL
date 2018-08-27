@@ -29,7 +29,8 @@ def home():
 
 @application.route('/create-account', methods=['POST'])
 def create_account():
-    print(request.data)
+    json_data = json.loads(request.data)
+    print(json_data.keys())
     return request.data
 
 @application.route('/some-token-requirement', methods=['GET'])
