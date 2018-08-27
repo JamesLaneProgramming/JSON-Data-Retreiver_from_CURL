@@ -29,6 +29,7 @@ config.yaml
 token.json
 credentials.json
 credentials.csv
+error.log
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

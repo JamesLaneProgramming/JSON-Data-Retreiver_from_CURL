@@ -13,22 +13,41 @@ except Exception as error:
 #End Google module imports
 
 import os
+from os import environ
 import yaml
 import sys
 import requests
 import json
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+import logging
 
-application = Flask(__name__)
+application = Flask(__name__, template_folder='templates')
 
 @application.route('/')
 def home():
-    return "Hello world"
+    return render_template('home.html')
 
+@application.route('/create-account', methods=['POST'])
+def create_account():
+    json_data = json.loads(request.data)
+    print(json_data.keys())
+    return request.data
+
+@application.route('/some-token-requirement', methods=['GET'])
+def get_some_token():
+    #Need to research handling heroku tokens without error on local machine.
+    #Environ.get() will return None instead of error. Use if statement instead
+    #of Try/Catch.
+    token = environ.get('token')
+    if token:
+        return token
+    else:
+        return "Token not found"
 #If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
 #Opens the YAML file at the specified directory and returns the YAML object.
+
 def get_config(_dir):
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
@@ -46,62 +65,9 @@ def get_config(_dir):
         sys.exit()
     return file_content
 
-def get_students_in_section(canvas_bearer_token, course_id, section_id):
-    students = []
-
-    pagination_level = 200
-    domain = 'https://coderacademy.instructure.com'
-    API_request = '/api/v1/courses/{0}/sections'.format(course_id)
-    payload = {'per_page':pagination_level, 
-               'include[]': 'students'
-              }
-    headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    print("Requesting {0} endpoint".format(domain + API_request))
-    response = requests.get(
-                            domain + API_request,
-                            params=payload,
-                            headers=headers
-                           )
-    #Converts the request into text format
-    response = response.text
-    #Converts the response text into JSON
-    response = json.loads(response)
-    #section is an dictionary that contains information about the section.
-    #Contains a field for students
-    for section in response:
-        #filters the sections by name
-        if section['id'] == section_id:
-            print(section['id'])
-            #student is a dictionary of student data.
-            #Check if section['students'] = null
-            for enrolled_student in section['students']:
-                print(enrolled_student['name'])
-    print("Found {0} students in section: {1}".format(len(students),
-                                                      section_id))
-    return students
-
-def main():
-    #Loads the config file
-    config = get_config('./config.yaml')
-
-    #Canvas config variables
-    try:
-        request_parameters = config['canvas']['request_parameters']
-        course_ID = config['canvas']['course_id']
-        canvas_bearer_token = config['canvas']['bearer_token']
-    except KeyError as error:
-        print('Could not find config key specified')
-        raise error
-
-    #Google sheets config variables
-    try:
-        SPREADSHEET_ID = config['google_sheets']['spreadsheet_ID']
-        RANGE_NAME = config['google_sheets']['sheet_range']
-    except KeyError as error:
-        print('could not find config key specified')
-        raise error
-    
+def google_request():
     #Google credentials
+    
     store = file.Storage('token.json')
     creds = store.get()
     if not creds or creds.invalid:
@@ -117,7 +83,10 @@ def main():
     if not sheet_data:
         print("No values found in spreadsheet, Exiting")
         sys.exit()
+    else:
+        return sheet_data
 
+def canvas_request():
     #Canvas data request
     headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
     #Need to check length of request_parameters, Iterate and concatenate for
@@ -160,16 +129,39 @@ def main():
     print("{0} staff or imposters in canvas".format(number_of_canvas_staff))
     #Returns all students in section 145(STAFF)
     print(get_students_in_section(canvas_bearer_token, course_ID, 149))
+
+def main():
+    #Loads the config file
+    #config = get_config('./config.yaml')
+    '''
+    #Canvas config variables
+    try:
+        request_parameters = config['canvas']['request_parameters']
+        course_ID = config['canvas']['course_id']
+        canvas_bearer_token = config['canvas']['bearer_token']
+    except KeyError as error:
+        print('Could not find config key specified')
+        raise error
+
+    #Google sheets config variables
+    try:
+        SPREADSHEET_ID = config['google_sheets']['spreadsheet_ID']
+        RANGE_NAME = config['google_sheets']['sheet_range']
+    except KeyError as error:
+        print('could not find config key specified')
+        raise error
+    
+    '''
+    #Call update_canvas_email for all elements in students
     '''
     final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
                                                       headers), students_found,
-                                                        students))
+                                                         students))
     '''
 def update_canvas_email(student_ID, email, _headers):
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
     update_request = requests.put(url, headers = _headers, data = parameters)
-    print(update_request)
     '''
     if(update_request.status == 200):
         print("Successfully updated canvas email")
@@ -180,5 +172,7 @@ def update_canvas_email(student_ID, email, _headers):
 if __name__ == "__main__":
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
+    logging.basicConfig(filename='error.log',level=logging.DEBUG)
     application.run(host='0.0.0.0', port=port)
-    main()
+
+    #If running locally, call main. ETC.
