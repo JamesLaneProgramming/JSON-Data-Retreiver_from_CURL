@@ -159,7 +159,7 @@ def main():
     '''
 def create_canvas_login(student_name, student_email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
-    parameters = {'user[name]':student_name, 'user[email]':student_email}
+    parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     print(student_name, student_email, _headers, url)
     update_request = requests.post(url, headers = _headers, data = parameters)
