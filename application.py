@@ -21,6 +21,8 @@ import json
 from flask import Flask, render_template, request
 import logging
 
+environment = 'Development'
+
 application = Flask(__name__, template_folder='templates')
 
 @application.route('/')
@@ -46,9 +48,6 @@ def create_account():
         return "Canvas Account Created"
     else:
         return "Could not find token"
-#If modifying these scopes, delete the file token.json.
-SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
-
 #Opens the YAML file at the specified directory and returns the YAML object.
 
 def get_config(_dir):
@@ -68,9 +67,7 @@ def get_config(_dir):
         sys.exit()
     return file_content
 
-def google_request():
-    #Google credentials
-    
+def google_request(spreadsheet_ID, range_name, scope):
     store = file.Storage('token.json')
     creds = store.get()
     if not creds or creds.invalid:
@@ -89,17 +86,22 @@ def google_request():
     else:
         return sheet_data
 
-def canvas_request():
-    #Canvas data request
+def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
+    '''
+    Docstring
+    '''
     headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    #Need to check length of request_parameters, Iterate and concatenate for
-    #each request_parameter.
     url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}'.format(course_ID,
                                                                               request_parameters)
     response = requests.get(url, headers=headers)
-    #Load the request data into a JSON object
-    canvas_data = json.loads(response.text)
-
+    if not response:
+        print("No data found at endpoint: {0}".format(url))
+        sys.exit()
+    else:
+        #Load the request data into a JSON object
+        canvas_data = json.loads(response.text)
+        return canvas_data
+def filter_students_from_sheets():
     #Create an array of dictionaries from google sheet values
     students = []
     for each in sheet_data:
@@ -135,26 +137,32 @@ def canvas_request():
 
 def main():
     #Loads the config file
-    #config = get_config('./config.yaml')
-    '''
-    #Canvas config variables
-    try:
-        request_parameters = config['canvas']['request_parameters']
-        course_ID = config['canvas']['course_id']
-        canvas_bearer_token = config['canvas']['bearer_token']
-    except KeyError as error:
-        print('Could not find config key specified')
-        raise error
+    if environment == 'Development':
+        config = get_config('./config.yaml')
 
-    #Google sheets config variables
-    try:
-        SPREADSHEET_ID = config['google_sheets']['spreadsheet_ID']
-        RANGE_NAME = config['google_sheets']['sheet_range']
-    except KeyError as error:
-        print('could not find config key specified')
-        raise error
-    
-    '''
+        #Canvas config variables
+        try:
+            request_parameters = config['canvas']['request_parameters']
+            course_ID = config['canvas']['course_id']
+            canvas_bearer_token = config['canvas']['bearer_token']
+        except KeyError as error:
+            print('Could not find config key specified')
+            raise error
+
+        #Google sheets config variables
+        try:
+            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
+            range_name = config['google_sheets']['sheet_range']
+        except KeyError as error:
+            print('could not find config key specified')
+            raise error
+    else if environment == 'Production':
+        #Retrieve config variables from Heroku
+        pass
+
+    sheet_data = google_request(spreadsheet_ID, range_name, )
+    canvas_data = canvas_request()
+
     #Call update_canvas_email for all elements in students
     '''
     final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],

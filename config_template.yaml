@@ -1,0 +1,8 @@
+#Rename this file to config.yaml for use in canvas-integration application.
+canvas:
+        canvas_bearer_token: ''
+        course_ID: ''
+google_sheets:
+        scope: ''
+        spreadsheet_ID: ''
+        sheet_range: ''
