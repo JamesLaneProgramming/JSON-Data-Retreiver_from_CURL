@@ -71,12 +71,12 @@ def google_request(spreadsheet_ID, range_name, scope):
     store = file.Storage('token.json')
     creds = store.get()
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        flow = client.flow_from_clientsecrets('credentials.json', scope)
         creds = tools.run_flow(flow, store)
     service = build('sheets', 'v4', http=creds.authorize(Http()))
 
-    result = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID,
-                                                range=RANGE_NAME).execute()
+    result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_ID,
+                                                range=range_name).execute()
     sheet_data = result.get('values', [])
     
     #Check if the sheet_data is empty
@@ -143,7 +143,7 @@ def main():
         #Canvas config variables
         try:
             request_parameters = config['canvas']['request_parameters']
-            course_ID = config['canvas']['course_id']
+            course_ID = config['canvas']['course_ID']
             canvas_bearer_token = config['canvas']['bearer_token']
         except KeyError as error:
             print('Could not find config key specified')
@@ -153,15 +153,21 @@ def main():
         try:
             spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
             range_name = config['google_sheets']['sheet_range']
+            scope = config['google_sheets']['scope']
         except KeyError as error:
             print('could not find config key specified')
             raise error
-    else if environment == 'Production':
+    elif environment == 'Production':
         #Retrieve config variables from Heroku
+        application.debug = True
+        port = int(os.environ.get('PORT', 5000))
+        logging.basicConfig(filename='error.log',level=logging.DEBUG)
+        application.run(host='0.0.0.0', port=port)
         pass
 
-    sheet_data = google_request(spreadsheet_ID, range_name, )
-    canvas_data = canvas_request()
+    sheet_data = google_request(spreadsheet_ID, range_name, scope)
+    canvas_data = canvas_request(canvas_bearer_token, course_ID,
+                                 request_parameters)
     print(sheet_data, "End of sheet data")
     print(canvas_data, "End of canvas data")
     #Call update_canvas_email for all elements in students
@@ -196,9 +202,6 @@ def update_canvas_email(student_ID, email, _headers):
         print("Student with ID: {0} failed to update with error code: {1}".format(student_ID, update.request.status))
     '''
 if __name__ == "__main__":
-    application.debug = True
-    port = int(os.environ.get('PORT', 5000))
-    logging.basicConfig(filename='error.log',level=logging.DEBUG)
-    application.run(host='0.0.0.0', port=port)
-
+    main()
+    
     #If running locally, call main. ETC.
