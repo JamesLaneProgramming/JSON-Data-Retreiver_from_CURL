@@ -26,6 +26,7 @@ wheels/
 *.egg
 #Credential files
 config.yaml
+config.yml
 token.json
 credentials.json
 credentials.csv

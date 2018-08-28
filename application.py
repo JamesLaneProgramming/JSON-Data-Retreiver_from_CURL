@@ -162,7 +162,8 @@ def main():
 
     sheet_data = google_request(spreadsheet_ID, range_name, )
     canvas_data = canvas_request()
-
+    print(sheet_data, "End of sheet data")
+    print(canvas_data, "End of canvas data")
     #Call update_canvas_email for all elements in students
     '''
     final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
