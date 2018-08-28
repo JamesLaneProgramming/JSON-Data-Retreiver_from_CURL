@@ -101,7 +101,7 @@ def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
         #Load the request data into a JSON object
         canvas_data = json.loads(response.text)
         return canvas_data
-def filter_students_from_sheets():
+def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Create an array of dictionaries from google sheet values
     students = []
     for each in sheet_data:
@@ -133,8 +133,11 @@ def filter_students_from_sheets():
     print("{0} students are not matched".format(number_of_remaining_students))
     print("{0} staff or imposters in canvas".format(number_of_canvas_staff))
     #Returns all students in section 145(STAFF)
-    print(get_students_in_section(canvas_bearer_token, course_ID, 149))
+    #print(get_students_in_section(canvas_bearer_token, course_ID, 149))
 
+    final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
+                                                      _headers), students_found,
+                                                         students))
 def main():
     #Loads the config file
     if environment == 'Development':
@@ -168,14 +171,17 @@ def main():
     sheet_data = google_request(spreadsheet_ID, range_name, scope)
     canvas_data = canvas_request(canvas_bearer_token, course_ID,
                                  request_parameters)
-    print(sheet_data, "End of sheet data")
-    print(canvas_data, "End of canvas data")
-    #Call update_canvas_email for all elements in students
-    '''
-    final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
-                                                      headers), students_found,
-                                                         students))
-    '''
+    update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
+    #Log each sheet data on new line
+    for each in sheet_data:
+        print(each, '\n')
+    print("End of sheet data")
+    #Log each canvas data on new line
+    for each in canvas_data:
+        print(each, '\n')
+    print("End of canvas data")
+
+
 def enroll_canvas_student(student_ID, course_ID, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
     parameters = {'enrollment[user_id]': student_id}
@@ -191,16 +197,19 @@ def create_canvas_login(student_name, student_email, _headers):
     return post_request
 
 def update_canvas_email(student_ID, email, _headers):
+    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
     update_request = requests.post(url, headers = _headers, data = parameters)
-    '''
-    if(update_request.status == 200):
+
+    if(update_request.status_code == 200):
         print("Successfully updated canvas email")
     else:
         print("There was an error updating a canvas email", '\n')
-        print("Student with ID: {0} failed to update with error code: {1}".format(student_ID, update.request.status))
-    '''
+        print("Student with ID: {0} failed to update with error code: {1}".format(
+                                                                                  student_ID, 
+                                                                                  update_request.status_code
+                                                                                 ))
 if __name__ == "__main__":
     main()
     
