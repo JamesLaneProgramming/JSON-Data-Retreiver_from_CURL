@@ -16,10 +16,13 @@ import os
 from os import environ
 import yaml
 import sys
+from functools import reduce
 import requests
 import json
 from flask import Flask, render_template, request
 import logging
+
+environment = 'Production'
 
 application = Flask(__name__, template_folder='templates')
 
@@ -41,14 +44,11 @@ def create_account():
                                            _headers)
         
         user_data = json.loads(post_request.text)
-        print(user_data, "Canvas Account Created")
+
         #enroll_post_request = enroll_canvas_student(create_post_request)
         return "Canvas Account Created"
     else:
         return "Could not find token"
-#If modifying these scopes, delete the file token.json.
-SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
-
 #Opens the YAML file at the specified directory and returns the YAML object.
 
 def get_config(_dir):
@@ -68,18 +68,16 @@ def get_config(_dir):
         sys.exit()
     return file_content
 
-def google_request():
-    #Google credentials
-    
+def google_request(spreadsheet_ID, range_name, scope):
     store = file.Storage('token.json')
     creds = store.get()
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        flow = client.flow_from_clientsecrets('credentials.json', scope)
         creds = tools.run_flow(flow, store)
     service = build('sheets', 'v4', http=creds.authorize(Http()))
 
-    result = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID,
-                                                range=RANGE_NAME).execute()
+    result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_ID,
+                                                range=range_name).execute()
     sheet_data = result.get('values', [])
     
     #Check if the sheet_data is empty
@@ -89,78 +87,103 @@ def google_request():
     else:
         return sheet_data
 
-def canvas_request():
-    #Canvas data request
+def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
+    '''
+    Docstring
+    '''
     headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    #Need to check length of request_parameters, Iterate and concatenate for
-    #each request_parameter.
     url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}'.format(course_ID,
                                                                               request_parameters)
     response = requests.get(url, headers=headers)
-    #Load the request data into a JSON object
-    canvas_data = json.loads(response.text)
-
+    if not response:
+        print(response)
+        print("No data found at endpoint: {0}".format(url))
+        sys.exit()
+    else:
+        #Load the request data into a JSON object
+        canvas_data = json.loads(response.text)
+        return canvas_data
+def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Create an array of dictionaries from google sheet values
-    students = []
-    for each in sheet_data:
-        students.append({"name": each[0], "email": each[1]})
     
-    names = []
-    for each in students:
-        names.append(each['name'].lower())
+    #Create instance of sheet data filtered with matches from canvas
+
+    #Create instance of canvas data filtered with matches from canvas
+
+    #Order both data sets.
     
-    students_missing = list(filter(lambda x: x['name'].lower() not in names,
-                                 canvas_data)) 
-    students_found = list(filter(lambda x: x['name'].lower() in names,
-                                 canvas_data))
+    #Lambda to get student name from canvas for matching
+    canvas_name_lambda = lambda x: x['name']
+    #Lambda to get student ID from canvas to update email with
+    canvas_ID_lambda = lambda x: x['id']
+    #Lambda to get student name from sheets for matching
+    sheet_name_lambda = lambda y: y[0]
+    #Lambda to get student email from sheets to update canvas with
+    sheet_email_lambda = lambda z: z[2]
 
-    #Statistics
-    number_of_canvas_users = len(canvas_data)
-    number_of_students_in_spreadsheet = len(sheet_data)
-    number_of_students_matched = len(students_found)
-    number_of_remaining_students = len(sheet_data) - len(students_found)
-    number_of_canvas_staff = number_of_canvas_users - (
-                                    number_of_students_matched + 
-                                    number_of_remaining_students)
-
-    print('{0} users extracted from Canvas'.format(number_of_canvas_users))
-    print('{0} students extracted from the spreadsheet'.format(
-                                number_of_students_in_spreadsheet))
-    
-    print("{0} students matched in spreadsheet".format(number_of_students_matched))
-    print("{0} students are not matched".format(number_of_remaining_students))
-    print("{0} staff or imposters in canvas".format(number_of_canvas_staff))
-    #Returns all students in section 145(STAFF)
-    print(get_students_in_section(canvas_bearer_token, course_ID, 149))
-
+    #Update emails based on canvas_data['id'] and sheet_data['email']
+    for each_sheet_student in sheet_data:
+        for each_canvas_student in canvas_data:
+            #Use variables to compare
+            student_sheet_name = sheet_name_lambda(each_sheet_student)
+            student_canvas_name = canvas_name_lambda(each_canvas_student)
+            
+            #Use variables to update
+            student_sheet_email = sheet_email_lambda(each_sheet_student)
+            student_canvas_ID = canvas_ID_lambda(each_canvas_student)
+            
+            if student_canvas_name == student_sheet_name:
+                update_canvas_email(
+                                    student_canvas_ID,
+                                    student_sheet_email,
+                                    _headers
+                                   )
 def main():
     #Loads the config file
-    #config = get_config('./config.yaml')
-    '''
-    #Canvas config variables
-    try:
-        request_parameters = config['canvas']['request_parameters']
-        course_ID = config['canvas']['course_id']
-        canvas_bearer_token = config['canvas']['bearer_token']
-    except KeyError as error:
-        print('Could not find config key specified')
-        raise error
+    if environment == 'Development':
+        config = get_config('./config.yaml')
 
-    #Google sheets config variables
-    try:
-        SPREADSHEET_ID = config['google_sheets']['spreadsheet_ID']
-        RANGE_NAME = config['google_sheets']['sheet_range']
-    except KeyError as error:
-        print('could not find config key specified')
-        raise error
-    
+        #Canvas config variables
+        try:
+            request_parameters = config['canvas']['request_parameters']
+            course_ID = config['canvas']['course_ID']
+            canvas_bearer_token = config['canvas']['bearer_token']
+        except KeyError as error:
+            print('Could not find config key specified')
+            raise error
+
+        #Google sheets config variables
+        try:
+            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
+            range_name = config['google_sheets']['sheet_range']
+            scope = config['google_sheets']['scope']
+        except KeyError as error:
+            print('could not find config key specified')
+            raise error
+    elif environment == 'Production':
+        #Retrieve config variables from Heroku
+        application.debug = True
+        port = int(os.environ.get('PORT', 5000))
+        logging.basicConfig(filename='error.log',level=logging.DEBUG)
+        application.run(host='0.0.0.0', port=port)
+        pass
+
+    sheet_data = google_request(spreadsheet_ID, range_name, scope)
+    canvas_data = canvas_request(canvas_bearer_token, course_ID,
+                                 request_parameters)
+    update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
+    #Log each sheet data on new line
     '''
-    #Call update_canvas_email for all elements in students
+    for each in sheet_data:
+        print(each, '\n')
+    print("End of sheet data")
+    #Log each canvas data on new line
+    for each in canvas_data:
+        print(each, '\n')
+    print("End of canvas data")
     '''
-    final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
-                                                      headers), students_found,
-                                                         students))
-    '''
+
+
 def enroll_canvas_student(student_ID, course_ID, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
     parameters = {'enrollment[user_id]': student_id}
@@ -176,20 +199,23 @@ def create_canvas_login(student_name, student_email, _headers):
     return post_request
 
 def update_canvas_email(student_ID, email, _headers):
+    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
-    update_request = requests.post(url, headers = _headers, data = parameters)
-    '''
-    if(update_request.status == 200):
+    update_request = requests.put(url, headers = _headers, data = parameters)
+
+    #Condition if request successful
+    if(update_request.status_code == 200):
         print("Successfully updated canvas email")
+    elif(update_request.status_code == 422):
+        print("Error: ", update_request.status_code)
     else:
         print("There was an error updating a canvas email", '\n')
-        print("Student with ID: {0} failed to update with error code: {1}".format(student_ID, update.request.status))
-    '''
+        print("Student with ID: {0} failed to update with error code: {1}".format(
+                                                                                  student_ID, 
+                                                                                  update_request.status_code
+                                                                                 ))
 if __name__ == "__main__":
-    application.debug = True
-    port = int(os.environ.get('PORT', 5000))
-    logging.basicConfig(filename='error.log',level=logging.DEBUG)
-    application.run(host='0.0.0.0', port=port)
-
+    main()
+    
     #If running locally, call main. ETC.

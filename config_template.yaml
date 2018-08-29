@@ -1,5 +1,4 @@
 #RENAME this file to config.yaml if program is being run locally.
-
 canvas:
         request_parameters:     <Enter_Additional_Parameters>
         bearer_token:           <Enter_Canvas_Token_Here>
