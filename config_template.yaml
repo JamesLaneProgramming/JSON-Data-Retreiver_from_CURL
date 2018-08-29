@@ -1,8 +1,9 @@
-#Rename this file to config.yaml for use in canvas-integration application.
+#RENAME this file to config.yaml if program is being run locally.
 canvas:
-        canvas_bearer_token: ''
-        course_ID: ''
+        request_parameters:     <Enter_Additional_Parameters>
+        bearer_token:           <Enter_Canvas_Token_Here>
+        course_id:              <Enter_Course_ID_Here>
+
 google_sheets:
-        scope: ''
-        spreadsheet_ID: ''
-        sheet_range: ''
+        spreadsheet_ID:         <Enter_Spreadsheet_ID_Here>
+        sheet_range:            <Enter_Sheet_Range_Here>
