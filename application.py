@@ -16,12 +16,13 @@ import os
 from os import environ
 import yaml
 import sys
+from functools import reduce
 import requests
 import json
 from flask import Flask, render_template, request
 import logging
 
-environment = 'Development'
+environment = 'Production'
 
 application = Flask(__name__, template_folder='templates')
 
@@ -43,7 +44,7 @@ def create_account():
                                            _headers)
         
         user_data = json.loads(post_request.text)
-        print(user_data, "Canvas Account Created")
+
         #enroll_post_request = enroll_canvas_student(create_post_request)
         return "Canvas Account Created"
     else:
@@ -95,6 +96,7 @@ def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
                                                                               request_parameters)
     response = requests.get(url, headers=headers)
     if not response:
+        print(response)
         print("No data found at endpoint: {0}".format(url))
         sys.exit()
     else:
@@ -103,41 +105,39 @@ def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
         return canvas_data
 def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Create an array of dictionaries from google sheet values
-    students = []
-    for each in sheet_data:
-        students.append({"name": each[0], "email": each[1]})
     
-    names = []
-    for each in students:
-        names.append(each['name'].lower())
+    #Create instance of sheet data filtered with matches from canvas
+
+    #Create instance of canvas data filtered with matches from canvas
+
+    #Order both data sets.
     
-    students_missing = list(filter(lambda x: x['name'].lower() not in names,
-                                 canvas_data)) 
-    students_found = list(filter(lambda x: x['name'].lower() in names,
-                                 canvas_data))
+    #Lambda to get student name from canvas for matching
+    canvas_name_lambda = lambda x: x['name']
+    #Lambda to get student ID from canvas to update email with
+    canvas_ID_lambda = lambda x: x['id']
+    #Lambda to get student name from sheets for matching
+    sheet_name_lambda = lambda y: y[0]
+    #Lambda to get student email from sheets to update canvas with
+    sheet_email_lambda = lambda z: z[2]
 
-    #Statistics
-    number_of_canvas_users = len(canvas_data)
-    number_of_students_in_spreadsheet = len(sheet_data)
-    number_of_students_matched = len(students_found)
-    number_of_remaining_students = len(sheet_data) - len(students_found)
-    number_of_canvas_staff = number_of_canvas_users - (
-                                    number_of_students_matched + 
-                                    number_of_remaining_students)
-
-    print('{0} users extracted from Canvas'.format(number_of_canvas_users))
-    print('{0} students extracted from the spreadsheet'.format(
-                                number_of_students_in_spreadsheet))
-    
-    print("{0} students matched in spreadsheet".format(number_of_students_matched))
-    print("{0} students are not matched".format(number_of_remaining_students))
-    print("{0} staff or imposters in canvas".format(number_of_canvas_staff))
-    #Returns all students in section 145(STAFF)
-    #print(get_students_in_section(canvas_bearer_token, course_ID, 149))
-
-    final = list(map(lambda x, y: update_canvas_email(x['id'], y['email'],
-                                                      _headers), students_found,
-                                                         students))
+    #Update emails based on canvas_data['id'] and sheet_data['email']
+    for each_sheet_student in sheet_data:
+        for each_canvas_student in canvas_data:
+            #Use variables to compare
+            student_sheet_name = sheet_name_lambda(each_sheet_student)
+            student_canvas_name = canvas_name_lambda(each_canvas_student)
+            
+            #Use variables to update
+            student_sheet_email = sheet_email_lambda(each_sheet_student)
+            student_canvas_ID = canvas_ID_lambda(each_canvas_student)
+            
+            if student_canvas_name == student_sheet_name:
+                update_canvas_email(
+                                    student_canvas_ID,
+                                    student_sheet_email,
+                                    _headers
+                                   )
 def main():
     #Loads the config file
     if environment == 'Development':
@@ -173,6 +173,7 @@ def main():
                                  request_parameters)
     update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
     #Log each sheet data on new line
+    '''
     for each in sheet_data:
         print(each, '\n')
     print("End of sheet data")
@@ -180,6 +181,7 @@ def main():
     for each in canvas_data:
         print(each, '\n')
     print("End of canvas data")
+    '''
 
 
 def enroll_canvas_student(student_ID, course_ID, _headers):
@@ -200,10 +202,13 @@ def update_canvas_email(student_ID, email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
     parameters = {'user[email]':email}
     url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
-    update_request = requests.post(url, headers = _headers, data = parameters)
+    update_request = requests.put(url, headers = _headers, data = parameters)
 
+    #Condition if request successful
     if(update_request.status_code == 200):
         print("Successfully updated canvas email")
+    elif(update_request.status_code == 422):
+        print("Error: ", update_request.status_code)
     else:
         print("There was an error updating a canvas email", '\n')
         print("Student with ID: {0} failed to update with error code: {1}".format(
