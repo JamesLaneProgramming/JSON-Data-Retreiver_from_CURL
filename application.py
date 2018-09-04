@@ -77,10 +77,10 @@ def create_account():
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
     if (post_request.status_code == 201):
-        app.logger.info(post_request)
+        application.logger.info(post_request)
         return render_template('Canvas_Account_Creation_Successful.html'), 201
     else:
-        app.logger.info(post_request)
+        application.logger.info(post_request)
         return "Canvas account could not be created at this time...\
                 Please try again later or contact us for more information"
 
@@ -94,7 +94,7 @@ def main():
     #Handle arguments parsed from the command line
     parse_arguments()
     if environment == 'DEVELOPMENT':
-        app.logger.info("Starting development build")
+        application.logger.info("Starting development build")
         config = get_config('./config.yaml')
 
         #Canvas config variables
@@ -115,7 +115,7 @@ def main():
             print('could not find config key specified')
             raise error
     elif environment == 'PRODUCTION':
-        app.logger.info('Starting production server')
+        application.logger.info('Starting production server')
         #Retrieve config variables from Heroku
         #config_variable = environ.get('')
         application.debug = True
