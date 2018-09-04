@@ -19,8 +19,7 @@ import sys
 from functools import reduce
 import requests
 import json
-from flask import Flask, render_template, request
-import logging
+from flask import Flask, render_template, request, abort
 import argparse
 
 environment = None
@@ -37,23 +36,53 @@ def home():
 
 @application.route('/create-account', methods=['POST'])
 def create_account():
-    json_data = json.loads(request.data)
-    first_name = json_data['properties']['firstname']['value']
-    last_name = json_data['properties']['lastname']['value']
-    student_name = first_name + " " + last_name
-    student_email = json_data['properties']['email']['value']
-    
-    _headers = environ.get('canvas_secret')
-    if _headers:
-        post_request = create_canvas_login(student_name, student_email,
-                                           _headers)
-        
-        user_data = json.loads(post_request.text)
+    '''
+    Docstring
+    ---------
+    create_account() should only be run in a production environment
+    Arguments
+    ---------
+    student_data(JSON Object):
+        Takes a JSON Object that contains firstname, lastname and email
+    Returns
+    -------
+    Account_Creation_Successful(template):
+        Returns a template to be rendered by Flask on successful request.
+    '''
 
-        #enroll_post_request = enroll_canvas_student(create_post_request)
-        return "Canvas Account Created"
+    #Attempts to lead canvas_secret from environment
+    try:
+        _headers = environ.get('canvas_secret')
+    except KeyError as error:
+        '''
+        If canvas_secret token cannot be loaded from the server, return a 500
+        internal server error
+        '''
+        abort(500)
+    #Attempts to load json data from student_data
+    
+    if not request.json:
+        abort(415)
     else:
-        return "Could not find token"
+        json_data = request.get_json()
+        try:
+            first_name = json_data['properties']['firstname']['value']
+            last_name = json_data['properties']['lastname']['value'] 
+            student_email = json_data['properties']['email']['value']
+        except KeyError as error:
+            abort(415)
+    student_name = first_name + " " + last_name
+    post_request = create_canvas_login(student_name, student_email,
+                                           _headers)
+    user_data = post_request.get_json()
+    #enroll_post_request = enroll_canvas_student(create_post_request)
+    if (post_request.status_code == 201):
+        app.logger.info(post_request)
+        return render_template('Canvas_Account_Creation_Successful.html'), 201
+    else:
+        app.logger.info(post_request)
+        return "Canvas account could not be created at this time...\
+                Please try again later or contact us for more information"
 
 def parse_arguments():
     global environment
@@ -65,7 +94,7 @@ def main():
     #Handle arguments parsed from the command line
     parse_arguments()
     if environment == 'DEVELOPMENT':
-        print("Starting development build")
+        app.logger.info("Starting development build")
         config = get_config('./config.yaml')
 
         #Canvas config variables
@@ -86,12 +115,11 @@ def main():
             print('could not find config key specified')
             raise error
     elif environment == 'PRODUCTION':
-        print('Starting production server')
+        app.logger.info('Starting production server')
         #Retrieve config variables from Heroku
         #config_variable = environ.get('')
         application.debug = True
         port = int(os.environ.get('PORT', 5000))
-        logging.basicConfig(filename='error.log',level=logging.DEBUG)
         application.run(host='0.0.0.0', port=port)
     else:
         print('Environment parsed but does not match')
