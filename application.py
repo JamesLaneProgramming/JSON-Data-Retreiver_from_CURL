@@ -21,11 +21,16 @@ import requests
 import json
 from flask import Flask, render_template, request
 import logging
+import argparse
 
-environment = 'Production'
-
+environment = None
 application = Flask(__name__, template_folder='templates')
 
+parser = argparse.ArgumentParser(description='Command line arguments')
+parser.add_argument('-env', 
+                    '--environment',
+                    help='Sets the environment for the program.')
+args = parser.parse_args()
 @application.route('/')
 def home():
     return render_template('home.html')
@@ -49,8 +54,55 @@ def create_account():
         return "Canvas Account Created"
     else:
         return "Could not find token"
-#Opens the YAML file at the specified directory and returns the YAML object.
 
+def parse_arguments():
+    global environment
+    environment = args.environment.upper()
+    if (environment == None):
+        print("environment could not be parsed, exiting.")
+        sys.exit(0)
+def main():
+    #Handle arguments parsed from the command line
+    parse_arguments()
+    if environment == 'DEVELOPMENT':
+        print("Starting development build")
+        config = get_config('./config.yaml')
+
+        #Canvas config variables
+        try:
+            request_parameters = config['canvas']['request_parameters']
+            course_ID = config['canvas']['course_ID']
+            canvas_bearer_token = config['canvas']['bearer_token']
+        except KeyError as error:
+            print('Could not find config key specified')
+            raise error
+
+        #Google sheets config variables
+        try:
+            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
+            range_name = config['google_sheets']['sheet_range']
+            scope = config['google_sheets']['scope']
+        except KeyError as error:
+            print('could not find config key specified')
+            raise error
+    elif environment == 'PRODUCTION':
+        print('Starting production server')
+        #Retrieve config variables from Heroku
+        #config_variable = environ.get('')
+        application.debug = True
+        port = int(os.environ.get('PORT', 5000))
+        logging.basicConfig(filename='error.log',level=logging.DEBUG)
+        application.run(host='0.0.0.0', port=port)
+    else:
+        print('Environment parsed but does not match')
+        print('Posible environments are: development/production/testing')
+
+    #sheet_data = google_request(spreadsheet_ID, range_name, scope)
+    #canvas_data = canvas_request(canvas_bearer_token, course_ID,
+    #                             request_parameters)
+    #update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
+
+#Opens the YAML file at the specified directory and returns the YAML object.
 def get_config(_dir):
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
@@ -103,15 +155,8 @@ def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
         #Load the request data into a JSON object
         canvas_data = json.loads(response.text)
         return canvas_data
+
 def update_canvas_emails(sheet_data, canvas_data, _headers):
-    #Create an array of dictionaries from google sheet values
-    
-    #Create instance of sheet data filtered with matches from canvas
-
-    #Create instance of canvas data filtered with matches from canvas
-
-    #Order both data sets.
-    
     #Lambda to get student name from canvas for matching
     canvas_name_lambda = lambda x: x['name']
     #Lambda to get student ID from canvas to update email with
@@ -138,50 +183,6 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                     student_sheet_email,
                                     _headers
                                    )
-def main():
-    #Loads the config file
-    if environment == 'Development':
-        config = get_config('./config.yaml')
-
-        #Canvas config variables
-        try:
-            request_parameters = config['canvas']['request_parameters']
-            course_ID = config['canvas']['course_ID']
-            canvas_bearer_token = config['canvas']['bearer_token']
-        except KeyError as error:
-            print('Could not find config key specified')
-            raise error
-
-        #Google sheets config variables
-        try:
-            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
-            range_name = config['google_sheets']['sheet_range']
-            scope = config['google_sheets']['scope']
-        except KeyError as error:
-            print('could not find config key specified')
-            raise error
-    elif environment == 'Production':
-        #Retrieve config variables from Heroku
-        application.debug = True
-        port = int(os.environ.get('PORT', 5000))
-        logging.basicConfig(filename='error.log',level=logging.DEBUG)
-        application.run(host='0.0.0.0', port=port)
-        pass
-
-    sheet_data = google_request(spreadsheet_ID, range_name, scope)
-    canvas_data = canvas_request(canvas_bearer_token, course_ID,
-                                 request_parameters)
-    update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
-    #Log each sheet data on new line
-    '''
-    for each in sheet_data:
-        print(each, '\n')
-    print("End of sheet data")
-    #Log each canvas data on new line
-    for each in canvas_data:
-        print(each, '\n')
-    print("End of canvas data")
-    '''
 
 
 def enroll_canvas_student(student_ID, course_ID, _headers):
@@ -217,5 +218,3 @@ def update_canvas_email(student_ID, email, _headers):
                                                                                  ))
 if __name__ == "__main__":
     main()
-    
-    #If running locally, call main. ETC.
