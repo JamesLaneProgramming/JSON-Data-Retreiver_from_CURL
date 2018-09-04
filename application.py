@@ -21,11 +21,16 @@ import requests
 import json
 from flask import Flask, render_template, request
 import logging
+import argparse
 
-environment = 'Production'
-
+environment = None
 application = Flask(__name__, template_folder='templates')
 
+parser = argparse.ArgumentParser(description='Command line arguments')
+parser.add_argument('-env', 
+                    '--environment',
+                    help='Sets the environment for the program.')
+args = parser.parse_args()
 @application.route('/')
 def home():
     return render_template('home.html')
@@ -50,9 +55,17 @@ def create_account():
     else:
         return "Could not find token"
 
+def parse_arguments():
+    global environment
+    environment = args.environment.upper()
+    if (environment == None):
+        print("environment could not be parsed, exiting.")
+        sys.exit(0)
 def main():
-    #Loads the config file
-    if environment == 'Development':
+    #Handle arguments parsed from the command line
+    parse_arguments()
+    if environment == 'DEVELOPMENT':
+        print("Starting development build")
         config = get_config('./config.yaml')
 
         #Canvas config variables
@@ -72,13 +85,17 @@ def main():
         except KeyError as error:
             print('could not find config key specified')
             raise error
-    elif environment == 'Production':
+    elif environment == 'PRODUCTION':
+        print('Starting production server')
         #Retrieve config variables from Heroku
         #config_variable = environ.get('')
         application.debug = True
         port = int(os.environ.get('PORT', 5000))
         logging.basicConfig(filename='error.log',level=logging.DEBUG)
         application.run(host='0.0.0.0', port=port)
+    else:
+        print('Environment parsed but does not match')
+        print('Posible environments are: development/production/testing')
 
     #sheet_data = google_request(spreadsheet_ID, range_name, scope)
     #canvas_data = canvas_request(canvas_bearer_token, course_ID,
