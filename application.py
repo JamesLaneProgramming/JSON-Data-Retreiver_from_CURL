@@ -21,6 +21,9 @@ import requests
 import json
 from flask import Flask, render_template, request, abort
 import argparse
+import logging
+
+import User
 
 environment = None
 application = Flask(__name__, template_folder='templates')
@@ -30,12 +33,24 @@ parser.add_argument('-env',
                     '--environment',
                     help='Sets the environment for the program.')
 args = parser.parse_args()
+
 @application.route('/')
 def home():
     return render_template('home.html')
 
+@application.route('/login', methods=['GET','POST'])
+def login():
+    form = LoginForm()
+    if(form.validate_on_submit()):
+        login_user(User())
+        flask.flash("Login successful")
+        next = flask.request.args.get('next')
+        if not is_safe_url(next):
+            abort(400)
+        return flask.redirect(next or flask.url_for('index'))
+    return flask.render_template('login.html', form=form)
 @application.route('/create-account', methods=['POST'])
-def create_account():
+def create_canvas_account():
     '''
     Docstring
     ---------
@@ -85,19 +100,23 @@ def create_account():
                 Please try again later or contact us for more information"
 
 def parse_arguments():
+    '''
+    Docstring
+    ---------
+    Stores command line arguments in global variables for easy access
+    '''
     global environment
-    environment = args.environment.upper()
-    if (environment == None):
-        print("environment could not be parsed, exiting.")
+    if(args.environment != None):
+        environment = args.environment.upper()
+    else:
+        application.logger.info("environment could not be parsed, exiting.")
+        application.logger.info("Use python3 application.py -env <Environment>")
         sys.exit(0)
 def main():
-    #Handle arguments parsed from the command line
     parse_arguments()
     if environment == 'DEVELOPMENT':
         application.logger.info("Starting development build")
         config = get_config('./config.yaml')
-
-        #Canvas config variables
         try:
             request_parameters = config['canvas']['request_parameters']
             course_ID = config['canvas']['course_ID']
@@ -105,8 +124,6 @@ def main():
         except KeyError as error:
             print('Could not find config key specified')
             raise error
-
-        #Google sheets config variables
         try:
             spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
             range_name = config['google_sheets']['sheet_range']
@@ -132,6 +149,18 @@ def main():
 
 #Opens the YAML file at the specified directory and returns the YAML object.
 def get_config(_dir):
+    '''
+    Arguments
+    ---------
+    _dir(String):
+        Takes a directory string and checks whether a file exists in the current file
+        structure
+    Returns
+    -------
+    file_content:
+        Reads the file specified by the _dir string and returns the contents
+        using yaml.load(). Alternatively you could use yaml.safe_load().
+    '''
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
             try:
@@ -139,16 +168,28 @@ def get_config(_dir):
                 file_content = yaml.load(config_file)
             except IOError as error:
                 raise error
-                sys.exit()
+                sys.exit(0)
             except EOFError as error:
                 raise error
-                sys.exit()
+                sys.exit(0)
     else:
         print('Could not find config file')
-        sys.exit()
+        sys.exit(0)
     return file_content
 
 def google_request(spreadsheet_ID, range_name, scope):
+    '''
+    Arguments
+    ---------
+    spreadsheet_ID(String):
+        Takes a string agrument that represents the google spreadsheet
+        identifier.
+    range_name(String):
+        Take a string argument that represents the google sheet ranges to
+        retreive data from. Format for the string is as follows:
+            '<sheet_name>!<start_range>:<end_range>'
+    scope(Google)
+    '''
     store = file.Storage('token.json')
     creds = store.get()
     if not creds or creds.invalid:
@@ -160,9 +201,7 @@ def google_request(spreadsheet_ID, range_name, scope):
                                                 range=range_name).execute()
     sheet_data = result.get('values', [])
     
-    #Check if the sheet_data is empty
     if not sheet_data:
-        print("No values found in spreadsheet, Exiting")
         sys.exit()
     else:
         return sheet_data
