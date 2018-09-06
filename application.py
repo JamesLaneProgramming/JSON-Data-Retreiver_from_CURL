@@ -23,6 +23,8 @@ from flask import Flask, render_template, request, abort
 import argparse
 import logging
 
+import User
+
 environment = None
 application = Flask(__name__, template_folder='templates')
 
@@ -36,6 +38,17 @@ args = parser.parse_args()
 def home():
     return render_template('home.html')
 
+@application.route('/login', methods=['GET','POST'])
+def login():
+    form = LoginForm()
+    if(form.validate_on_submit()):
+        login_user(User())
+        flask.flash("Login successful")
+        next = flask.request.args.get('next')
+        if not is_safe_url(next):
+            abort(400)
+        return flask.redirect(next or flask.url_for('index'))
+    return flask.render_template('login.html', form=form)
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -88,22 +101,22 @@ def create_canvas_account():
 
 def parse_arguments():
     '''
+    Docstring
+    ---------
     Stores command line arguments in global variables for easy access
     '''
     global environment
-    environment = args.environment.upper()
-    if (environment == None):
+    if(args.environment != None):
+        environment = args.environment.upper()
+    else:
         application.logger.info("environment could not be parsed, exiting.")
-        print("environment could not be parsed, exiting.")
+        application.logger.info("Use python3 application.py -env <Environment>")
         sys.exit(0)
 def main():
-    #Handle arguments parsed from the command line
     parse_arguments()
     if environment == 'DEVELOPMENT':
         application.logger.info("Starting development build")
         config = get_config('./config.yaml')
-
-        #Canvas config variables
         try:
             request_parameters = config['canvas']['request_parameters']
             course_ID = config['canvas']['course_ID']
@@ -111,8 +124,6 @@ def main():
         except KeyError as error:
             print('Could not find config key specified')
             raise error
-
-        #Google sheets config variables
         try:
             spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
             range_name = config['google_sheets']['sheet_range']
