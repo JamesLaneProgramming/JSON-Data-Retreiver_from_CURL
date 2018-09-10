@@ -1,17 +1,3 @@
-#!usr/bin/python
-from __future__ import print_function
-#Google OATH imports
-try:
-    from googleapiclient.discovery import build
-    from httplib2 import Http
-    from oauth2client import file, client, tools
-except Exception as error:
-    print('Please run the following command to install Google API modules:',
-          '\n')
-    print('pip3 install --upgrade google-api-python-client oauth2client')
-    raise error
-#End Google module imports
-
 import os
 from os import environ
 import yaml
@@ -19,20 +5,27 @@ import sys
 from functools import reduce
 import requests
 import json
-from flask import Flask, render_template, request, abort
+from flask import Flask, render_template, request, abort, session
 import argparse
 import logging
-from flask_login import *
-import User
+import flask_login
+from User import User, Login_Manager
+import database as db
+try:
+    import google_sheets_module as gsm
+except Exception as e:
+    raise e
 
 environment = None
-application = Flask(__name__, template_folder='templates')
 
-parser = argparse.ArgumentParser(description='Command line arguments')
-parser.add_argument('-env', 
-                    '--environment',
-                    help='Sets the environment for the program.')
-args = parser.parse_args()
+#Initialises the Flask application
+application = Flask(__name__, template_folder='templates')
+login_manager = flask_login.LoginManager()
+login_manager.init_app(application)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 @application.route('/')
 def home():
@@ -40,15 +33,24 @@ def home():
 
 @application.route('/login', methods=['GET','POST'])
 def login():
-    form = LoginForm()
-    if(form.validate_on_submit()):
-        login_user(User())
-        flask.flash("Login successful")
-        next = flask.request.args.get('next')
-        if not is_safe_url(next):
-            abort(400)
-        return flask.redirect(next or flask.url_for('index'))
-    return flask.render_template('login.html', form=form)
+    if(request.method == 'GET'):
+        if 'user_id' in session:
+            return "Already logged in"
+        return render_template('login.html')
+    else:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = Login_Manager.login_user(username, password)
+        if user:
+            return "User Logged in"
+        else:
+            return "No user was created"
+@application.route('/logout')
+@login_required
+def logout():
+    flask_login.logout_user()
+    return redirect('/')
+@login_required
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -65,6 +67,7 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     '''
 
+    #NOT SAFE AT ALL, WHY DID WE DO THIS. REQUIRE LOGIN TO USE THIS ENDPOINT.
     #Attempts to lead canvas_secret from environment
     try:
         _headers = environ.get('canvas_secret')
@@ -104,8 +107,20 @@ def parse_arguments():
     Docstring
     ---------
     Stores command line arguments in global variables for easy access
+    
+    For development purposes run:
+        <python3 application --environment development>
+    For production purposes run:
+        <python3 application --environment production>
     '''
     global environment
+    #Initialises argparse to handle command line arguments
+    parser = argparse.ArgumentParser(description='Handle command line arguments')
+    parser.add_argument('-env', 
+                        '--environment',
+                        help='Sets the environment for the application.')
+    args = parser.parse_args()
+
     if(args.environment != None):
         environment = args.environment.upper()
     else:
@@ -113,9 +128,11 @@ def parse_arguments():
         application.logger.info("Use python3 application.py -env <Environment>")
         sys.exit(0)
 def main():
+    #Handle the command line arguments
     parse_arguments()
     if environment == 'DEVELOPMENT':
         application.logger.info("Starting development build")
+        #Retrieve the local config file.
         config = get_config('./config.yaml')
         try:
             request_parameters = config['canvas']['request_parameters']
@@ -131,6 +148,12 @@ def main():
         except KeyError as error:
             print('could not find config key specified')
             raise error
+        application.logger.info('Starting development server')
+        #Retrieve config variables from Heroku
+        #config_variable = environ.get('')
+        application.debug = True
+        port = int(os.environ.get('PORT', 5000))
+        application.run(host='0.0.0.0', port=port)
     elif environment == 'PRODUCTION':
         application.logger.info('Starting production server')
         #Retrieve config variables from Heroku
@@ -176,35 +199,6 @@ def get_config(_dir):
         print('Could not find config file')
         sys.exit(0)
     return file_content
-
-def google_request(spreadsheet_ID, range_name, scope):
-    '''
-    Arguments
-    ---------
-    spreadsheet_ID(String):
-        Takes a string agrument that represents the google spreadsheet
-        identifier.
-    range_name(String):
-        Take a string argument that represents the google sheet ranges to
-        retreive data from. Format for the string is as follows:
-            '<sheet_name>!<start_range>:<end_range>'
-    scope(Google)
-    '''
-    store = file.Storage('token.json')
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('credentials.json', scope)
-        creds = tools.run_flow(flow, store)
-    service = build('sheets', 'v4', http=creds.authorize(Http()))
-
-    result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_ID,
-                                                range=range_name).execute()
-    sheet_data = result.get('values', [])
-    
-    if not sheet_data:
-        sys.exit()
-    else:
-        return sheet_data
 
 def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
     '''
