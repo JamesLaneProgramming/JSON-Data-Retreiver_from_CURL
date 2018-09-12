@@ -1,12 +1,5 @@
 import database as db
 
-class Login_Manager():
-    def login_user(username, password):
-        user = User()
-        user.user_id = db.get_user_id(username, password)
-        print(user.user_id)
-        return user
-
 class User():
     def __init__(self, user_id):
         user.id = user_id
@@ -67,7 +60,15 @@ class User():
             print("Could not convert user id to unicode ID")
             raise error
     def get(user_id):
-        user_data = db.get_user(user_id)
-        user = User(user_id)
-        return user
         #gets a specific user from the database with the id.
+        user_data = db.get_user(user_id)
+        if(user_data == None):
+            return None
+        else:
+            user = User(user_id)
+            return user
+    def get_user(username, password):
+        user_id = db.get_user_id(username, password)
+        user = User(user_id)
+        user.is_authenticated = True
+        return user

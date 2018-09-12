@@ -5,11 +5,12 @@ import sys
 from functools import reduce
 import requests
 import json
-from flask import Flask, render_template, request, abort, session
+import flask
+from flask import render_template
 import argparse
 import logging
 import flask_login
-from User import User, Login_Manager
+from User import User
 import database as db
 try:
     import google_sheets_module as gsm
@@ -19,7 +20,7 @@ except Exception as e:
 environment = None
 
 #Initialises the Flask application
-application = Flask(__name__, template_folder='templates')
+application = flask.Flask(__name__, template_folder='templates')
 login_manager = flask_login.LoginManager()
 login_manager.init_app(application)
 
@@ -33,18 +34,14 @@ def home():
 
 @application.route('/login', methods=['GET','POST'])
 def login():
-    if(request.method == 'GET'):
-        if 'user_id' in session:
-            return "Already logged in"
+    if(flask.request.method == 'GET'):
         return render_template('login.html')
     else:
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = Login_Manager.login_user(username, password)
-        if user:
-            return "User Logged in"
-        else:
-            return "No user was created"
+        print(flask.request.form['username_field'])
+        current_user = User.get_user(flask.request.args.get('username'),
+                                     flask.request.args.get('password'))
+        #If current_user us None, "could not find user"; register?
+        flask_login.login_user(current_user)
 @application.route('/logout')
 def logout():
     flask_login.logout_user()
@@ -147,7 +144,7 @@ def main():
             print('could not find config key specified')
             raise error
 
-        print (retrieve_submission(109, 620, canvas_bearer_token).text)
+        print (retrieve_submission(109, 634, canvas_bearer_token).text)
         application.logger.info('Starting development server')
         #Retrieve config variables from Heroku
         #config_variable = environ.get('')
@@ -308,7 +305,7 @@ def retrieve_submission(course_ID, assessment_ID, _headers, student_IDs = 'all')
     print(parameters)
     #404: while(1);{"errors":[{"message":"The specified resource does not exist."}],"error_report_id":3556}
     #401: {"status":"unauthorised","errors":[{"message":"user not authorised to perform that action"}]}
-    url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/students/submissions'.format(course_ID)
+    url = 'https://coderacademy.beta.instructure.com/api/v1/courses/{0}/students/submissions'.format(course_ID)
     request = requests.get(url, headers = _headers, data = parameters)
     return request
 if __name__ == "__main__":
