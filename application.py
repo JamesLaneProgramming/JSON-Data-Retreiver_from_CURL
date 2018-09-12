@@ -46,11 +46,9 @@ def login():
         else:
             return "No user was created"
 @application.route('/logout')
-@login_required
 def logout():
     flask_login.logout_user()
     return redirect('/')
-@login_required
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -148,6 +146,8 @@ def main():
         except KeyError as error:
             print('could not find config key specified')
             raise error
+
+        print (retrieve_submission(109, 620, canvas_bearer_token).text)
         application.logger.info('Starting development server')
         #Retrieve config variables from Heroku
         #config_variable = environ.get('')
@@ -277,5 +277,39 @@ def update_canvas_email(student_ID, email, _headers):
                                                                                   student_ID, 
                                                                                   update_request.status_code
                                                                                  ))
+def retrieve_submission(course_ID, assessment_ID, _headers, student_IDs = 'all'):
+    '''
+    Docstring
+    ---------
+    Retrieves specified assessment submissions.
+    
+    Arguments
+    ---------
+    course_ID(String):
+        course_ID specifies which course submissions will be retrieved from.
+    assessment_ID(String):
+        assessment_ID specifies which assessment submissions will be retrieved
+        from.
+    student_IDs(String):
+        student_IDs specify from which students submissions will be retrieved.
+        Default will return all students that match course_ID and assessment_ID
+    _headers(JSON):
+        _headers specifies request parameters.
+    
+    Returns
+    -------
+    request:
+        Returns the request object.
+    '''
+    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
+    parameters = {'student_ids[]': '{0}'.format(student_IDs), 
+                  'assignment_ids[]': '{0}'.format(assessment_ID),
+                  'include[]': 'rubric_assessment'}
+    print(parameters)
+    #404: while(1);{"errors":[{"message":"The specified resource does not exist."}],"error_report_id":3556}
+    #401: {"status":"unauthorised","errors":[{"message":"user not authorised to perform that action"}]}
+    url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/students/submissions'.format(course_ID)
+    request = requests.get(url, headers = _headers, data = parameters)
+    return request
 if __name__ == "__main__":
     main()
