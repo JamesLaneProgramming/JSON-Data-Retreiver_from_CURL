@@ -2,7 +2,7 @@ import database as db
 
 class User():
     def __init__(self, user_id):
-        user.id = user_id
+        self.id = user_id
     @property
     def is_authenticated(self):
         '''
@@ -60,7 +60,21 @@ class User():
             print("Could not convert user id to unicode ID")
             raise error
     def get(user_id):
-        #gets a specific user from the database with the id.
+        '''
+        Docstring
+        ---------
+        get() queries the database and returns a User object.
+
+        Arguments
+        ---------
+        user_id(String):
+            Takes an ID of a student and returns the User object associated.
+
+        Returns
+        -------
+        user(User):
+            Returns a User object that is associated with the user_ID argument
+        '''
         user_data = db.get_user(user_id)
         if(user_data == None):
             return None

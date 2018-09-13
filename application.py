@@ -37,9 +37,9 @@ def login():
     if(flask.request.method == 'GET'):
         return render_template('login.html')
     else:
-        print(flask.request.form['username_field'])
-        current_user = User.get_user(flask.request.args.get('username'),
-                                     flask.request.args.get('password'))
+        print(flask.request.values)
+        current_user = User.get_user(flask.request.form.get('user'),
+                                     flask.request.form.get('pass'))
         #If current_user us None, "could not find user"; register?
         flask_login.login_user(current_user)
 @application.route('/logout')
@@ -302,7 +302,6 @@ def retrieve_submission(course_ID, assessment_ID, _headers, student_IDs = 'all')
     parameters = {'student_ids[]': '{0}'.format(student_IDs), 
                   'assignment_ids[]': '{0}'.format(assessment_ID),
                   'include[]': 'rubric_assessment'}
-    print(parameters)
     #404: while(1);{"errors":[{"message":"The specified resource does not exist."}],"error_report_id":3556}
     #401: {"status":"unauthorised","errors":[{"message":"user not authorised to perform that action"}]}
     url = 'https://coderacademy.beta.instructure.com/api/v1/courses/{0}/students/submissions'.format(course_ID)
