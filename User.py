@@ -15,7 +15,7 @@ class User():
             Returns True if the user has provided valid credentials.
             Returns False if the user's credentials are invalid.
         '''
-        return True
+        return self.is_authenticated
     @property
     def is_active(self):
         '''
@@ -29,7 +29,7 @@ class User():
             Returns False if the user's account has been
             deactivated(Restrictions in place).
         '''
-        return True
+        return self.is_active
     @property
     def is_anonymous(self):
         '''
@@ -41,7 +41,7 @@ class User():
             Returns True if the user is an anonymous user.
             Returns False if the user is authenticated.
         '''
-        return False
+        return is_anonymous
     def get_id(self):
         '''
         Docstring
@@ -82,7 +82,24 @@ class User():
             user = User(user_id)
             return user
     def get_user(username, password):
+        '''
+        Docstring
+        ---------
+        get_user() returns a user object based on a username/password pair.
+
+        Arguments
+        ---------
+        username(String):
+            Takes a String that represents a User's username
+        password(String):
+            Takes a String that represents a User's password
+
+        Returns
+        -------
+        user(User):
+            Returns a user if the username/password login pair are successful.
+            Returns None otherwise.
+        '''
         user_id = db.get_user_id(username, password)
         user = User(user_id)
-        user.is_authenticated = True
         return user
