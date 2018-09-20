@@ -1,6 +1,9 @@
 import database as db
 
 class User():
+    active = False
+    authenticated = False
+    anonymous = False
     def __init__(self, user_id):
         self.id = user_id
     @property
@@ -15,7 +18,7 @@ class User():
             Returns True if the user has provided valid credentials.
             Returns False if the user's credentials are invalid.
         '''
-        return self.is_authenticated
+        return self.authenticated
     @property
     def is_active(self):
         '''
@@ -29,7 +32,7 @@ class User():
             Returns False if the user's account has been
             deactivated(Restrictions in place).
         '''
-        return self.is_active
+        return self.active
     @property
     def is_anonymous(self):
         '''
@@ -41,7 +44,7 @@ class User():
             Returns True if the user is an anonymous user.
             Returns False if the user is authenticated.
         '''
-        return is_anonymous
+        return self.anonymous
     def get_id(self):
         '''
         Docstring

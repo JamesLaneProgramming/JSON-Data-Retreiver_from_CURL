@@ -143,8 +143,26 @@ def main():
         except KeyError as error:
             print('could not find config key specified')
             raise error
-
-        print (retrieve_submission(109, 634, canvas_bearer_token).text)
+        submission = retrieve_submission(109, 620, canvas_bearer_token).text
+        extract_rubric_data(submission)
+        
+        '''
+        #Ruby test
+        print (retrieve_submission(109, 172, canvas_bearer_token).text)
+        #Terminal App
+        print (retrieve_submission(109, 579, canvas_bearer_token).text)
+        #Portfolio
+        print (retrieve_submission(109, 587, canvas_bearer_token).text)
+        
+        #Term 2
+        #2SMP
+        print (retrieve_submission(109, 620, canvas_bearer_token).text)
+        #Discrete Maths
+        print (retrieve_submission(109, 188, canvas_bearer_token).text)
+        
+        #Term 3
+        print (retrieve_submission(109, 633, canvas_bearer_token).text)
+        '''
         application.logger.info('Starting development server')
         #Retrieve config variables from Heroku
         #config_variable = environ.get('')
@@ -307,5 +325,13 @@ def retrieve_submission(course_ID, assessment_ID, _headers, student_IDs = 'all')
     url = 'https://coderacademy.beta.instructure.com/api/v1/courses/{0}/students/submissions'.format(course_ID)
     request = requests.get(url, headers = _headers, data = parameters)
     return request
+
+def extract_rubric_data(submission_object):
+    json_data = json.loads(submission_object)
+    for each in json_data:
+        try:
+            print(each['rubric_assessment'])
+        except KeyError:
+            print("Submission does not have a rubric_assessment")
 if __name__ == "__main__":
     main()
