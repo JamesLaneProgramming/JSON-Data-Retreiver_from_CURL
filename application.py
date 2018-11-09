@@ -22,7 +22,6 @@ import json
 from flask import Flask, render_template, request, abort
 import argparse
 import logging
-from flask_login import *
 import User
 
 environment = None
@@ -40,6 +39,7 @@ def home():
 
 @application.route('/login', methods=['GET','POST'])
 def login():
+    '''
     form = LoginForm()
     if(form.validate_on_submit()):
         login_user(User())
@@ -49,6 +49,7 @@ def login():
             abort(400)
         return flask.redirect(next or flask.url_for('index'))
     return flask.render_template('login.html', form=form)
+    '''
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
