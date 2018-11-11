@@ -2,9 +2,10 @@
 from __future__ import print_function
 #Google OATH imports
 try:
-    from googleapiclient.discovery import build
-    from httplib2 import Http
-    from oauth2client import file, client, tools
+    pass
+    #from googleapiclient.discovery import build
+    #from httplib2 import Http
+    #from oauth2client import file, client, tools
 except Exception as error:
     print('Please run the following command to install Google API modules:',
           '\n')
@@ -14,7 +15,7 @@ except Exception as error:
 
 import os
 from os import environ
-import yaml
+#import yaml
 import sys
 from functools import reduce
 import requests
