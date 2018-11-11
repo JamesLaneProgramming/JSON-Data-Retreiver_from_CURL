@@ -91,6 +91,7 @@ def create_canvas_account():
     student_name = first_name + " " + last_name
     post_request = create_canvas_login(student_name, student_email,
                                            _headers)
+    '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
     if (post_request.status_code == 201):
@@ -100,6 +101,7 @@ def create_canvas_account():
         application.logger.info(post_request)
         return "Canvas account could not be created at this time...\
                 Please try again later or contact us for more information"
+    '''
 
 def parse_arguments():
     '''
