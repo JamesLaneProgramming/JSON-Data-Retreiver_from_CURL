@@ -40,6 +40,7 @@ def home():
 
 @application.route('/login', methods=['GET','POST'])
 def login():
+    pass
     '''
     form = LoginForm()
     if(form.validate_on_submit()):
@@ -87,6 +88,7 @@ def create_canvas_account():
             last_name = json_data['properties']['lastname']['value'] 
             student_email = json_data['properties']['email']['value']
         except KeyError as error:
+            application.logger.info("Could not extract json fields")
             abort(415)
     student_name = first_name + " " + last_name
     post_request = create_canvas_login(student_name, student_email,
