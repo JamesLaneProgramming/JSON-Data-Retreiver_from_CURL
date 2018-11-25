@@ -80,9 +80,11 @@ def create_canvas_account():
     #Attempts to load json data from student_data
     
     if not request.json:
+        #If the request has invalid json return 415 status code.
         abort(415)
     else:
         json_data = request.get_json()
+        application.logger.info(json_data)
         try:
             first_name = json_data['properties']['firstname']['value']
             last_name = json_data['properties']['lastname']['value'] 
@@ -90,6 +92,8 @@ def create_canvas_account():
         except KeyError as error:
             application.logger.info("Could not extract json fields")
             abort(415)
+        except Error as error:
+            application.logger.info(error)
     student_name = first_name + " " + last_name
     post_request = create_canvas_login(student_name, student_email,
                                            _headers)
@@ -124,22 +128,25 @@ def main():
         application.logger.info("Starting development build")
         config = get_config('./config.yaml')
         try:
-            request_parameters = config['canvas']['request_parameters']
+            try:
+                request_parameters = config['canvas']['request_parameters']
+            except Error as error:
+                application.logger.info("No additional request parameters were found")
             course_ID = config['canvas']['course_ID']
             canvas_bearer_token = config['canvas']['bearer_token']
         except KeyError as error:
-            print('Could not find config key specified')
+            print('Could not find Canvas config keys specified')
             raise error
         try:
             spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
             range_name = config['google_sheets']['sheet_range']
             scope = config['google_sheets']['scope']
         except KeyError as error:
-            print('could not find config key specified')
+            print('Could not find Google config keys specified')
             raise error
     elif environment == 'PRODUCTION':
         application.logger.info('Starting production server')
-        #Retrieve config variables from Heroku
+        #Retrieve config variables from Host environment
         #config_variable = environ.get('')
         application.debug = True
         port = int(os.environ.get('PORT', 5000))
