@@ -15,11 +15,7 @@ except Exception as error:
 
 import os
 from os import environ
-<<<<<<< HEAD
 import yaml
-=======
-#import yaml
->>>>>>> 6b12cdff27b9b6b2547bd3427bc8bda643a562fb
 import sys
 from functools import reduce
 import requests

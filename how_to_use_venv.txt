@@ -1,0 +1,13 @@
+To use a virtual environment for python3 you will need to install the python3-venv package by running:
+	sudo apt-get install python3-venv
+
+To create a virtual environment in your current directory, run:
+	python3 -m venv <name_of_virtual_env>
+
+To activate the virtual environment, run:
+	source <name_of_virtual_env>/bin/activate
+
+To install application requirements from a file in your virtual environment, from your application root, run:
+	pip3 install -r requirements.txt
+
+
