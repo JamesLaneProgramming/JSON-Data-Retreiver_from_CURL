@@ -15,7 +15,11 @@ except Exception as error:
 
 import os
 from os import environ
+<<<<<<< HEAD
 import yaml
+=======
+#import yaml
+>>>>>>> 6b12cdff27b9b6b2547bd3427bc8bda643a562fb
 import sys
 from functools import reduce
 import requests
@@ -97,7 +101,6 @@ def create_canvas_account():
     student_name = first_name + " " + last_name
     post_request = create_canvas_login(student_name, student_email,
                                            _headers)
-    return post_request
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
@@ -133,7 +136,7 @@ def main():
                 request_parameters = config['canvas']['request_parameters']
             except Error as error:
                 application.logger.info("No additional request parameters were found")
-            course_id = config['canvas']['course_id']
+            course_ID = config['canvas']['course_id']
             canvas_bearer_token = config['canvas']['bearer_token']
         except KeyError as error:
             print('Could not find Canvas config keys specified')
