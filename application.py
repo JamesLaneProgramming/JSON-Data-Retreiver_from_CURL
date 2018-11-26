@@ -24,7 +24,7 @@ from flask import Flask, render_template, request, abort
 from flask_login import LoginManager
 import argparse
 import logging
-import User
+from user_module import User
 import pymongo
 from pymongo import MongoClient
 
@@ -38,11 +38,20 @@ application.config['MONGO_URI'] = 'mongodb://localhost:27017/restdb'
 
 #Connects to the MongoDB database
 mongo_client = MongoClient('mongodb://localhost:27017/')
+#Creates the integration database if it doesn't exist
+integration_db = mongo_client.canvas_integration
+#Creates a users collection if it doesn't exist
+users_collection = integration_db.users
+#Inserts a test user into the collection
+users_collection.insert({"username": "James", "Password": "123"}) 
+#Test retrieving a user from the collection.
+print(users_collection.find_one({"username": "James"}))
 
 #Configure flask-login
 login_manager = LoginManager()
 login_manager.init_app(application)
 
+#user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
@@ -60,18 +69,20 @@ def home():
 
 @application.route('/login', methods=['GET','POST'])
 def login():
-    pass
-    '''
-    form = LoginForm()
-    if(form.validate_on_submit()):
-        login_user(User())
-        flask.flash("Login successful")
-        next = flask.request.args.get('next')
-        if not is_safe_url(next):
-            abort(400)
-        return flask.redirect(next or flask.url_for('index'))
-    return flask.render_template('login.html', form=form)
-    '''
+    if(request.method == 'POST'):
+        user = User.login(request.form['username'], request.form['password'])
+        print(user)
+        if(user != None):
+            return "Well done"
+        else:
+            return "No user was returned"
+    else:
+        return render_template('login.html')
+
+@application.route('/logout')
+def logout():
+    logout_user()
+    return redirect('/')
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''

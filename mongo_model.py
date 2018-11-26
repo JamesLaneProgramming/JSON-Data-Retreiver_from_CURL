@@ -7,4 +7,10 @@ integration_db = mongo_client.canvas_integration
 users_collection = integration_db.users
 users_collection.insert({"username": "James", "Password": "123"})
 
-print(users_collection.find_one({"username": "James"}))
+def get_user(username, password):
+    found_user = users_collection.find_one({"username": username, "password": password})
+    print(found_user)
+    return(found_user)
+
+def get_user_by_id(_id):
+    return users_collection.find_one({"_id": _id})
