@@ -26,8 +26,10 @@ import logging
 import User
 
 environment = None
+#Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
 
+#Handle command line arguments
 parser = argparse.ArgumentParser(description='Command line arguments')
 parser.add_argument('-env', 
                     '--environment',
@@ -68,7 +70,7 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     '''
 
-    #Attempts to lead canvas_secret from environment
+    #Attempt to load canvas_secret from environment
     try:
         _headers = environ.get('canvas_secret')
     except KeyError as error:
@@ -282,7 +284,7 @@ def create_canvas_login(student_name, student_email, _headers):
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
-    application.logger.info(post_request)
+    print(post_request)
 
 def update_canvas_email(student_ID, email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
