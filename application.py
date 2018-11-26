@@ -95,8 +95,9 @@ def create_canvas_account():
         except Error as error:
             application.logger.info(error)
     student_name = first_name + " " + last_name
-    post_request = create_canvas_login(student_name, student_email,
+    create_canvas_login(student_name, student_email,
                                            _headers)
+    return "Maybe"
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
@@ -281,7 +282,6 @@ def create_canvas_login(student_name, student_email, _headers):
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
-    return post_request
 
 def update_canvas_email(student_ID, email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
