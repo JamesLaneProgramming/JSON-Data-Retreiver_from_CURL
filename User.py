@@ -46,3 +46,10 @@ class User():
             The ID associated with the User account.
         '''
         pass
+    @classmethod
+    def get():
+        #Return MongoDB user from db
+        if True:
+            pass
+        if False:
+            return None

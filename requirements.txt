@@ -21,4 +21,4 @@ uritemplate==3.0.0
 urllib3==1.23
 Werkzeug==0.14.1
 pyyaml==3.13
-
+PyMongo==3.7.2

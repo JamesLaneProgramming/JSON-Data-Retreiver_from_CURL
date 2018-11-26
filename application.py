@@ -21,13 +21,31 @@ from functools import reduce
 import requests
 import json
 from flask import Flask, render_template, request, abort
+from flask_login import LoginManager
 import argparse
 import logging
 import User
+import pymongo
+from pymongo import MongoClient
 
 environment = None
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
+
+#Set config for MongoDB
+application.config['MONGO_DBNAME'] = 'restdb'
+application.config['MONGO_URI'] = 'mongodb://localhost:27017/restdb'
+
+#Connects to the MongoDB database
+mongo_client = MongoClient('mongodb://localhost:27017/')
+
+#Configure flask-login
+login_manager = LoginManager()
+login_manager.init_app(application)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 #Handle command line arguments
 parser = argparse.ArgumentParser(description='Command line arguments')
@@ -226,22 +244,28 @@ def google_request(spreadsheet_ID, range_name, scope):
     else:
         return sheet_data
 
-def canvas_request(canvas_bearer_token, course_ID, request_parameters=''):
+def canvas_API_request(canvas_URI, request_parameters=''):
     '''
     Docstring
+    https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}
     '''
+    #Setup headers
+    canvas_bearer_token = environ.get('canvas_secret')
     headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}'.format(course_ID,
-                                                                              request_parameters)
-    response = requests.get(url, headers=headers)
-    if not response:
-        print(response)
-        print("No data found at endpoint: {0}".format(url))
-        sys.exit()
-    else:
+    
+    #Request resource
+    response = requests.get(canvas_URI, headers=headers)
+    if response.status_code == 200:
+        print("Request successful")
         #Load the request data into a JSON object
-        canvas_data = json.loads(response.text)
-        return canvas_data
+        try:
+            resource_data = json.loads(response.text)
+            return resource_data
+        except ValueError as error:
+            #Return Unprocessable Entity response if JSON is invalid
+            abort(422)
+    elif response.status_code == 401:
+        print("Authorisation error, please check canvas_secret environment variable")
 
 def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Lambda to get student name from canvas for matching
