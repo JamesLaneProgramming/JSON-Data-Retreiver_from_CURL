@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 
+
 #Connects to the MongoDB database
 mongo_client = MongoClient('mongodb://localhost:27017/')
 #Attempt to reference database and create if not exists
@@ -13,3 +14,6 @@ def get_user(username, password):
 
 def get_user_by_id(_id):
     return users_collection.find_one({"_id": _id})
+
+def create_user(username, password):
+    users_collection.insert({"username": username, "password": 
