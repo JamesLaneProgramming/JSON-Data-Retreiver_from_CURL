@@ -21,7 +21,7 @@ from functools import reduce
 import requests
 import json
 from flask import Flask, flash, render_template, request, abort, redirect
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_user, login_required
 import argparse
 import logging
 from user_module import User
@@ -125,6 +125,7 @@ def login():
         return render_template('login.html')
 
 @application.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect('/')
