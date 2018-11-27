@@ -20,8 +20,8 @@ import sys
 from functools import reduce
 import requests
 import json
-from flask import Flask, render_template, request, abort
-from flask_login import LoginManager
+from flask import Flask, flash, render_template, request, abort, redirect
+from flask_login import LoginManager, login_user
 import argparse
 import logging
 from user_module import User
@@ -29,12 +29,10 @@ import pymongo
 from pymongo import MongoClient
 
 environment = None
-#Set the default folder for templates
-application = Flask(__name__, template_folder='templates')
 
 #Set config for MongoDB
-application.config['MONGO_DBNAME'] = 'restdb'
-application.config['MONGO_URI'] = 'mongodb://localhost:27017/restdb'
+application.config['MONGO_DBNAME'] = 'canvas_integration'
+application.config['MONGO_URI'] = 'mongodb://localhost:27017/canvas_integration'
 
 #Connects to the MongoDB database
 mongo_client = MongoClient('mongodb://localhost:27017/')
@@ -43,9 +41,9 @@ integration_db = mongo_client.canvas_integration
 #Creates a users collection if it doesn't exist
 users_collection = integration_db.users
 #Inserts a test user into the collection
-users_collection.insert({"username": "James", "Password": "123"}) 
+#users_collection.insert({"username": "James", "Password": "123"}) 
 #Test retrieving a user from the collection.
-print(users_collection.find_one({"username": "James"}))
+#print(users_collection.find_one({"username": "James"}))
 
 #Configure flask-login
 login_manager = LoginManager()
@@ -54,7 +52,8 @@ login_manager.init_app(application)
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    user = User.get(user_id)
+    return User(user.username, user_id) 
 
 #Handle command line arguments
 parser = argparse.ArgumentParser(description='Command line arguments')
@@ -63,6 +62,48 @@ parser.add_argument('-env',
                     help='Sets the environment for the program.')
 args = parser.parse_args()
 
+def main():
+    parse_arguments()
+    if environment == 'DEVELOPMENT':
+        application.logger.info("Starting development build")
+        config = get_config('./config.yaml')
+        try:
+            try:
+                request_parameters = config['canvas']['request_parameters']
+            except Error as error:
+                application.logger.info("No additional request parameters were found")
+            course_ID = config['canvas']['course_id']
+            canvas_bearer_token = config['canvas']['bearer_token']
+        except KeyError as error:
+            print('Could not find Canvas config keys specified')
+            raise error
+        try:
+            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
+            range_name = config['google_sheets']['sheet_range']
+            scope = config['google_sheets']['scope']
+        except KeyError as error:
+            print('Could not find Google config keys specified')
+        
+        application.debug = True
+        port = int(os.environ.get('PORT', 5000))
+        application.run(host='0.0.0.0', port=port)
+
+    elif environment == 'PRODUCTION':
+        application.logger.info('Starting production server')
+        #Retrieve config variables from Host environment
+        #config_variable = environ.get('')
+        application.debug = True
+        port = int(os.environ.get('PORT', 5000))
+        application.run(host='0.0.0.0', port=port)
+    else:
+        print('Environment parsed but does not match')
+        print('Posible environments are: development/production/testing')
+
+    #sheet_data = google_request(spreadsheet_ID, range_name, scope)
+    #canvas_data = canvas_request(canvas_bearer_token, course_ID,
+    #                             request_parameters)
+    #update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
+
 @application.route('/')
 def home():
     return render_template('home.html')
@@ -70,12 +111,16 @@ def home():
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
-        user = User.login(request.form['username'], request.form['password'])
-        print(user)
-        if(user != None):
-            return "Well done"
+        user = User.authenticate(request.form['username'], request.form['password'])
+        if(user.is_authenticated):
+            login_user(user)
+            flash('Logged in successfully.')
+            next = request.args.get('next')
+            if not is_safe_url(next):
+                return flask.abort(400)
+            #return redirect(request.headers['Referer'])
         else:
-            return "No user was returned"
+            return redirect('login', code=302)
     else:
         return render_template('login.html')
 
@@ -154,47 +199,6 @@ def parse_arguments():
         application.logger.info("environment could not be parsed, exiting.")
         application.logger.info("Use python3 application.py -env <Environment>")
         sys.exit(0)
-def main():
-    parse_arguments()
-    if environment == 'DEVELOPMENT':
-        application.logger.info("Starting development build")
-        config = get_config('./config.yaml')
-        try:
-            try:
-                request_parameters = config['canvas']['request_parameters']
-            except Error as error:
-                application.logger.info("No additional request parameters were found")
-            course_ID = config['canvas']['course_id']
-            canvas_bearer_token = config['canvas']['bearer_token']
-        except KeyError as error:
-            print('Could not find Canvas config keys specified')
-            raise error
-        try:
-            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
-            range_name = config['google_sheets']['sheet_range']
-            scope = config['google_sheets']['scope']
-        except KeyError as error:
-            print('Could not find Google config keys specified')
-        
-        application.debug = True
-        port = int(os.environ.get('PORT', 5000))
-        application.run(host='0.0.0.0', port=port)
-
-    elif environment == 'PRODUCTION':
-        application.logger.info('Starting production server')
-        #Retrieve config variables from Host environment
-        #config_variable = environ.get('')
-        application.debug = True
-        port = int(os.environ.get('PORT', 5000))
-        application.run(host='0.0.0.0', port=port)
-    else:
-        print('Environment parsed but does not match')
-        print('Posible environments are: development/production/testing')
-
-    #sheet_data = google_request(spreadsheet_ID, range_name, scope)
-    #canvas_data = canvas_request(canvas_bearer_token, course_ID,
-    #                             request_parameters)
-    #update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
 
 #Opens the YAML file at the specified directory and returns the YAML object.
 def get_config(_dir):
@@ -340,3 +344,5 @@ def update_canvas_email(student_ID, email, _headers):
                                                                                  ))
 if __name__ == "__main__":
     main()
+    #Set the default folder for templates
+    application = Flask(__name__, template_folder='templates')

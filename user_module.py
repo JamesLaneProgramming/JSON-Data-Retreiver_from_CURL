@@ -1,16 +1,26 @@
+from flask_login import UserMixin
 import mongo_model
 
-class User():
-    def __init__(self):
-        is_authenticated = False
-        is_active = False
-        is_anonymouse = False
-    def login(username, password):
-        if(mongo_model.get_user(username, password) != None):
-            user = User()
+class User(UserMixin):
+    is_authenticated = False
+    is_active = False
+    is_anonymous = False
+
+    def __init__(self, name, id):
+        self.name = name
+        self.id = id
+        #authenticate(username, password)
+    def load_user_details(self, user_details):
+        pass
+    def authenticate(username, password):
+        user_details = mongo_model.get_user(username, password)
+        if(user_details != None):
+            user = User(user_details['username'], user_details['_id'])
+            user.id = user_details['_id']
             user.is_authenticated = True
-            print(user.is_authenticated)
             return user
+        else:
+            print("No user found")
     '''
     Docstring: is_authenticated() checks whether the user's credetials
     are valid. is_authenticated() must equate to True as a criteria of
@@ -39,7 +49,7 @@ class User():
         Returns True if the user is an anonymous user.
         Returns False if the user is authenticated.
     '''
-    def get_id():
+    def get_id(self):
         '''
         Docstring
         ---------
@@ -49,10 +59,11 @@ class User():
         ID(Unicode String):
             The ID associated with the User account.
         '''
-        pass
+        return str(self.id).decode("utf-8")
 
-    @classmethod
     def get(user_id):
         #Return MongoDB user from db
-        if(mongo_model.get_user_by_id(user_id) != None):
-            self
+        user_details = mongo_model.get_user_by_id(user_id)
+        if(user_details != None):
+            return user_details
+
