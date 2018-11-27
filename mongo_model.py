@@ -16,4 +16,5 @@ def get_user_by_id(_id):
     return users_collection.find_one({"_id": _id})
 
 def create_user(username, password):
-    users_collection.insert({"username": username, "password": 
+    #TODO: encrypt password with hashing algorithm
+    users_collection.insert({"username": username, "password": password})

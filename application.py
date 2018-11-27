@@ -29,10 +29,16 @@ import pymongo
 from pymongo import MongoClient
 
 environment = None
-
+#Set the default folder for templates
+application = Flask(__name__, template_folder='templates')
+application.secret_key = 'super secret key'
+application.config['SESSION_TYPE'] = 'filesystem'
 #Set config for MongoDB
 application.config['MONGO_DBNAME'] = 'canvas_integration'
 application.config['MONGO_URI'] = 'mongodb://localhost:27017/canvas_integration'
+#Configure flask-login
+login_manager = LoginManager()
+login_manager.init_app(application)
 
 #Connects to the MongoDB database
 mongo_client = MongoClient('mongodb://localhost:27017/')
@@ -44,10 +50,6 @@ users_collection = integration_db.users
 #users_collection.insert({"username": "James", "Password": "123"}) 
 #Test retrieving a user from the collection.
 #print(users_collection.find_one({"username": "James"}))
-
-#Configure flask-login
-login_manager = LoginManager()
-login_manager.init_app(application)
 
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
@@ -112,12 +114,10 @@ def home():
 def login():
     if(request.method == 'POST'):
         user = User.authenticate(request.form['username'], request.form['password'])
-        if(user.is_authenticated):
+        if(user != None and user.is_authenticated):
             login_user(user)
             flash('Logged in successfully.')
-            next = request.args.get('next')
-            if not is_safe_url(next):
-                return flask.abort(400)
+            return redirect('/')
             #return redirect(request.headers['Referer'])
         else:
             return redirect('login', code=302)
@@ -344,5 +344,3 @@ def update_canvas_email(student_ID, email, _headers):
                                                                                  ))
 if __name__ == "__main__":
     main()
-    #Set the default folder for templates
-    application = Flask(__name__, template_folder='templates')
