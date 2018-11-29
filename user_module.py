@@ -1,26 +1,32 @@
 from flask_login import UserMixin
 import mongo_model
 
-class User(UserMixin):
-    is_authenticated = False
-    is_active = False
-    is_anonymous = False
+class User():
+    authenticated = False
+    active = False
+    anonymous = False
+    id = None
 
-    def __init__(self, name, id):
-        self.name = name
-        self.id = id
+    def is_authenticated(self):
+        return authenticated
+    def is_active(self):
+        return active
+    def is_anonymous(self):
+        return anonymous
+    def __init__(self):
+        pass
         #authenticate(username, password)
     def load_user_details(self, user_details):
-        pass
-    def authenticate(username, password):
+        self.id = user_details['_id']
+    def authenticate(self, username, password):
         user_details = mongo_model.get_user(username, password)
         if(user_details != None):
-            user = User(user_details['username'], user_details['_id'])
-            user.id = user_details['_id']
-            user.is_authenticated = True
-            return user
+            self.load_user_details(user_details)
+            self.authenticated = True
+            return self
         else:
             print("No user found")
+            return None
     '''
     Docstring: is_authenticated() checks whether the user's credetials
     are valid. is_authenticated() must equate to True as a criteria of
@@ -59,11 +65,17 @@ class User(UserMixin):
         ID(Unicode String):
             The ID associated with the User account.
         '''
-        return str(self.id).decode("utf-8")
+        return str(self.id)
 
     def get(user_id):
         #Return MongoDB user from db
         user_details = mongo_model.get_user_by_id(user_id)
         if(user_details != None):
-            return user_details
+            user = User()
+            user.load_user_details(user_details)
+            #Is the following line dangerous????
+            user.authenticated = True
+            return user
+        else:
+            print("No user with that id found")
 

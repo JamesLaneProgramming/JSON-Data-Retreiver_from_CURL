@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
 
 #Connects to the MongoDB database
 mongo_client = MongoClient('mongodb://localhost:27017/')
@@ -13,7 +13,11 @@ def get_user(username, password):
     return(found_user)
 
 def get_user_by_id(_id):
-    return users_collection.find_one({"_id": _id})
+    #Attempt to convert _id into an ObjectID for use with MongoDB fields
+    #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
+    o_id = ObjectId(_id)
+    user = users_collection.find_one({"_id": o_id})
+    return user
 
 def create_user(username, password):
     #TODO: encrypt password with hashing algorithm

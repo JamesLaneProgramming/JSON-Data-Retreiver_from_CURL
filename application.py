@@ -20,8 +20,8 @@ import sys
 from functools import reduce
 import requests
 import json
-from flask import Flask, flash, render_template, request, abort, redirect
-from flask_login import LoginManager, login_user, login_required
+from flask import Flask, flash, render_template, request, abort, redirect, url_for
+from flask_login import LoginManager, login_user, login_required, current_user
 import argparse
 import logging
 from user_module import User
@@ -38,6 +38,8 @@ application.config['MONGO_DBNAME'] = 'canvas_integration'
 application.config['MONGO_URI'] = 'mongodb://localhost:27017/canvas_integration'
 #Configure flask-login
 login_manager = LoginManager()
+login_manager.session_protection = 'strong'
+login_manager.login_view = 'login'
 login_manager.init_app(application)
 
 #Connects to the MongoDB database
@@ -54,8 +56,9 @@ users_collection = integration_db.users
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
+    print(user_id)
     user = User.get(user_id)
-    return User(user.username, user_id) 
+    return user
 
 #Handle command line arguments
 parser = argparse.ArgumentParser(description='Command line arguments')
@@ -113,11 +116,15 @@ def home():
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
-        user = User.authenticate(request.form['username'], request.form['password'])
+        user = User()
+        user.authenticate(request.form['username'], request.form['password'])
         if(user != None and user.is_authenticated):
-            login_user(user)
+            login_status = login_user(user, remember=True)
             flash('Logged in successfully.')
-            return redirect('/')
+            next = request.args.get('next')
+            # is_safe_url should check if the url is safe for redirects.
+            # See http://flask.pocoo.org/snippets/62/ for an example.
+            return redirect(next)
             #return redirect(request.headers['Referer'])
         else:
             return redirect('login', code=302)
@@ -129,6 +136,17 @@ def login():
 def logout():
     logout_user()
     return redirect('/')
+
+@application.route('/backup')
+@login_required
+def backup():
+    '''
+    Implement a text field and a sumbit button. Text field should contain a course ID.
+    '''
+    course_ID = 144
+    backup_URI = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users'.format(course_ID)
+    print(canvas_API_request())
+
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -174,7 +192,6 @@ def create_canvas_account():
     student_name = first_name + " " + last_name
     create_canvas_login(student_name, student_email,
                                            _headers)
-    return "Maybe"
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
@@ -260,15 +277,20 @@ def google_request(spreadsheet_ID, range_name, scope):
     else:
         return sheet_data
 
-def canvas_API_request(canvas_URI, request_parameters=''):
+def canvas_API_request(canvas_URI, *request_parameters):
     '''
     Docstring
     https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}
     '''
-    #Setup headers
+    #Retrieve canvas bearer token from environment variables.
     canvas_bearer_token = environ.get('canvas_secret')
+    #Setup request headers with auth token.
     headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
     
+    #Append optional parameters to the URI string.
+    if(request_parameters != None):
+        pass
+
     #Request resource
     response = requests.get(canvas_URI, headers=headers)
     if response.status_code == 200:
@@ -282,6 +304,9 @@ def canvas_API_request(canvas_URI, request_parameters=''):
             abort(422)
     elif response.status_code == 401:
         print("Authorisation error, please check canvas_secret environment variable")
+
+def canvas_API_post_request(canvas_URI, request_parameters=''):
+    pass
 
 def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Lambda to get student name from canvas for matching
