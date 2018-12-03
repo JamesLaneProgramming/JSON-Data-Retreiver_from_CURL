@@ -190,8 +190,9 @@ def create_canvas_account():
         except Error as error:
             application.logger.info(error)
     student_name = first_name + " " + last_name
-    create_canvas_login(student_name, student_email,
+    canvas_user = create_canvas_login(student_name, student_email,
                                            _headers)
+    print(canvas_user['id'])
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
@@ -337,9 +338,13 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                    )
 
 
-def enroll_canvas_student(student_ID, course_ID, _headers):
-    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
-    parameters = {'enrollment[user_id]': student_id}
+def enroll_canvas_student(student_ID, course_ID):
+    #Retrieve canvas bearer token from environment variables.
+    canvas_bearer_token = environ.get('canvas_secret')
+    #Setup request headers with auth token.
+    headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
+
+    parameters = {'enrollment[user_id]': student_ID}
     url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
     post_request = requests.post(url, headers = _headers, data = parameters)
     return post_request
@@ -349,7 +354,7 @@ def create_canvas_login(student_name, student_email, _headers):
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
-    print(post_request)
+    return post_request
 
 def update_canvas_email(student_ID, email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
