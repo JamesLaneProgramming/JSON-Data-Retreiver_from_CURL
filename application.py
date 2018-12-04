@@ -145,7 +145,8 @@ def backup():
     '''
     course_ID = 144
     backup_URI = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users'.format(course_ID)
-    print(canvas_API_request())
+    request = canvas_API_request(backup_URI)
+    return json.loads(request)
 
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
