@@ -146,7 +146,7 @@ def backup():
     course_ID = 144
     backup_URI = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users'.format(course_ID)
     request = canvas_API_request(backup_URI)
-    return json.loads(request)
+    return "Hello"
 
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
@@ -173,7 +173,6 @@ def create_canvas_account():
         internal server error
         '''
         abort(500)
-    #Attempts to load json data from student_data
     
     if not request.json:
         #If the request has invalid json return 415 status code.
@@ -191,8 +190,7 @@ def create_canvas_account():
         except Error as error:
             application.logger.info(error)
     student_name = first_name + " " + last_name
-    canvas_user = create_canvas_login(student_name, student_email,
-                                           _headers)
+    canvas_user = create_canvas_login(student_name, student_email)
     print(canvas_user)
     '''
     user_data = post_request.get_json()
@@ -284,10 +282,18 @@ def canvas_API_request(canvas_URI, *request_parameters):
     Docstring
     https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}
     '''
-    #Retrieve canvas bearer token from environment variables.
-    canvas_bearer_token = environ.get('canvas_secret')
+    #Attempt to load canvas_secret from environment
+    try:
+        canvas_bearer_token = environ.get('canvas_secret')
+    except KeyError as error:
+        '''
+        If canvas_secret token cannot be loaded from the server, return a 500
+        internal server error
+        '''
+        return abort(500)
+
     #Setup request headers with auth token.
-    headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
+    _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
     
     #Append optional parameters to the URI string.
     if(request_parameters != None):
@@ -351,8 +357,16 @@ def enroll_canvas_student(student_ID, course_ID):
     return post_request
 
 def create_canvas_login(student_name, student_email):
-    #Retrieve canvas bearer token from environment variables.
-    canvas_bearer_token = environ.get('canvas_secret')
+    #Attempt to load canvas_secret from environment
+    try:
+        canvas_bearer_token = environ.get('canvas_secret')
+    except KeyError as error:
+        '''
+        If canvas_secret token cannot be loaded from the server, return a 500
+        internal server error
+        '''
+        return abort(500)
+
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
 
