@@ -162,36 +162,24 @@ def create_canvas_account():
     -------
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
-    '''
-
-    #Attempt to load canvas_secret from environment
-    try:
-        _headers = environ.get('canvas_secret')
-    except KeyError as error:
-        '''
-        If canvas_secret token cannot be loaded from the server, return a 500
-        internal server error
-        '''
-        abort(500)
-    
+    '''  
     if not request.json:
         #If the request has invalid json return 415 status code.
         abort(415)
     else:
         json_data = request.get_json()
-        application.logger.info(json_data)
         try:
             first_name = json_data['properties']['firstname']['value']
             last_name = json_data['properties']['lastname']['value'] 
             student_email = json_data['properties']['email']['value']
         except KeyError as error:
-            application.logger.info("Could not extract json fields")
-            abort(415)
+            print("Could not extract json fields")
+            return abort(415)
         except Error as error:
-            application.logger.info(error)
+            print(error)
     student_name = first_name + " " + last_name
     canvas_user = create_canvas_login(student_name, student_email)
-    print(canvas_user)
+    return canvas_user
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
