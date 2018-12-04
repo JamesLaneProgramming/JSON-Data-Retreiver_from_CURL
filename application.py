@@ -343,15 +343,19 @@ def enroll_canvas_student(student_ID, course_ID):
     #Retrieve canvas bearer token from environment variables.
     canvas_bearer_token = environ.get('canvas_secret')
     #Setup request headers with auth token.
-    headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
+    _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
 
     parameters = {'enrollment[user_id]': student_ID}
     url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
     post_request = requests.post(url, headers = _headers, data = parameters)
     return post_request
 
-def create_canvas_login(student_name, student_email, _headers):
-    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
+def create_canvas_login(student_name, student_email):
+    #Retrieve canvas bearer token from environment variables.
+    canvas_bearer_token = environ.get('canvas_secret')
+    #Setup request headers with auth token.
+    _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
+
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
