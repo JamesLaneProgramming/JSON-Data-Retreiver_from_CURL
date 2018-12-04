@@ -179,7 +179,7 @@ def create_canvas_account():
             print(error)
     student_name = first_name + " " + last_name
     canvas_user = create_canvas_login(student_name, student_email)
-    return canvas_user.status_code
+    return str(canvas_user.status_code)
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
