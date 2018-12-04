@@ -42,17 +42,13 @@ login_manager.session_protection = 'strong'
 login_manager.login_view = 'login'
 login_manager.init_app(application)
 
-#Connects to the MongoDB database
-mongo_client = MongoClient('mongodb://localhost:27017/')
-#Creates the integration database if it doesn't exist
-integration_db = mongo_client.canvas_integration
-#Creates a users collection if it doesn't exist
-users_collection = integration_db.users
-#Inserts a test user into the collection
-#users_collection.insert({"username": "James", "Password": "123"}) 
-#Test retrieving a user from the collection.
-#print(users_collection.find_one({"username": "James"}))
-
+'''
+Notes:
+    https://blog.teamtreehouse.com/how-to-create-bulletproof-sessions
+    What parts of the website need access to the cookie?
+    Will the cookie need to work across sub domains?
+    Will the cookie need to persist if the user leaves an SSL portion of the site?
+'''    
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
@@ -178,6 +174,7 @@ def create_canvas_account():
         except Error as error:
             print(error)
     student_name = first_name + " " + last_name
+    #TODO YOU NEED TO CHECK IF THE USER ALREADY EXISTS
     canvas_user = create_canvas_login(student_name, student_email)
     print(canvas_user.text)
     return str(canvas_user.status_code)
