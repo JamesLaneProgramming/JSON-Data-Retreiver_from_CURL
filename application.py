@@ -193,7 +193,7 @@ def create_canvas_account():
     student_name = first_name + " " + last_name
     canvas_user = create_canvas_login(student_name, student_email,
                                            _headers)
-    print(canvas_user['id'])
+    print(canvas_user)
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
