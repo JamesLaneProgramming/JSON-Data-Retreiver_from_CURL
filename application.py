@@ -143,8 +143,11 @@ def backup():
     return "Hello"
 
 @application.route('/student_search')
+@login_required
 def student_search():
-    canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', request_parameters={'search_term': 'james.lane@coderacademy.edu.au'})
+    return canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', 
+            request_parameters={'search_term': 'james.lane@coderacademy.edu.au'})
+
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -315,11 +318,11 @@ def canvas_API_request(canvas_URI, request_parameters=None):
     response = requests.get(canvas_URI, headers=_headers)
     if response.status_code == 200:
         print("Request successful")
-        return response.text
     elif response.status_code == 401:
-        return "Authorisation error, please check canvas_secret environment variable"
+        print("Authorisation error, please check canvas_secret environment variable")
     else:
-        return str(response.text)
+        print(response.status_code)
+    return response
 
 def canvas_API_post_request(canvas_URI, request_parameters=''):
     pass
