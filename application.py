@@ -48,7 +48,7 @@ Notes:
     What parts of the website need access to the cookie?
     Will the cookie need to work across sub domains?
     Will the cookie need to persist if the user leaves an SSL portion of the site?
-'''    
+'''
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
@@ -87,7 +87,6 @@ def main():
         application.debug = True
         port = int(os.environ.get('PORT', 5000))
         application.run(host='0.0.0.0', port=port)
-
     elif environment == 'PRODUCTION':
         application.logger.info('Starting production server')
         #Retrieve config variables from Host environment
@@ -143,6 +142,9 @@ def backup():
     request = canvas_API_request(backup_URI)
     return "Hello"
 
+@application.route('/student_search')
+def student_search():
+    canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', {'search_term': 'james.lane@coderacademy.edu.au'})
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -302,8 +304,13 @@ def canvas_API_request(canvas_URI, *request_parameters):
     
     #Append optional parameters to the URI string.
     if(request_parameters != None):
-        pass
-
+        query_string = None
+        for each_key, each_value in request_parameters.items():
+            if query_string is None:
+                query_string = '?{0}={1}'.format(each_key, each_value)
+            else:
+                query_string = '{0}&{1}={2}'.format(query_string, each_key, each_value)
+        canvas_URI = canvas_URI + query_string
     #Request resource
     response = requests.get(canvas_URI, headers=headers)
     if response.status_code == 200:
@@ -311,6 +318,7 @@ def canvas_API_request(canvas_URI, *request_parameters):
         #Load the request data into a JSON object
         try:
             resource_data = json.loads(response.text)
+            print(resource_data)
             return resource_data
         except ValueError as error:
             #Return Unprocessable Entity response if JSON is invalid
