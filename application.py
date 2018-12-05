@@ -191,6 +191,7 @@ def create_canvas_account():
         try:
             student_details = json.loads(creation_response.text)
             enrollment_response = enroll_canvas_student(course_ID, student_details['id'], section_ID)
+            print(enrollment_response.text)
         except Exception as error:
             raise error
         #TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
