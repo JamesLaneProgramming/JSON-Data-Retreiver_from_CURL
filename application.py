@@ -70,7 +70,7 @@ def main():
         try:
             try:
                 request_parameters = config['canvas']['request_parameters']
-            except Error as error:
+            except Exception as error:
                 application.logger.info("No additional request parameters were found")
             course_ID = config['canvas']['course_id']
             canvas_bearer_token = config['canvas']['bearer_token']
@@ -162,7 +162,7 @@ def create_canvas_account():
     #Extract the course_ID from the URL string.
     try:
         course_ID = request.get('course_id')
-    except Error as error:
+    except Exception as error:
         raise error
     
     #Validate POST payload
@@ -178,7 +178,7 @@ def create_canvas_account():
         except KeyError as error:
             print("Could not extract json fields")
             return abort(415)
-        except Error as error:
+        except Exception as error:
             print(error)
     #Concatenate student_name from json data.
     student_name = first_name + " " + last_name
@@ -189,7 +189,7 @@ def create_canvas_account():
     elif(creation_response.status_code == 200):
         try:
             enrollment_response = enroll_canvas_student(course_ID, creation_response['id'])
-        except Error as error:
+        except Exception as error:
             raise error
         #TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
         #This ID will be used to enroll the student in selected course.
