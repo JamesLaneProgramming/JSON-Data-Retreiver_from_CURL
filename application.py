@@ -188,7 +188,8 @@ def create_canvas_account():
         print("The user already exists")
     elif(creation_response.status_code == 200):
         try:
-            enrollment_response = enroll_canvas_student(course_ID, creation_response['id'])
+            student_details = json.loads(creation_response.text)
+            enrollment_response = enroll_canvas_student(course_ID, student_details['id'])
         except Exception as error:
             raise error
         #TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
