@@ -284,7 +284,7 @@ def google_request(spreadsheet_ID, range_name, scope):
     else:
         return sheet_data
 
-def canvas_API_request(canvas_URI, *request_parameters):
+def canvas_API_request(canvas_URI, request_parameters=None):
     '''
     Docstring
     https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}
