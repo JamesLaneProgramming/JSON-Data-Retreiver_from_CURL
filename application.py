@@ -161,7 +161,7 @@ def create_canvas_account():
     '''  
     #Extract the course_ID from the URL string.
     try:
-        course_ID = request.get('course_id')
+        course_ID = request.args.get('course_id')
     except Exception as error:
         raise error
     
