@@ -80,6 +80,7 @@ class User():
             print("No user with that id found")
     def create(username, password):
         user_details = mongo_model.create_user(username, password)
+        print(user_details)
         if(user_details != None):
             user = User()
             user.load_user_details(user_details)
