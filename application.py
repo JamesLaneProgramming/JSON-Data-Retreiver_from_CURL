@@ -144,7 +144,7 @@ def backup():
 
 @application.route('/student_search')
 def student_search():
-    canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', {'search_term': 'james.lane@coderacademy.edu.au'})
+    canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', request_parameters={'search_term': 'james.lane@coderacademy.edu.au'})
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
