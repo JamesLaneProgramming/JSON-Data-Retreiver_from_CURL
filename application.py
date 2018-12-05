@@ -113,7 +113,7 @@ def signup():
         username = request.form['username']
         password = request.form['password']
         new_user = User.create(username, password)
-        return redirect('/', code=200)
+        return redirect('/')
     else:
         return render_template('signup.html')
 
@@ -394,7 +394,7 @@ def create_canvas_login(student_name, student_email):
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
 
-    parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email}
+    parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': '12345678'}
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
     return post_request
