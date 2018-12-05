@@ -322,9 +322,11 @@ def canvas_API_request(canvas_URI, request_parameters=None):
             return resource_data
         except ValueError as error:
             #Return Unprocessable Entity response if JSON is invalid
-            abort(422)
+            return abort(422)
     elif response.status_code == 401:
-        print("Authorisation error, please check canvas_secret environment variable")
+        return "Authorisation error, please check canvas_secret environment variable"
+    else:
+        return response
 
 def canvas_API_post_request(canvas_URI, request_parameters=''):
     pass
