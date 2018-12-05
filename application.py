@@ -162,6 +162,7 @@ def create_canvas_account():
     #Extract the course_ID from the URL string.
     try:
         course_ID = request.args.get('course_id')
+        section_ID = request.args.get('section_id')
     except Exception as error:
         raise error
     
@@ -189,7 +190,7 @@ def create_canvas_account():
     elif(creation_response.status_code == 200):
         try:
             student_details = json.loads(creation_response.text)
-            enrollment_response = enroll_canvas_student(course_ID, student_details['id'])
+            enrollment_response = enroll_canvas_student(course_ID, student_details['id'], section_id)
         except Exception as error:
             raise error
         #TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
@@ -348,16 +349,19 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                    )
 
 
-def enroll_canvas_student(course_ID, student_ID):
+def enroll_canvas_student(course_ID, student_ID, section_ID=None):
     #Retrieve canvas bearer token from environment variables.
     canvas_bearer_token = environ.get('canvas_secret')
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-
-    parameters = {'enrollment[user_id]': student_ID}
-    url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
-    post_request = requests.post(url, headers = _headers, data = parameters)
-    return post_request
+    
+    if section_ID:
+        parameters = {'enrollment[user_id]': student_ID, 'enrollment[type]': 'Student_Enrollment', 'enrollment[course_section_id]': section_ID}
+        url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
+        post_request = requests.post(url, headers = _headers, data = parameters)
+        return post_request
+    else:
+        return "No section_ID provided"
 
 def create_canvas_login(student_name, student_email):
     #Attempt to load canvas_secret from environment
