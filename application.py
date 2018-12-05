@@ -109,8 +109,13 @@ def home():
 
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
-    new_user = User.create("James", "testing")
-    return redirect('/', code=200)
+    if(request.method == 'POST'):
+        username = request.form['username']
+        password = request.form['password']
+        new_user = User.create(username, password)
+        return redirect('/', code=200)
+    else:
+        return render_template('signup.html')
 
 @application.route('/login', methods=['GET','POST'])
 def login():
