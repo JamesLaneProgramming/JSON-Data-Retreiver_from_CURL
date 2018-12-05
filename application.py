@@ -35,7 +35,7 @@ application.secret_key = 'super secret key'
 application.config['SESSION_TYPE'] = 'filesystem'
 #Set config for MongoDB
 application.config['MONGO_DBNAME'] = 'canvas_integration'
-application.config['MONGO_URI'] = 'mongodb://localhost:27017/canvas_integration'
+application.config['MONGO_URI'] = 'mongodb://<dbuser>:<dbpassword>@ds125684.mlab.com:25684/canvas_integration'
 #Configure flask-login
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
