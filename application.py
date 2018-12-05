@@ -315,16 +315,7 @@ def canvas_API_request(canvas_URI, request_parameters=None):
     response = requests.get(canvas_URI, headers=_headers)
     if response.status_code == 200:
         print("Request successful")
-        #Load the request data into a JSON object
-        try:
-            resource_data = json.loads(response.text)
-            print(resource_data)
-            print("^^ RESOURCE DATA")
-            return str(resource_data)
-        except ValueError as error:
-            #Return Unprocessable Entity response if JSON is invalid
-            return abort(422)
-        print("^^RETURNED DATA")
+        return response.text
     elif response.status_code == 401:
         return "Authorisation error, please check canvas_secret environment variable"
     else:
