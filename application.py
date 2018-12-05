@@ -313,6 +313,8 @@ def canvas_API_request(canvas_URI, request_parameters=None):
         canvas_URI = canvas_URI + query_string
     #Request resource
     response = requests.get(canvas_URI, headers=_headers)
+    print(response)
+    return str(response.status_code)
     if response.status_code == 200:
         print("Request successful")
         #Load the request data into a JSON object
