@@ -14,7 +14,7 @@ users_collection = integration_db.users
 #users_collection.insert({"username": "James", "password": "123"})
 
 def get_user(username, password):
-    found_user = users_collection.find_one({"username": username, "Password": password})
+    found_user = users_collection.find_one({"Username": username, "Password": password})
     return(found_user)
 
 def get_user_by_id(_id):
@@ -26,4 +26,4 @@ def get_user_by_id(_id):
 
 def create_user(username, password):
     #TODO: encrypt password with hashing algorithm
-    users_collection.insert({"username": username, "password": password})
+    users_collection.insert({"Username": username, "Password": password})

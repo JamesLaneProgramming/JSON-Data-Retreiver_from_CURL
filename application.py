@@ -107,6 +107,10 @@ def main():
 def home():
     return render_template('home.html')
 
+@application.route('/signup', methods=['GET', 'POST'])
+def signup():
+    User.create_user("James", "testing")
+
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
