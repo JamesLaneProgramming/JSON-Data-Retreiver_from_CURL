@@ -52,7 +52,6 @@ Notes:
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
-    print(user_id)
     user = User.get(user_id)
     return user
 
@@ -158,10 +157,18 @@ def create_canvas_account():
     -------
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
+    Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''  
+    #Extract the course_ID from the URL string.
+    try:
+        course_ID = request.get('course_id')
+    except Error as error:
+        raise error
+    
+    #Validate POST payload
     if not request.json:
         #If the request has invalid json return 415 status code.
-        abort(415)
+        return abort(415)
     else:
         json_data = request.get_json()
         try:
@@ -173,11 +180,20 @@ def create_canvas_account():
             return abort(415)
         except Error as error:
             print(error)
+    #Concatenate student_name from json data.
     student_name = first_name + " " + last_name
     #TODO YOU NEED TO CHECK IF THE USER ALREADY EXISTS
-    canvas_user = create_canvas_login(student_name, student_email)
-    print(canvas_user.text)
-    return str(canvas_user.status_code)
+    creation_response = create_canvas_login(student_name, student_email)
+    if(creation_response.status_code == 400):
+        print("The user already exists")
+    elif(creation_response.status_code == 200):
+        try:
+            enrollment_response = enroll_canvas_student(course_ID, creation_response['id'])
+        except Error as error:
+            raise error
+        #TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
+        #This ID will be used to enroll the student in selected course.
+    return str(enrollment_response.status_code)
     '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
@@ -331,7 +347,7 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                    )
 
 
-def enroll_canvas_student(student_ID, course_ID):
+def enroll_canvas_student(course_ID, student_ID):
     #Retrieve canvas bearer token from environment variables.
     canvas_bearer_token = environ.get('canvas_secret')
     #Setup request headers with auth token.
