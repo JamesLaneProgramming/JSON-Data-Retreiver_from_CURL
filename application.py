@@ -350,14 +350,14 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                    )
 
 
-def enroll_canvas_student(course_ID, student_ID, section_ID=None):
+def enroll_canvas_student(course_ID, student_ID, section_ID):
     #Retrieve canvas bearer token from environment variables.
     canvas_bearer_token = environ.get('canvas_secret')
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
     
     if section_ID:
-        parameters = {'enrollment[user_id]': student_ID, 'enrollment[type]': 'Student_Enrollment', 'enrollment[course_section_id]': section_ID}
+        parameters = {'enrollment[user_id]': str(student_ID), 'enrollment[course_section_id]': int(section_ID)}
         url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
         post_request = requests.post(url, headers = _headers, data = parameters)
         return post_request
