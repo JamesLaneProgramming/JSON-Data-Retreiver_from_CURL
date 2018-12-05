@@ -1,10 +1,11 @@
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from os import environ
 
 #Connects to the MongoDB database
 mongo_client = MongoClient('ds125684.mlab.com:25684', 
         username='James', 
-        password='Loveofsongs238', 
+        password=environ.get('mongoDB_Password'), 
         authSource='canvas_integration', 
         authMechanism='SCRAM-SHA-1')
 #Attempt to reference database and create if not exists
