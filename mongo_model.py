@@ -20,6 +20,7 @@ def get_user(username, password):
 def get_user_by_id(_id):
     #Attempt to convert _id into an ObjectID for use with MongoDB fields
     #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
+    print(_id)_
     o_id = ObjectId(_id)
     if o_id is None:
         print("ObjectID is None")
