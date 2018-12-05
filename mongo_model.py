@@ -2,7 +2,11 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 #Connects to the MongoDB database
-mongo_client = MongoClient('ds125684.mlab.com:25684', username='James', password='Loveofsongs238')
+mongo_client = MongoClient('ds125684.mlab.com:25684', 
+        username='James', 
+        password='Loveofsongs238', 
+        authSource='canvas_integration', 
+        authMechanism='SCRAM-SHA-1')
 #Attempt to reference database and create if not exists
 integration_db = mongo_client.canvas_integration
 users_collection = integration_db.users
