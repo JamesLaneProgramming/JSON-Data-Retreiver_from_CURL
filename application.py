@@ -121,8 +121,9 @@ def student_search():
     if(request.method == 'POST'):
         try:
             search_term = request.args.get('search_term')
-            return canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', 
-                request_parameters={'search_term': search_term})
+            canvas_request = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', 
+                    request_parameters={'search_term': search_term})
+            return canvas_request.text
         except Exception as error:
             raise error
     else:
