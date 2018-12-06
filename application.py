@@ -33,12 +33,12 @@ environment = None
 application = Flask(__name__, template_folder='templates')
 application.secret_key = 'super secret key'
 application.config['SESSION_TYPE'] = 'filesystem'
-#Set config for MongoDB
-application.config['MONGO_DBNAME'] = 'canvas_integration'
-application.config['MONGO_URI'] = 'mongodb://<dbuser>:<dbpassword>@ds125684.mlab.com:25684/canvas_integration'
+
 #Configure flask-login
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
+
+#Redirect to login view when a user has yet to authenticate.
 login_manager.login_view = 'login'
 login_manager.init_app(application)
 
@@ -55,15 +55,17 @@ def load_user(user_id):
     user = User.get(user_id)
     return user
 
+'''
+Command line archived code:
 #Handle command line arguments
 parser = argparse.ArgumentParser(description='Command line arguments')
 parser.add_argument('-env', 
                     '--environment',
                     help='Sets the environment for the program.')
 args = parser.parse_args()
-
+'''
 def main():
-    parse_arguments()
+    #parse_arguments()
     if environment == 'DEVELOPMENT':
         application.logger.info("Starting development build")
         config = get_config('./config.yaml')
@@ -152,12 +154,19 @@ def backup():
     request = canvas_API_request(backup_URI)
     return "Hello"
 
-@application.route('/student_search')
+@application.route('/student_search', methods=['GET', 'POST'])
 @login_required
 def student_search():
-    return canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', 
-            request_parameters={'search_term': 'james.lane@coderacademy.edu.au'})
-
+    if(request.method == 'POST'):
+        try:
+            search_term = request.args.get('search_term')
+            return canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', 
+                request_parameters={'search_term': search_term})
+        except Exception as error:
+            raise error
+    else:
+        #TODO: Create the student search template
+        return render_template('student_search.html')
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
@@ -202,6 +211,7 @@ def create_canvas_account():
     creation_response = create_canvas_login(student_name, student_email)
     if(creation_response.status_code == 400):
         print("The user already exists")
+
     elif(creation_response.status_code == 200):
         try:
             student_details = json.loads(creation_response.text)
@@ -252,10 +262,13 @@ def get_config(_dir):
         Reads the file specified by the _dir string and returns the contents
         using yaml.load(). Alternatively you could use yaml.safe_load().
     '''
+    file_content = None
+    #Check if the directory method argument exists in the current filesystem.
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
             try:
-                print('Token file accessed and read')
+                print('config accessed and read')
+                #Load the configuration into a scriptable object.
                 file_content = yaml.load(config_file)
             except IOError as error:
                 raise error
@@ -263,10 +276,16 @@ def get_config(_dir):
             except EOFError as error:
                 raise error
                 sys.exit(0)
+            except ImportError as error:
+                print("YAML module could not be imported, please ensure that YAML module has been installed and is in the requirements.txt file")
+            except Exception as error:
+                raise error
+            if(file_content != None):
+                return file_content
+            else:
+                print("Could not load configuration from file but no errors were thrown")
     else:
-        print('Could not find config file')
-        sys.exit(0)
-    return file_content
+        print('_dir method argument is not a valid directory in the current filesystem')
 
 def google_request(spreadsheet_ID, range_name, scope):
     '''
