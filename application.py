@@ -372,16 +372,7 @@ def enroll_canvas_student(course_ID, student_ID, section_ID):
         return "No section_ID provided"
 
 def create_canvas_login(student_name, student_email):
-    #Attempt to load canvas_secret from environment
-    try:
-        canvas_bearer_token = environ.get('canvas_secret')
-    except KeyError as error:
-        '''
-        If canvas_secret token cannot be loaded from the server, return a 500
-        internal server error
-        '''
-        return abort(500)
-
+    '''
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
 
@@ -389,6 +380,7 @@ def create_canvas_login(student_name, student_email):
     url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
     return post_request
+    '''
 
 def update_canvas_email(student_ID, email, _headers):
     _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
