@@ -1,17 +1,17 @@
-#!usr/bin/python
 from __future__ import print_function
+'''
 #Google OATH imports
 try:
-    pass
-    #from googleapiclient.discovery import build
-    #from httplib2 import Http
-    #from oauth2client import file, client, tools
+    from googleapiclient.discovery import build
+    from httplib2 import Http
+    from oauth2client import file, client, tools
 except Exception as error:
     print('Please run the following command to install Google API modules:',
           '\n')
     print('pip3 install --upgrade google-api-python-client oauth2client')
     raise error
 #End Google module imports
+'''
 
 import os
 from os import environ
@@ -70,6 +70,8 @@ def signup():
     if(request.method == 'POST'):
         username = request.form['username']
         password = request.form['password']
+        assert username is not None
+        assert password is not None
         new_user = User.create(username, password)
         return redirect('/')
     else:
@@ -79,7 +81,11 @@ def signup():
 def login():
     if(request.method == 'POST'):
         user = User()
-        user.authenticate(request.form['username'], request.form['password'])
+        username = request.form['username']
+        password = request.form['password']
+        assert username is not None
+        assert password is not None
+        user.authenticate(username, password)
         if(user != None and user.is_authenticated):
             login_status = login_user(user, remember=True)
             flash('Logged in successfully.')
@@ -87,7 +93,6 @@ def login():
             # is_safe_url should check if the url is safe for redirects.
             # See http://flask.pocoo.org/snippets/62/ for an example.
             return redirect(next)
-            #return redirect(request.headers['Referer'])
         else:
             return redirect('login', code=302)
     else:
@@ -356,7 +361,7 @@ def enroll_canvas_student(course_ID, student_ID, section_ID):
     canvas_bearer_token = environ.get('canvas_secret')
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    
+
     if section_ID:
         parameters = {'enrollment[user_id]': str(student_ID), 'enrollment[course_section_id]': int(section_ID)}
         url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
