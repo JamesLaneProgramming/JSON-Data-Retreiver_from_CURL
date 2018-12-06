@@ -22,13 +22,11 @@ import requests
 import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, current_user
-import argparse
 import logging
 from user_module import User
 import pymongo
 from pymongo import MongoClient
 
-environment = None
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
 application.secret_key = 'super secret key'
@@ -55,15 +53,6 @@ def load_user(user_id):
     user = User.get(user_id)
     return user
 
-'''
-Command line archived code:
-#Handle command line arguments
-parser = argparse.ArgumentParser(description='Command line arguments')
-parser.add_argument('-env', 
-                    '--environment',
-                    help='Sets the environment for the program.')
-args = parser.parse_args()
-'''
 def main():
     application.logger.info('Starting production server')
     #Retrieve config variables from Host environment
@@ -71,6 +60,7 @@ def main():
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
+
 @application.route('/')
 def home():
     return render_template('home.html')
@@ -200,21 +190,7 @@ def create_canvas_account():
                 Please try again later or contact us for more information"
     '''
 
-def parse_arguments():
-    '''
-    Docstring
-    ---------
-    Stores command line arguments in global variables for easy access
-    '''
-    global environment
-    if(args.environment != None):
-        environment = args.environment.upper()
-    else:
-        application.logger.info("environment could not be parsed, exiting.")
-        application.logger.info("Use python3 application.py -env <Environment>")
-        sys.exit(0)
-
-#Opens the YAML file at the specified directory and returns the YAML object.
+#Opens the YAML file at the specified directory and returns the scriptable YAML object.
 def get_config(_dir):
     '''
     Arguments
@@ -289,7 +265,18 @@ def google_request(spreadsheet_ID, range_name, scope):
 def canvas_API_request(canvas_URI, request_parameters=None):
     '''
     Docstring
-    https://coderacademy.instructure.com/api/v1/courses/{0}/users?{1}
+    ---------
+        canvas_API_request('https://coderacademy.instructure.com/api/v1/courses/1/users', request_parameters={'search_term': 'test'})
+    Arguments
+    ---------
+    canvas_URI(String):
+        Takes a String method argument that dictates the canvas endpoint to request.
+    request_parameters(Dict):
+        Takes a dictionary of additional request parameters. These are parsed as query parameters to the endpoint specified by the canvas_URI.
+    Returns
+    -------
+    response(Response): http://docs.python-requests.org/en/master/api/
+        Returns a Response Object.
     '''
     #Attempt to load canvas_secret from environment
     try:
@@ -300,10 +287,17 @@ def canvas_API_request(canvas_URI, request_parameters=None):
         internal server error
         '''
         return abort(500)
+    except ImportError as error:
+        print("OS module could not be imported, please ensure that OS module has been installed and is in the requirements.txt file")
+        return abort(500)
+    except Exception as error:
+        raise error
+
+    assert isinstance(canvas_URI, str)
+    assert isinstance(request_parameters, dict)
 
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    
     #Append optional parameters to the URI string.
     if(request_parameters != None):
         query_string = None
@@ -312,9 +306,11 @@ def canvas_API_request(canvas_URI, request_parameters=None):
                 query_string = '?{0}={1}'.format(each_key, each_value)
             else:
                 query_string = '{0}&{1}={2}'.format(query_string, each_key, each_value)
+        #Concatenate URI and query string
         canvas_URI = canvas_URI + query_string
     #Request resource
     response = requests.get(canvas_URI, headers=_headers)
+    
     if response.status_code == 200:
         print("Request successful")
     elif response.status_code == 401:
