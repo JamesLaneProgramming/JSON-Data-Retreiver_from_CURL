@@ -65,46 +65,12 @@ parser.add_argument('-env',
 args = parser.parse_args()
 '''
 def main():
-    #parse_arguments()
-    if environment == 'DEVELOPMENT':
-        application.logger.info("Starting development build")
-        config = get_config('./config.yaml')
-        try:
-            try:
-                request_parameters = config['canvas']['request_parameters']
-            except Exception as error:
-                application.logger.info("No additional request parameters were found")
-            course_ID = config['canvas']['course_id']
-            canvas_bearer_token = config['canvas']['bearer_token']
-        except KeyError as error:
-            print('Could not find Canvas config keys specified')
-            raise error
-        try:
-            spreadsheet_ID = config['google_sheets']['spreadsheet_ID']
-            range_name = config['google_sheets']['sheet_range']
-            scope = config['google_sheets']['scope']
-        except KeyError as error:
-            print('Could not find Google config keys specified')
-        
-        application.debug = True
-        port = int(os.environ.get('PORT', 5000))
-        application.run(host='0.0.0.0', port=port)
-    elif environment == 'PRODUCTION':
-        application.logger.info('Starting production server')
-        #Retrieve config variables from Host environment
-        #config_variable = environ.get('')
-        application.debug = True
-        port = int(os.environ.get('PORT', 5000))
-        application.run(host='0.0.0.0', port=port)
-    else:
-        print('Environment parsed but does not match')
-        print('Posible environments are: development/production/testing')
-
-    #sheet_data = google_request(spreadsheet_ID, range_name, scope)
-    #canvas_data = canvas_request(canvas_bearer_token, course_ID,
-    #                             request_parameters)
-    #update_canvas_emails(sheet_data, canvas_data, canvas_bearer_token)
-
+    application.logger.info('Starting production server')
+    #Retrieve config variables from Host environment
+    #config_variable = environ.get('')
+    application.debug = True
+    port = int(os.environ.get('PORT', 5000))
+    application.run(host='0.0.0.0', port=port)
 @application.route('/')
 def home():
     return render_template('home.html')
@@ -254,15 +220,19 @@ def get_config(_dir):
     Arguments
     ---------
     _dir(String):
-        Takes a directory string and checks whether a file exists in the current file
-        structure
+        Takes a directory method argument used to load configuration.
     Returns
     -------
     file_content:
         Reads the file specified by the _dir string and returns the contents
         using yaml.load(). Alternatively you could use yaml.safe_load().
     '''
+    
     file_content = None
+
+    #Checks whether the _dir method argument is a string. isinstance() supports DataTypes that inherit the String base class.
+    assert isinstance(_dir, str)
+    
     #Check if the directory method argument exists in the current filesystem.
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
