@@ -16,6 +16,23 @@ users_collection = integration_db.users
 #users_collection.insert({"username": "James", "password": "123"})
 
 def get_user(username, password):
+    '''
+    Docstring
+    ---------
+    Takes in a username, password pair and queries the database for a potential user.
+    Arguments
+    ---------
+    username(String):
+        Takes a String function argument to represent a user's username
+    password(String):
+        Takes a String function argument to represent a user's password
+    Returns
+    -------
+    found_user(Dict):
+        Returns a user Dict if the username, password pair matches a user credentials in the database.
+    None(None):
+        Returns None if the username was not found in the database or if the password asociated with a user is incorrect
+    '''
     #TODO: Sanitise inputs before query database 
     assert isinstance(username, str)
     assert isinstance(password, str)
@@ -33,10 +50,22 @@ def get_user(username, password):
         return None
 
 def get_user_by_id(_id):
+    '''
+    Docstring
+    ---------
+    Retrieves a user from the database from a _id stored in the session upon successful login.
+    Arguments
+    ---------
+    _id(string):
+        Takes a String function argument to query the database with.
+    Returns
+    -------
+    user(Dict):
+        Returns user from the database if _id matches a user document.
+    '''
     #Attempt to convert _id into an ObjectID for use with MongoDB fields
     #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
     #Note: Sometimes you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
-    #TODO: What validation needs to be done here?
     try:
         o_id = ObjectId(_id)
         user = users_collection.find_one({"_id": o_id})
