@@ -88,7 +88,7 @@ def login():
         assert password is not None
         user.authenticate(username, password)
         if(user != None and user.is_authenticated):
-            login_status = login_user(user, remember=True)
+            login_status = login_user(user)
             flash('Logged in successfully.')
             next = request.args.get('next')
             # is_safe_url should check if the url is safe for redirects.
