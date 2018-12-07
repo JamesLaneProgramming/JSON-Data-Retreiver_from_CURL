@@ -90,6 +90,7 @@ def login():
         if(user != None and user.is_authenticated):
             login_status = login_user(user)
             flash('Logged in successfully.')
+            #TODO: Issue redirecting to /None after successful login
             next = request.args.get('next')
             # is_safe_url should check if the url is safe for redirects.
             # See http://flask.pocoo.org/snippets/62/ for an example.

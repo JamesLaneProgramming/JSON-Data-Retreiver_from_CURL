@@ -20,7 +20,7 @@ def get_user(username, password):
     assert isinstance(username, str)
     assert isinstance(password, str)
     #Generate a password hash for database storage.
-    password_hash = generate_password_hash(password)
+    password_hash = check_password_hash(password)
     found_user = users_collection.find_one({"Username": username, "Password": password_hash})
     return(found_user)
 
