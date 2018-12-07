@@ -269,7 +269,7 @@ def google_request(spreadsheet_ID, range_name, scope):
     else:
         return sheet_data
 
-def canvas_API_request(canvas_URI, request_parameters=None):
+def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'):
     '''
     Docstring
     ---------
@@ -280,6 +280,8 @@ def canvas_API_request(canvas_URI, request_parameters=None):
         Takes a String method argument that dictates the canvas endpoint to request.
     request_parameters(Dict):
         Takes a dictionary of additional request parameters. These are parsed as query parameters to the endpoint specified by the canvas_URI.
+    request_method(String)(Default = 'GET')
+        Takes a String method argument that dictates the request method to be used.
     Returns
     -------
     response(Response): http://docs.python-requests.org/en/master/api/
@@ -302,6 +304,7 @@ def canvas_API_request(canvas_URI, request_parameters=None):
 
     assert isinstance(canvas_URI, str)
     assert isinstance(request_parameters, dict)
+    assert isinstance(request_method, str)
 
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
@@ -315,9 +318,18 @@ def canvas_API_request(canvas_URI, request_parameters=None):
                 query_string = '{0}&{1}={2}'.format(query_string, each_key, each_value)
         #Concatenate URI and query string
         canvas_URI = canvas_URI + query_string
-    #Request resource
-    response = requests.get(canvas_URI, headers=_headers)
     
+    #Request resource
+    if(request_method.upper() == 'POST'):
+        response = requests.post(canvas_URI, headers=_headers)
+    elif(request_method.upper() == 'GET'):
+        response = requests.get(canvas_URI, headers=_headers)
+    elif(request_method.upper() == 'PUT'):
+        response = requests.put(canvas_URI, headers=_headers)
+    else:
+        print("Could not understand request_method, Please specify 'GET', 'POST' or 'PUT'")
+
+    #Handle responses
     if response.status_code == 200:
         print("Request successful")
     elif response.status_code == 401:
@@ -325,9 +337,6 @@ def canvas_API_request(canvas_URI, request_parameters=None):
     else:
         print(response.status_code)
     return response
-
-def canvas_API_post_request(canvas_URI, request_parameters=''):
-    pass
 
 def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Lambda to get student name from canvas for matching
