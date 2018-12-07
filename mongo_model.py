@@ -28,13 +28,14 @@ def get_user_by_id(_id):
     #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
     #Note: Sometimes you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
     #TODO: What validation needs to be done here?
-    o_id = ObjectId(_id)
-    if o_id is None:
-        #TODO: Session token not set on invalid login.
-        raise Invalid_Session_Token("Session ID is None.")
-    else:
+    try:
+        o_id = ObjectId(_id)
         user = users_collection.find_one({"_id": o_id})
         return user
+    except bson.errors.InvalidId as error:
+        raise Invalid_Session_Token("Session ID is None. Cannot construct ObjectId")
+    except Exception as error:
+        raise error
 
 def create_user(username, password):
     #TODO: encrypt password with hashing algorithm
