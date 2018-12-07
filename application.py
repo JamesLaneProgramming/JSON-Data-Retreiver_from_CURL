@@ -371,13 +371,23 @@ def enroll_canvas_student(course_ID, student_ID, section_ID):
     else:
         return "No section_ID provided"
 
-def create_canvas_login(student_name, student_email):
+def create_canvas_login(student_name, student_email, password=None):
+    assert isinstance(student_name, str)
+    assert isinstance(student_email, str)
+    
+    #password function argument defaults to 'None' to ensure assert works.
+    if password is None:
+        parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': '12345678'}
+    else:
+        assert isinstance(password, str)
+        parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': password}
+    response = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', parameters)
+    return response
     '''
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
 
-    parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': '12345678'}
-    url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
+        url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
     post_request = requests.post(url, headers = _headers, data = parameters)
     return post_request
     '''
