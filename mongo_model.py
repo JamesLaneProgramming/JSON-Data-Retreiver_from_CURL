@@ -20,9 +20,17 @@ def get_user(username, password):
     assert isinstance(username, str)
     assert isinstance(password, str)
     #Generate a password hash for database storage.
-    password_hash = check_password_hash(password)
-    found_user = users_collection.find_one({"Username": username, "Password": password_hash})
-    return(found_user)
+    found_user = users_collection.find_one({"Username": username})
+    if found_user:
+        password_exact = check_password_hash(password, found_user['Password'])
+    else:
+        print("No user with that username found")
+        return None
+    if password_exact:
+        return(found_user)
+    else:
+        print("Wrong password")
+        return None
 
 def get_user_by_id(_id):
     #Attempt to convert _id into an ObjectID for use with MongoDB fields
