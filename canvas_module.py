@@ -1,3 +1,5 @@
+from functools import reduce
+
 def update_canvas_emails(sheet_data, canvas_data, _headers):
     #Lambda to get student name from canvas for matching
     canvas_name_lambda = lambda x: x['name']
@@ -26,21 +28,66 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                     _headers
                                    )
 
-def enroll_canvas_student(course_ID, student_ID, section_ID):
-    #Retrieve canvas bearer token from environment variables.
-    canvas_bearer_token = environ.get('canvas_secret')
-    #Setup request headers with auth token.
-    _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
+def enroll_canvas_student(student_ID, course_ID, section_ID=None):
+    '''
+    Docstring
+    ---------
+    enroll_canvas_student is used to enroll a canvas user to a specific course and section.
+    
+    Arguments
+    ---------
+    student_ID(Integer):
+        Takes an integer argument that is used to specify the canvas user to enroll into a course.
+    course_ID(Integer):
+        Takes an integer argument that is used to specify the course to enroll the canvas user into.
+    section_ID(Integer)(default = None):
+        Takes an integer argument that is used to specify the course section to enroll the canvas user into.
 
-    if section_ID:
-        parameters = {'enrollment[user_id]': str(student_ID), 'enrollment[course_section_id]': int(section_ID)}
-        url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
-        post_request = requests.post(url, headers = _headers, data = parameters)
-        return post_request
+    Returns
+    -------
+    response(Response):
+        returns a response object.
+    Notes
+    -----
+    Need to assert that the arguments are positive integers and that they are valid canvas users, courses and sections.
+    '''
+    assert isinstance(student_ID, int)
+    assert isinstance(course_ID, int)
+    
+    request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
+    if(section_ID != None):
+        assert isinstance(section_ID, int)
+        parameters = {'enrollment[user_id]': str(student_ID), 'enrollment[course_section_id]': str(section_ID)}
     else:
-        return "No section_ID provided"
+        parameters = {'enrollment[user_id]': str(student_ID)}
 
-def create_canvas_login(student_name, student_email, password=None):
+    response = canvas_API_request(request_url, request_parameters=parameters, request_method='POST')
+    return response
+
+def create_canvas_login(student_name, student_email, student_password=None):
+    '''
+    Docstring
+    ---------
+    create_canvas_login is used to create a new canvas account using a specified name and email with the option to specify a password. A default is used if the password argument is not parsed.
+
+    Arguments
+    ---------
+    student_name(String):
+        Takes a string argument that is used to represent the name of the new canvas account.
+    student_email(String):
+        Takes a string argument that is used to represent the email of the new canvas account.
+    student_password(String)(Default):
+        Takes a string argument that is used to represent the password of the new canvas account.
+
+    Returns
+    -------
+    response(Response):
+        returns a response object.
+
+    Notes
+    -----
+    Argument names will need to change to user_name, user_email, user_password when this function is used to create accounts that are not students(E.g. teachers)
+    '''
     assert isinstance(student_name, str)
     assert isinstance(student_email, str)
     
@@ -52,32 +99,32 @@ def create_canvas_login(student_name, student_email, password=None):
         parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': password}
     response = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', parameters)
     return response
-    '''
-    #Setup request headers with auth token.
-    _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
 
-        url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
-    post_request = requests.post(url, headers = _headers, data = parameters)
-    return post_request
+def update_canvas_email(student_ID, student_email):
     '''
+    Docstring
+    ---------
+    update_canvas_email is used to update the primary email for a specified canvas user.
 
-def update_canvas_email(student_ID, email, _headers):
-    _headers = {'Authorization' : 'Bearer {0}'.format(_headers)}
+    Arguments
+    ---------
+    student_ID(Integer):
+        Takes an integer argument that specifies the canvas user to update.
+    student_email(String):
+        Takes a string argument that represents the email used to update the canvas user account.
+
+    Returns
+    -------
+    response(Response):
+        returns a response object.
+    '''
+    assert isinstance(student_ID, int)
+    assert isinstance(student_email, str)
+
     parameters = {'user[email]':email}
-    url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
-    update_request = requests.put(url, headers = _headers, data = parameters)
-
-    #Condition if request successful
-    if(update_request.status_code == 200):
-        print("Successfully updated canvas email")
-    elif(update_request.status_code == 422):
-        print("Error: ", update_request.status_code)
-    else:
-        print("There was an error updating a canvas email", '\n')
-        print("Student with ID: {0} failed to update with error code: {1}".format(
-                                                                                  student_ID, 
-                                                                                  update_request.status_code
-                                                                                 ))
+    request_url = 'https://coderacademy.instructure.com/api/v1/users/{0}.json'.format(student_ID)
+    response = canvas_API_request(request_url, request_parameters=parameters, request_method='PUT')
+    return response
 
 def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'):
     '''
@@ -95,7 +142,7 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
     Returns
     -------
     response(Response): http://docs.python-requests.org/en/master/api/
-        Returns a Response Object.
+        Returns a response Object.
     '''
     #Attempt to load canvas_secret from environment
     try:

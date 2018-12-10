@@ -18,12 +18,11 @@ import os
 from os import environ
 import yaml
 import sys
-from functools import reduce
 import requests
 import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, current_user
-import logging
+import canvas_module
 from user_module import User
 import pymongo
 from pymongo import MongoClient
@@ -47,6 +46,7 @@ Notes:
     What parts of the website need access to the cookie?
     Will the cookie need to work across sub domains?
     Will the cookie need to persist if the user leaves an SSL portion of the site?
+    TODO: See development task: https://trello.com/c/qZfDhqaE/9-create-a-session-collection-in-the-database-track-views-actions-etc-when-a-user-authenticates-add-those-values-to-the-user-docum
 '''
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
