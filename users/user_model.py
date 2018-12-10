@@ -11,12 +11,13 @@ class User():
     anonymous = False
     id = None
     
-    #Connects to the MongoDB database
-    mongo_connection = MongoClient('ds125684.mlab.com:25684', 
-            username        = 'James', 
-            password        = environ.get('mongoDB_Password'), 
-            authSource      = 'canvas_integration', 
-            authMechanism   = 'SCRAM-SHA-1')
+    def __init__():
+        #Connects to the MongoDB database
+        global mongo_connection = MongoClient('ds125684.mlab.com:25684', 
+                username        = 'James', 
+                password        = environ.get('mongoDB_Password'), 
+                authSource      = 'canvas_integration', 
+                authMechanism   = 'SCRAM-SHA-1')
 
     def is_authenticated(self):
         return authenticated
@@ -24,9 +25,6 @@ class User():
         return active
     def is_anonymous(self):
         return anonymous
-    def __init__(self):
-        pass
-        #authenticate(username, password)
     def load_user_details(self, user_details):
         self.id = user_details['_id']
     def authenticate(self, username, password):
