@@ -23,7 +23,7 @@ import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, current_user
 import canvas_module
-from user_module import User
+from users.user_module import User
 import pymongo
 from pymongo import MongoClient
 
