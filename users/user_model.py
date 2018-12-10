@@ -1,14 +1,21 @@
+from os import environ
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
-from common.db_connection_module import mongo_client as db
 
 class User():
     authenticated = False
     active = False
     anonymous = False
     id = None
+    
+    #Connects to the MongoDB database
+    mongo_connection = MongoClient('ds125684.mlab.com:25684', 
+            username        = 'James', 
+            password        = environ.get('mongoDB_Password'), 
+            authSource      = 'canvas_integration', 
+            authMechanism   = 'SCRAM-SHA-1')
 
     def is_authenticated(self):
         return authenticated
@@ -43,7 +50,7 @@ class User():
         assert isinstance(username, str)
         assert isinstance(password, str)
         #Generate a password hash for database storage.
-        found_user = db.users.find_one({"Username": username})
+        found_user = mongo_connection.users.find_one({"Username": username})
         if found_user:
             if check_password_hash(password, found_user['Password']):
                 return(found_user)
@@ -123,7 +130,7 @@ class User():
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        user_details = db.users.insert({"Username": username, "Password": password_hash})
+        user_details = mongo_connection.users.insert({"Username": username, "Password": password_hash})
 
         if(user_details != None):
             user = User()
