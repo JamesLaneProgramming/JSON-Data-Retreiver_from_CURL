@@ -69,6 +69,10 @@ class User():
 
     def get(user_id):
         #Return MongoDB user from db
+        #TODO: Work around until sessions are setup as a collection in the database.
+        if user_id == None:
+            user = User()
+            return user
         user_details = mongo_model.get_user_by_id(user_id)
         if(user_details != None):
             user = User()
