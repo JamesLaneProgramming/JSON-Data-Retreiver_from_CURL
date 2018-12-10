@@ -14,7 +14,7 @@ except Exception as error:
 '''
 #TODO: Setup workflow for OAuth2 refresh tokens
 
-import os
+import os, sys
 from os import environ
 import yaml
 import sys
@@ -23,7 +23,7 @@ import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, current_user
 import canvas_module
-from .users.user_module import User
+from . import users.user_model
 import pymongo
 from pymongo import MongoClient
 
