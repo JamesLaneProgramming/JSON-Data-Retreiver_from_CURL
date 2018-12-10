@@ -2,7 +2,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
-from db_connection_module import my_mongo_client as db
+from common import db_connection_module as db
 
 class User():
     authenticated = False
@@ -45,7 +45,7 @@ class User():
         #Generate a password hash for database storage.
         found_user = db.users.find_one({"Username": username})
         if found_user:
-            if check_password_hash(password, found_user['Password'])
+            if check_password_hash(password, found_user['Password']):
                 return(found_user)
             else:
                 print("Wrong password")
