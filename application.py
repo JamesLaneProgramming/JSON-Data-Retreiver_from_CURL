@@ -55,9 +55,11 @@ def load_user(user_id):
     return user
 
 def main():
-    application.logger.info('Starting production server')
     #Retrieve config variables from Host environment
     #config_variable = environ.get('')
+    
+    print('Starting production server')
+    #Set application.debug to False if running a production server.
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)

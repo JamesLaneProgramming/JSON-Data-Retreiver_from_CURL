@@ -7,3 +7,5 @@ First test for the expected datatypes.
 An assertion is something that checks whether the actual result is the same as expected result. E.g. Expected a String, Given a String.
 
 Write tests that are supposed to throw errors.
+
+Code coverage(How much of the program source code is covered by tests)
