@@ -90,6 +90,7 @@ def login():
         assert username is not None
         assert password is not None
         user.authenticate(username, password)
+        print(user)
         if(user != None and user.is_authenticated):
             login_status = login_user(user, remember=True)
             flash('Logged in successfully.')

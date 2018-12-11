@@ -143,5 +143,5 @@ class User():
         user = self.mongo_connection.canvas_integration.users.insert({"Username": username, "Password": password_hash})
 
         if(user != None):
-            self.load_user_details(user_details)
+            self.load_user_details(user)
             return self
