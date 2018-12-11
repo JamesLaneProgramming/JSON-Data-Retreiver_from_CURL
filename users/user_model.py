@@ -8,6 +8,8 @@ from pymongo import MongoClient
 class User():
     id = None
     username = None
+    authenticated = None
+    anonymous = None
 
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
@@ -18,7 +20,6 @@ class User():
                 authSource      = 'canvas_integration', 
                 authMechanism   = 'SCRAM-SHA-1')
     def load_user_details(self, user_details):
-        print(user_details)
         self.id = user_details['_id']
         self.username = user_details['Username']
 
@@ -35,7 +36,7 @@ class User():
         is_authenticated(Bool):
             Returns True if the user has provided valid credentials. Returns False if the user's credentials are invalid.
         '''
-        return authenticated
+        return self.authenticated
 
     def is_active(self):
         '''
@@ -48,7 +49,7 @@ class User():
         is_active(Bool):
             Returns True if the user's account is active(No restrictions in place). Returns False if the user's account has been deactivated(Restrictions in place).
         '''
-        return active
+        return self.active
     
     def is_anonymous(self):
         '''
@@ -60,7 +61,7 @@ class User():
             Returns True if the user is an anonymous user.
             Returns False if the user is authenticated.
         '''
-        return anonymous
+        return self.anonymous
     
     def authenticate(self, username, password):
         '''
@@ -89,6 +90,7 @@ class User():
         if user:
             if check_password_hash(password, user['Password']):
                 self.load_user_details(user)
+                self.authenticated = True
                 return(self)
             else:
                 print("Wrong password")
