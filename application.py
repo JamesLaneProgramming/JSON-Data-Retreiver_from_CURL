@@ -91,7 +91,7 @@ def login():
         assert password is not None
         user.authenticate(username, password)
         if(user != None and user.is_authenticated):
-            login_status = login_user(user)
+            login_status = login_user(user, remember=True)
             flash('Logged in successfully.')
             #TODO: Issue redirecting to /None after successful login
             next = request.args.get('next')
