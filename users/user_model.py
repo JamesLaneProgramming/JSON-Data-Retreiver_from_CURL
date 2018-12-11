@@ -5,7 +5,7 @@ import bson
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
-class User()
+class User():
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
     def __init__(self):
