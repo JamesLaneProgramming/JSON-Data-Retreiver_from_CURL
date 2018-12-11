@@ -99,7 +99,7 @@ class User():
             print("No user with that username found")
             return None
     
-    def get_id():
+    def get_id(self):
         '''
         Docstring
         ---------
@@ -110,7 +110,7 @@ class User():
             The ID associated with the User account.
         '''
         #TODO: Encode user id as unicode string
-        return str(id)
+        return str(self.id)
 
     def get(self, _id):
         '''
