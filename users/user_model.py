@@ -6,6 +6,9 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 class User():
+    id = None
+    username = None
+
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
     def __init__(self):
@@ -14,7 +17,10 @@ class User():
                 password        = environ.get('mongoDB_Password'), 
                 authSource      = 'canvas_integration', 
                 authMechanism   = 'SCRAM-SHA-1')
-    
+    def load_user_details(self, user_details):
+        self.id = user_details['_id']
+        self.username = user_details['Username']
+
     #http://zetcode.com/python/pymongo/
     def is_authenticated(self):
         '''
@@ -78,10 +84,11 @@ class User():
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        found_user = self.mongo_connection.canvas_integration.users.find_one({"Username": username})
-        if found_user:
-            if check_password_hash(password, found_user['Password']):
-                return(found_user)
+        user = self.mongo_connection.canvas_integration.users.find_one({"Username": username})
+        if user:
+            if check_password_hash(password, user['Password']):
+                self.load_user_details(user)
+                return(self)
             else:
                 print("Wrong password")
                 return None
@@ -102,7 +109,7 @@ class User():
         #TODO: Encode user id as unicode string
         return str(self.id)
 
-    def get(_id):
+    def get(self, _id):
         '''
         Docstring
         ---------
@@ -122,7 +129,8 @@ class User():
         try:
             o_id = ObjectId(_id)
             user = db.users.find_one({"_id": o_id})
-            return user
+            self.load_user_details(user)
+            return self
         except bson.errors.InvalidId as error:
             raise error
         except Exception as error:
@@ -132,9 +140,8 @@ class User():
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        user_details = self.mongo_connection.canvas_integration.users.insert({"Username": username, "Password": password_hash})
+        user = self.mongo_connection.canvas_integration.users.insert({"Username": username, "Password": password_hash})
 
-        if(user_details != None):
-            user = User()
-            user.load_user_details(user_details)
-            return user
+        if(user != None):
+            self.load_user_details(user_details)
+            return self
