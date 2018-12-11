@@ -129,7 +129,7 @@ class User():
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = db.users.find_one({"_id": o_id})
+            user = self.mongo_connection.canvas_integration.users.find_one({"_id": o_id})
             self.load_user_details(user)
             return self
         except bson.errors.InvalidId as error:
