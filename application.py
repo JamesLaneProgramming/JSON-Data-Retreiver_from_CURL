@@ -92,7 +92,7 @@ def login():
         user.authenticate(username, password)
         print(user)
         if(user != None and user.is_authenticated):
-            login_status = login_user(user, remember=True)
+            login_status = login_user(user)
             flash('Logged in successfully.')
             #TODO: Issue redirecting to /None after successful login
             next = request.args.get('next')

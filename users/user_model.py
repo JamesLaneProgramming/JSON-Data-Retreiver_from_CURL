@@ -18,6 +18,7 @@ class User():
                 authSource      = 'canvas_integration', 
                 authMechanism   = 'SCRAM-SHA-1')
     def load_user_details(self, user_details):
+        print(user_details)
         self.id = user_details['_id']
         self.username = user_details['Username']
 
