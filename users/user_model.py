@@ -78,7 +78,7 @@ class User():
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        found_user = mongo_connection.users.find_one({"Username": username})
+        found_user = self.mongo_connection.users.find_one({"Username": username})
         if found_user:
             if check_password_hash(password, found_user['Password']):
                 return(found_user)
@@ -128,11 +128,11 @@ class User():
         except Exception as error:
             raise error
         
-    def create(username, password):
+    def create(self, username, password):
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        user_details = mongo_connection.users.insert({"Username": username, "Password": password_hash})
+        user_details = self.mongo_connection.users.insert({"Username": username, "Password": password_hash})
 
         if(user_details != None):
             user = User()
