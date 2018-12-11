@@ -51,7 +51,8 @@ Notes:
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
-    user = User.get(user_id)
+    user_instance = User()
+    user = user_instance.get(user_id)
     return user
 
 def main():
@@ -75,7 +76,7 @@ def signup():
         password = request.form['password']
         assert username is not None
         assert password is not None
-        new_user = User.create(username, password)
+        new_user = User().create(username, password)
         return redirect('/')
     else:
         return render_template('signup.html')

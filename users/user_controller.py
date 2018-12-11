@@ -5,28 +5,56 @@ import bson
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
-class User():
-    authenticated = False
-    active = False
-    anonymous = False
-    id = None
-    
-    def __init__():
-        #Connects to the MongoDB database
-        global mongo_connection = MongoClient('ds125684.mlab.com:25684', 
+class User()
+    #TODO: What method should this be placed in? __init__ ??
+    #Connects to the MongoDB database
+    def __init__(self):
+        self.mongo_connection = MongoClient('ds125684.mlab.com:25684', 
                 username        = 'James', 
                 password        = environ.get('mongoDB_Password'), 
                 authSource      = 'canvas_integration', 
                 authMechanism   = 'SCRAM-SHA-1')
-
+    
+    #http://zetcode.com/python/pymongo/
     def is_authenticated(self):
+        '''
+        Docstring
+        ---------
+        is_authenticated() checks whether the user's credetials are valid. is_authenticated() must equate to True as a criteria of
+        login_required().
+        
+        Returns
+        -------
+        is_authenticated(Bool):
+            Returns True if the user has provided valid credentials. Returns False if the user's credentials are invalid.
+        '''
         return authenticated
+
     def is_active(self):
+        '''
+        Docstring
+        ---------
+        is_active checks whether the user's account has special restrictions in place. For example, if the account has been suspended.
+        
+        Returns
+        -------
+        is_active(Bool):
+            Returns True if the user's account is active(No restrictions in place). Returns False if the user's account has been deactivated(Restrictions in place).
+        '''
         return active
+    
     def is_anonymous(self):
+        '''
+        Docstring: If particular functionality does not require an
+        authenticated User, is_anonymous() may be useful.
+        Returns
+        -------
+        is_anonymous(Bool):
+            Returns True if the user is an anonymous user.
+            Returns False if the user is authenticated.
+        '''
         return anonymous
-    def load_user_details(self, user_details):
-        self.id = user_details['_id']
+    
     def authenticate(self, username, password):
         '''
         Docstring
@@ -49,6 +77,7 @@ class User():
         assert isinstance(username, str)
         assert isinstance(password, str)
         #Generate a password hash for database storage.
+        #TODO: Does this need to be an async call to the database?
         found_user = mongo_connection.users.find_one({"Username": username})
         if found_user:
             if check_password_hash(password, found_user['Password']):
@@ -59,34 +88,7 @@ class User():
         else:
             print("No user with that username found")
             return None
-    '''
-    Docstring: is_authenticated() checks whether the user's credetials
-    are valid. is_authenticated() must equate to True as a criteria of
-    login_required().
-    Returns
-    -------
-    is_authenticated(Bool):
-        Returns True if the user has provided valid credentials.
-        Returns False if the user's credentials are invalid.
-
-    Docstring: is_active checks whether the user's account has special
-    restrictions in place. For example, if the account has been suspended.
-    Returns
-    -------
-    is_active(Bool):
-        Returns True if the user's account is active(No restrictions in
-        place).
-        Returns False if the user's account has been
-        deactivated(Restrictions in place).
     
-    Docstring: If particular functionality does not require an
-    authenticated User, is_anonymous() may be useful.
-    Returns
-    -------
-    is_anonymous(Bool):
-        Returns True if the user is an anonymous user.
-        Returns False if the user is authenticated.
-    '''
     def get_id(self):
         '''
         Docstring
@@ -97,6 +99,7 @@ class User():
         ID(Unicode String):
             The ID associated with the User account.
         '''
+        #TODO: Encode user id as unicode string
         return str(self.id)
 
     def get(_id):
