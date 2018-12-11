@@ -135,7 +135,8 @@ class User():
             self.load_user_details(user)
             return self
         except bson.errors.InvalidId as error:
-            raise error
+            #Session ID is None and therefor throws InvalidId error.
+            return None
         except Exception as error:
             raise error
         
