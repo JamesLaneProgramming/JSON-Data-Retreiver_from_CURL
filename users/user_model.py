@@ -141,8 +141,6 @@ class User():
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        user = self.mongo_connection.canvas_integration.users.insert({"Username": username, "Password": password_hash})
-
-        if(user != None):
-            self.load_user_details(user)
-            return self
+        created_user_id = self.mongo_connection.canvas_integration.users.insert({"Username": username, "Password": password_hash})
+        self.get(created_user_id)
+        return self
