@@ -86,7 +86,7 @@ class User(Document):
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        user = self.db.users.find_one({"Username": username})
+        user = self.db.canvas_integration.users.find_one({"Username": username})
         if user:
             print(user['Password'])
             print(password)
