@@ -3,25 +3,24 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
-from pymongo import MongoClient
+from mongoengine import *
 
-class User():
-    id = None
-    username = None
-    authenticated = None
-    anonymous = None
+class User(Document):
+    username = StringField(required = True)
+    authenticated = BooleanField(default = False)
+    anonymous = BooleanField(default = False)
+    active = BooleanField(default = True)
 
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
-    def __init__(self):
-        self.mongo_connection = MongoClient('ds125684.mlab.com:25684', 
-                username        = 'James', 
-                password        = environ.get('mongoDB_Password'), 
-                authSource      = 'canvas_integration', 
-                authMechanism   = 'SCRAM-SHA-1')
-    def load_user_details(self, user_details):
-        self.id = user_details['_id']
-        self.username = user_details['Username']
+    db = Connect(
+            db='canvas_integration',
+            host='ds125684.mlab.com:25684',
+            username        = 'James',
+            password        = environ.get('mongoDB_Password'),
+            authentication_source      = 'canvas_integration',
+            #authMechanism   = 'SCRAM-SHA-1'
+            )
 
     #http://zetcode.com/python/pymongo/
     def is_authenticated(self):
@@ -86,10 +85,9 @@ class User():
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        user = self.mongo_connection.canvas_integration.users.find_one({"Username": username})
+        user = db.users.find_one({"Username": username})
         if user:
             if check_password_hash(password, user['Password']):
-                self.load_user_details(user)
                 self.authenticated = True
                 return(self)
             else:
@@ -131,8 +129,7 @@ class User():
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = self.mongo_connection.canvas_integration.users.find_one({"_id": o_id})
-            self.load_user_details(user)
+            user = db.users.find_one({"_id": o_id})
             return self
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
@@ -144,6 +141,6 @@ class User():
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        created_user_id = self.mongo_connection.canvas_integration.users.insert({"Username": username, "Password": password_hash})
+        created_user_id = db.users.insert({"Username": username, "Password": password_hash})
         self.get(created_user_id)
         return self
