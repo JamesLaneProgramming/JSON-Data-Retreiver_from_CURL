@@ -110,7 +110,7 @@ class User(Document):
         #TODO: Encode user id as unicode string
         return str(self.id)
 
-    def get(self, _id):
+    def get(_id):
         '''
         Docstring
         ---------

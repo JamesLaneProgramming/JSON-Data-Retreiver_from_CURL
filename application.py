@@ -57,7 +57,7 @@ Notes:
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
-    User.objects(pk=user_id)
+    return User.get(user_id)
 
 def main():
     #Retrieve config variables from Host environment
