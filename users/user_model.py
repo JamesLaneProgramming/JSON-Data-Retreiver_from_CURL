@@ -89,7 +89,7 @@ class User(Document):
                 user.authenticated = True
                 user.save()
                 print(user.authenticated)
-                return(self)
+                return(user)
             else:
                 print("Wrong password")
                 return None
