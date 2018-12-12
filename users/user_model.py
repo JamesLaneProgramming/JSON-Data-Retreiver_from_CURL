@@ -130,7 +130,7 @@ class User(Document):
         try:
             o_id = ObjectId(_id)
             user = User.objects(_id = o_id).first()
-            return self
+            return user
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
             return None
