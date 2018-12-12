@@ -23,7 +23,7 @@ from flask import Flask, flash, render_template, request, abort, redirect, url_f
 from flask_login import LoginManager, login_user, login_required, current_user
 from flask_mongoengine import MongoEngine
 import canvas_module
-from users.user_model import User
+from users import user_model
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
