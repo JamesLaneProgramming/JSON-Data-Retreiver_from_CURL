@@ -16,7 +16,6 @@ except Exception as error:
 
 import os, sys
 from os import environ
-import yaml
 import sys
 import requests
 import json
@@ -24,8 +23,6 @@ from flask import Flask, flash, render_template, request, abort, redirect, url_f
 from flask_login import LoginManager, login_user, login_required, current_user
 import canvas_module
 from users.user_model import User
-import pymongo
-from pymongo import MongoClient
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
