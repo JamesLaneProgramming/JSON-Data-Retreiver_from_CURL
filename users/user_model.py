@@ -80,7 +80,7 @@ class User(Document):
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        user = User.objects(username=username)
+        user = User.objects(username=username).first()
         if user:
             print(user.password)
             if check_password_hash(password, user.password):
@@ -126,7 +126,7 @@ class User(Document):
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = User.objects(_id = o_id)
+            user = User.objects(_id = o_id).first()
             return self
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
