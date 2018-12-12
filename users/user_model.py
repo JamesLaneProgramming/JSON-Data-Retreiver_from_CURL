@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
 from flask_mongoengine import *
+from mongoengine import StringField, BooleanField
 from application import db
 
 class User(db.Document):
