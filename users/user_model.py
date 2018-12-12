@@ -132,7 +132,7 @@ class User(Document):
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = self.db.users.find_one({"_id": o_id})
+            user = self.db.canvas_integration.users.find_one({"_id": o_id})
             return self
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
@@ -144,6 +144,6 @@ class User(Document):
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        created_user_id = self.db.users.insert({"Username": username, "Password": password_hash})
+        created_user_id = self.db.canvas_integration.users.insert({"Username": username, "Password": password_hash})
         self.get(created_user_id)
         return self
