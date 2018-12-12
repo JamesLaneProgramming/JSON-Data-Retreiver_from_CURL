@@ -84,7 +84,8 @@ class User(Document):
         if user:
             print(user.password)
             print(password)
-            if check_password_hash(password, user.password):
+            print(
+            if check_password_hash(user.password, password):
                 self.authenticated = True
                 self.save()
                 return(self)
