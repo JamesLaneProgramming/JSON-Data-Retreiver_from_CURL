@@ -4,10 +4,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
 from flask_mongoengine import *
-from mongoengine import StringField, BooleanField
-from application import db
+from mongoengine import Document, StringField, BooleanField
 
-class User(db.Document):
+class User(Document):
     meta = {'collection': 'users'}
     username = StringField(required = True)
     password = StringField(required = True)
