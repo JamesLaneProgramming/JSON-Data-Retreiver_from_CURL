@@ -30,10 +30,10 @@ application = Flask(__name__, template_folder='templates')
 application.secret_key = 'super secret key'
 application.config['SESSION_TYPE'] = 'filesystem'
 application.config['MONGODB_SETTINGS'] = {
-    'db': 'canvas_integration'
-    'host': 'ds125684.mlab.com:25684'
-    'username': 'James'
-    'password': environ.get('mongoDB_Password')
+    'db': 'canvas_integration',
+    'host': 'ds125684.mlab.com:25684',
+    'username': 'James',
+    'password': environ.get('mongoDB_Password'),
     'authentication_source': 'canvas_integration'
         }
 db = MongoEngine(application)
