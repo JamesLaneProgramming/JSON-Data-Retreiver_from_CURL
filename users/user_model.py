@@ -108,7 +108,7 @@ class User(Document):
             The ID associated with the User account.
         '''
         #TODO: Encode user id as unicode string
-        return str("ASDFASDF")
+        return str(self._id)
 
     def get(_id):
         '''
