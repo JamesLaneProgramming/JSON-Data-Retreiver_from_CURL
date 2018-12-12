@@ -10,17 +10,18 @@ class User(Document):
     authenticated = BooleanField(default = False)
     anonymous = BooleanField(default = False)
     active = BooleanField(default = True)
-
+    
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
-    db = connect(
-            db='canvas_integration',
-            host='ds125684.mlab.com:25684',
-            username        = 'James',
-            password        = environ.get('mongoDB_Password'),
-            authentication_source      = 'canvas_integration',
-            #authMechanism   = 'SCRAM-SHA-1'
-            )
+    def __init__(self):
+        self.db = connect(
+                db='canvas_integration',
+                host='ds125684.mlab.com:25684',
+                username        = 'James',
+                password        = environ.get('mongoDB_Password'),
+                authentication_source      = 'canvas_integration',
+                #authMechanism   = 'SCRAM-SHA-1'
+                )
 
     #http://zetcode.com/python/pymongo/
     def is_authenticated(self):
@@ -85,7 +86,7 @@ class User(Document):
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        user = db.users.find_one({"Username": username})
+        user = self.db.users.find_one({"Username": username})
         if user:
             print(user['Password'])
             print(password)
@@ -131,7 +132,7 @@ class User(Document):
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = db.users.find_one({"_id": o_id})
+            user = self.db.users.find_one({"_id": o_id})
             return self
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
@@ -143,6 +144,6 @@ class User(Document):
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        created_user_id = db.users.insert({"Username": username, "Password": password_hash})
+        created_user_id = self.db.users.insert({"Username": username, "Password": password_hash})
         self.get(created_user_id)
         return self
