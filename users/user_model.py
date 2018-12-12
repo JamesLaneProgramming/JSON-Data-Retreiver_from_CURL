@@ -82,8 +82,7 @@ class User(Document):
         #TODO: Does this need to be an async call to the database?
         user = User.objects(username=username)
         if user:
-            print(user['Password'])
-            print(password)
+            print(user)
             if check_password_hash(password, user['Password']):
                 self.authenticated = True
                 return(self)
