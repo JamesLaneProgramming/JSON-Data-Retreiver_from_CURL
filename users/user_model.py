@@ -13,7 +13,7 @@ class User(Document):
 
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
-    db = Connect(
+    db = connect(
             db='canvas_integration',
             host='ds125684.mlab.com:25684',
             username        = 'James',
