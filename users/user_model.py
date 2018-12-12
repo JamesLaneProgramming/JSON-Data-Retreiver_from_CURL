@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from flask_mongoengine import *
 
 class User(db.Document):
+    meta = {'collection': 'users'}
     username = StringField(required = True)
     password = StringField(required = True)
     authenticated = BooleanField(default = False)
@@ -78,7 +79,7 @@ class User(db.Document):
         assert isinstance(password, str)
         #Generate a password hash for database storage.
         #TODO: Does this need to be an async call to the database?
-        user = self.db.canvas_integration.users.find_one({"Username": username})
+        user = User.objects(username=username)
         if user:
             print(user['Password'])
             print(password)
@@ -124,7 +125,7 @@ class User(db.Document):
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = self.db.canvas_integration.users.find_one({"_id": o_id})
+            user = User.objects(_id = o_id)
             return self
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
@@ -136,6 +137,5 @@ class User(db.Document):
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)
-        created_user_id = self.db.canvas_integration.users.insert({"Username": username, "Password": password_hash})
-        self.get(created_user_id)
-        return self
+        created_user = User(username, password_hash).save()
+        return created_user

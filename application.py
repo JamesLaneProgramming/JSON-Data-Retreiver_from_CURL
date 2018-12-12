@@ -21,6 +21,7 @@ import requests
 import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, current_user
+from flask_mongoengine import MongoEngine
 import canvas_module
 from users.user_model import User
 
@@ -35,6 +36,7 @@ application.config['MONGODB_SETTINGS'] = {
     'password': environ.get('mongoDB_Password')
     'authentication_source': 'canvas_integration'
         }
+db = MongoEngine(application)
 
 #Configure flask-login
 login_manager = LoginManager()
@@ -55,9 +57,7 @@ Notes:
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
-    user_instance = User()
-    user = user_instance.get(user_id)
-    return user
+    User.objects(pk=user_id)
 
 def main():
     #Retrieve config variables from Host environment
