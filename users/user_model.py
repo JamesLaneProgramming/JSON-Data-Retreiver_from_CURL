@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from flask_mongoengine import *
 from mongoengine import Document, StringField, BooleanField
 
-class User(Document):
+class User(UserMixin, Document):
     meta = {'collection': 'users'}
     username = StringField(required = True)
     password = StringField(required = True)
@@ -96,9 +96,9 @@ class User(Document):
         else:
             print("No user with that username found")
             return None
-    
+    '''
     def get_id(self):
-        '''
+        
         Docstring
         ---------
         get_id() returns the Unicode ID of the User.
@@ -106,12 +106,12 @@ class User(Document):
         -------
         ID(Unicode String):
             The ID associated with the User account.
-        '''
+        
         #TODO: Encode user id as unicode string
         return str(User.objects(username=self.username).first()._id)
 
     def get(_id):
-        '''
+        
         Docstring
         ---------
         Retrieves a user from the database from a _id stored in the session upon successful login.
@@ -123,7 +123,7 @@ class User(Document):
         -------
         user(Dict):
             Returns user from the database if _id matches a user document.
-        '''
+        
         #Attempt to convert _id into an ObjectID for use with MongoDB fields
         #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
@@ -136,7 +136,7 @@ class User(Document):
             return None
         except Exception as error:
             raise error
-        
+    '''    
     def create(self, username, password):
         assert isinstance(username, str)
         assert isinstance(password, str)
