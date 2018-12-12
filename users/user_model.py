@@ -3,25 +3,17 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
-from mongoengine import *
+from flask_mongoengine import *
 
-class User(Document):
+class User(db.Document):
     username = StringField(required = True)
+    password = StringField(required = True)
     authenticated = BooleanField(default = False)
     anonymous = BooleanField(default = False)
     active = BooleanField(default = True)
     
     #TODO: What method should this be placed in? __init__ ??
     #Connects to the MongoDB database
-    def __init__(self):
-        self.db = connect(
-                db='canvas_integration',
-                host='ds125684.mlab.com:25684',
-                username        = 'James',
-                password        = environ.get('mongoDB_Password'),
-                authentication_source      = 'canvas_integration',
-                #authMechanism   = 'SCRAM-SHA-1'
-                )
 
     #http://zetcode.com/python/pymongo/
     def is_authenticated(self):
