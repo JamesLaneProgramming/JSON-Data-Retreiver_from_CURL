@@ -1,3 +1,5 @@
+from os import environ
+import requests
 from functools import reduce
 
 def update_canvas_emails(sheet_data, canvas_data, _headers):
