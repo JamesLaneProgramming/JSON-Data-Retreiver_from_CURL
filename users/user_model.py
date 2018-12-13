@@ -4,11 +4,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
 from flask_mongoengine import *
-from mongoengine import Document, StringField, BooleanField, IntField
+from mongoengine import Document, StringField, BooleanField
 
 class User(UserMixin, Document):
     meta = {'collection': 'users'}
-    id = IntField(primary_key=True)
     username = StringField(required = True, unique=True)
     password = StringField(required = True)
     authenticated = BooleanField(default = False)
@@ -109,7 +108,10 @@ class User(UserMixin, Document):
             The ID associated with the User account.
         '''
         #TODO: Encode user id as unicode string
-        return str(self.id)
+        print("get_id returned:")
+        print(self.pk)
+        print(pk)
+        return str(self.pk)
     
     def get(_id):
         '''
@@ -130,7 +132,7 @@ class User(UserMixin, Document):
         #Note: Sometimes in development you will need to delete your session tokens in order for the o_id to not be None(Resulting in errors)
         try:
             o_id = ObjectId(_id)
-            user = User.objects(id = o_id).first()
+            user = User.objects(pk = o_id).first()
             return user
         except bson.errors.InvalidId as error:
             #Session ID is None and therefor throws InvalidId error.
