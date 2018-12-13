@@ -82,13 +82,9 @@ class User(UserMixin, Document):
         #TODO: Does this need to be an async call to the database?
         user = User.objects(username=username).first()
         if user:
-            print(user.password)
-            print(password)
-            print(check_password_hash(user.password, password)) 
             if check_password_hash(user.password, password):
                 user.authenticated = True
                 user.save()
-                print(user.authenticated)
                 return(user)
             else:
                 print("Wrong password")
@@ -108,9 +104,6 @@ class User(UserMixin, Document):
             The ID associated with the User account.
         '''
         #TODO: Encode user id as unicode string
-        print("get_id returned:")
-        print(self.pk)
-        print(pk)
         return str(self.pk)
     
     def get(_id):
