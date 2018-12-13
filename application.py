@@ -27,8 +27,12 @@ from users.user_model import User
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
+
+#Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
 application.config['SESSION_TYPE'] = 'filesystem'
+
+#Configure mongodb server connection
 application.config['MONGODB_SETTINGS'] = {
     'db': 'canvas_integration',
     'host': 'ds125684.mlab.com:25684',
@@ -36,6 +40,8 @@ application.config['MONGODB_SETTINGS'] = {
     'password': environ.get('mongoDB_Password'),
     'authentication_source': 'canvas_integration'
         }
+
+#Initialise the mongo engine.
 db = MongoEngine(application)
 
 #Configure flask-login
@@ -60,10 +66,8 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def main():
-    #Retrieve config variables from Host environment
-    #config_variable = environ.get('')
-    
     print('Starting production server')
+    
     #Set application.debug to False if running a production server.
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
@@ -153,7 +157,7 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''  
-    #Extract the course_ID from the URL string.
+    #Extract the required data from the URL string.
     try:
         course_ID = request.args.get('course_id')
         section_ID = request.args.get('section_id')
