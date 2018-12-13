@@ -57,7 +57,7 @@ class User(UserMixin, Document):
         '''
         return self.anonymous
     
-    def authenticate(self, username, password):
+    def authenticate(username, password):
         '''
         Docstring
         ---------
@@ -140,7 +140,7 @@ class User(UserMixin, Document):
         except Exception as error:
             raise error
        
-    def create(self, username, password):
+    def create(username, password):
         assert isinstance(username, str)
         assert isinstance(password, str)
         password_hash = generate_password_hash(password)

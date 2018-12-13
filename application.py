@@ -80,7 +80,7 @@ def signup():
         password = request.form['password']
         assert username is not None
         assert password is not None
-        new_user = User().create(username, password)
+        User.create(username, password)
         return redirect('/')
     else:
         return render_template('signup.html')
@@ -88,12 +88,11 @@ def signup():
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
-        user = User()
         username = request.form['username']
         password = request.form['password']
         assert username is not None
         assert password is not None
-        user.authenticate(username, password)
+        user = User.authenticate(username, password)
         if(user != None and user.is_authenticated):
             login_status = login_user(user)
             flash('Logged in successfully.')
