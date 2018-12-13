@@ -22,7 +22,7 @@ import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, current_user
 from flask_mongoengine import MongoEngine
-import canvas_module
+from canvas_module import canvas_API_request. update_canvas_email, create_canvas_login, enroll_canvas_student
 from users.user_model import User
 
 #Set the default folder for templates
