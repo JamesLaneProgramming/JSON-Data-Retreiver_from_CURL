@@ -162,13 +162,13 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
         raise error
 
     assert isinstance(canvas_URI, str)
-    assert isinstance(request_parameters, dict)
     assert isinstance(request_method, str)
 
     #Setup request headers with auth token.
     _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
     #Append optional parameters to the URI string.
     if(request_parameters != None):
+        assert isinstance(request_parameters, dict)
         query_string = None
         for each_key, each_value in request_parameters.items():
             if query_string is None:
