@@ -67,7 +67,6 @@ def load_user(user_id):
 
 def main():
     print('Starting production server')
-    
     #Set application.debug to False if running a production server.
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
