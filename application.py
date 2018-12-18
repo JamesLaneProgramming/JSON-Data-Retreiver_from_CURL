@@ -189,7 +189,11 @@ def create_canvas_account():
     elif(creation_response.status_code == 200):
         try:
             student_details = json.loads(creation_response.text)
-            enrollment_response = enroll_canvas_student(course_ID, student_details['id'], section_ID)
+            try:
+                student_ID = int(student_details['id'])
+            except Error as error:
+                raise error
+            enrollment_response = enroll_canvas_student(student_ID, course_ID, section_ID)
             print(enrollment_response.text)
         except Exception as error:
             raise error
