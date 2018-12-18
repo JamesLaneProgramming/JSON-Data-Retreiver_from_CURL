@@ -51,7 +51,7 @@ db = MongoEngine(application)
 #Configure flask-login
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
-assertTrue
+
 #Redirect to login view when a user has yet to authenticate.
 login_manager.login_view = 'login'
 login_manager.init_app(application)
