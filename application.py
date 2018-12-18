@@ -40,15 +40,18 @@ application.config['MONGODB_SETTINGS'] = {
     'username': 'James',
     'password': environ.get('mongoDB_Password'),
     'authentication_source': 'canvas_integration'
-        }
+}
 
 #Initialise the mongo engine.
+#TODO: Add testing when MongoEngine cannot be initialised. For example when MongoDB_Password cannot be retreived from environment
 db = MongoEngine(application)
+#AssertTrue(db.connection, pymongo.MongoClient)
+#AssertRaises(InvalidSettingsError, MongoEngine, db)
 
 #Configure flask-login
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
-
+assertTrue
 #Redirect to login view when a user has yet to authenticate.
 login_manager.login_view = 'login'
 login_manager.init_app(application)
@@ -119,9 +122,6 @@ def logout():
 @application.route('/rubric_data')
 @login_required
 def rubric_data():
-    '''
-    Implement a text field and a sumbit button. Text field should contain a course ID.
-    '''
     course_ID = 144
     assessment_ID = 667
     request = extract_rubric_data(course_ID, assessment_ID)
