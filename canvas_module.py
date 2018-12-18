@@ -94,7 +94,7 @@ def enroll_canvas_student(student_ID, course_ID, section_ID=None):
     response = canvas_API_request(request_url, request_parameters=parameters, request_method='POST')
     return response
 
-def create_canvas_login(student_name, student_email, student_password=None):
+def create_canvas_login(student_name, student_email):
     '''
     Docstring
     ---------
@@ -106,9 +106,6 @@ def create_canvas_login(student_name, student_email, student_password=None):
         Takes a string argument that is used to represent the name of the new canvas account.
     student_email(String):
         Takes a string argument that is used to represent the email of the new canvas account.
-    student_password(String)(Default):
-        Takes a string argument that is used to represent the password of the new canvas account.
-
     Returns
     -------
     response(Response):
@@ -116,17 +113,12 @@ def create_canvas_login(student_name, student_email, student_password=None):
 
     Notes
     -----
-    Argument names will need to change to user_name, user_email, user_password when this function is used to create accounts that are not students(E.g. teachers)
+    Argument names will need to change to user_name, user_email when this function is used to create accounts that are not students(E.g. teachers)
     '''
     assert isinstance(student_name, str)
     assert isinstance(student_email, str)
     
-    #password function argument defaults to 'None' to ensure assert works.
-    if password is None:
-        parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[force_self_registration]': 'True'}
-    else:
-        assert isinstance(password, str)
-        parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': password}
+    parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[force_self_registration]': 'True'}
     response = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', parameters)
     return response
 
