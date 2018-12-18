@@ -159,8 +159,8 @@ def create_canvas_account():
     '''  
     #Extract the required data from the URL string.
     try:
-        course_ID = request.args.get('course_id')
-        section_ID = request.args.get('section_id')
+        course_ID = int(request.args.get('course_id'))
+        section_ID = int(request.args.get('section_id'))
     except Exception as error:
         raise error
     
