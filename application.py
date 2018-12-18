@@ -43,7 +43,9 @@ application.config['MONGODB_SETTINGS'] = {
         }
 
 #Initialise the mongo engine.
+#TODO: Add testing when MongoEngine cannot be initialised. For example when MongoDB_Password cannot be retreived from environment
 db = MongoEngine(application)
+print(type(db))
 
 #Configure flask-login
 login_manager = LoginManager()
