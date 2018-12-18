@@ -40,17 +40,18 @@ application.config['MONGODB_SETTINGS'] = {
     'username': 'James',
     'password': environ.get('mongoDB_Password'),
     'authentication_source': 'canvas_integration'
-        }
+}
 
 #Initialise the mongo engine.
 #TODO: Add testing when MongoEngine cannot be initialised. For example when MongoDB_Password cannot be retreived from environment
 db = MongoEngine(application)
-print(type(db))
+#AssertTrue(db.connection, pymongo.MongoClient)
+#AssertRaises(InvalidSettingsError, MongoEngine, db)
 
 #Configure flask-login
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
-
+assertTrue
 #Redirect to login view when a user has yet to authenticate.
 login_manager.login_view = 'login'
 login_manager.init_app(application)

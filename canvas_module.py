@@ -123,7 +123,7 @@ def create_canvas_login(student_name, student_email, student_password=None):
     
     #password function argument defaults to 'None' to ensure assert works.
     if password is None:
-        parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': '12345678'}
+        parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[force_self_registration]': 'True'}
     else:
         assert isinstance(password, str)
         parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[password]': password}
