@@ -119,9 +119,6 @@ def logout():
 @application.route('/rubric_data')
 @login_required
 def rubric_data():
-    '''
-    Implement a text field and a sumbit button. Text field should contain a course ID.
-    '''
     course_ID = 144
     assessment_ID = 667
     request = extract_rubric_data(course_ID, assessment_ID)
