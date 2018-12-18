@@ -22,7 +22,8 @@ import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
-from canvas_module import canvas_API_request, update_canvas_email, create_canvas_login, enroll_canvas_student
+#Should not import canvas_API_request function. Instead create a function for specific action.
+from canvas_module import update_canvas_email, create_canvas_login, enroll_canvas_student, extract_rubric_data
 from users.user_model import User
 
 #Set the default folder for templates
@@ -115,16 +116,16 @@ def logout():
     logout_user()
     return redirect('/')
 
-@application.route('/backup')
+@application.route('/rubric_data')
 @login_required
-def backup():
+def rubric_data():
     '''
     Implement a text field and a sumbit button. Text field should contain a course ID.
     '''
     course_ID = 144
-    backup_URI = 'https://coderacademy.instructure.com/api/v1/courses/{0}/users'.format(course_ID)
-    request = canvas_API_request(backup_URI)
-    return "Hello"
+    assessment_ID = 667
+    request = extract_rubric_data(course_ID, assessment_ID)
+    return request
 
 @application.route('/student_search', methods=['GET', 'POST'])
 @login_required
