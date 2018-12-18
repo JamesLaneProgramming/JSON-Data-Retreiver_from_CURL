@@ -191,7 +191,7 @@ def create_canvas_account():
             student_details = json.loads(creation_response.text)
             try:
                 student_ID = int(student_details['id'])
-            except Error as error:
+            except Exception as error:
                 raise error
             enrollment_response = enroll_canvas_student(student_ID, course_ID, section_ID)
             print(enrollment_response.text)
