@@ -190,9 +190,10 @@ def create_canvas_account():
     elif(creation_response.status_code == 200):
         try:
             student_details = json.loads(creation_response.text)
-            print(student_details)
             try:
                 student_ID = int(student_details['id'])
+            except TypeError as error:
+                print("Webhook is most likely sending array of student data.")
             except Exception as error:
                 raise error
             enrollment_response = enroll_canvas_student(student_ID, course_ID, section_ID)

@@ -119,7 +119,7 @@ def create_canvas_login(student_name, student_email):
     assert isinstance(student_email, str)
     
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[force_self_registration]': 'True'}
-    response = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', parameters)
+    response = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', parameters, request_method='POST')
     return response
 
 def update_canvas_email(student_ID, student_email):
