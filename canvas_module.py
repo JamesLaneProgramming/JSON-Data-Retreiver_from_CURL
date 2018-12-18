@@ -2,7 +2,35 @@ from os import environ
 import requests
 from functools import reduce
 
+#TODO: Setup routes and function for retrieving rubric data
+
+def extract_rubric_data(course_ID, assessment_ID):
+    '''
+    Docstring
+    ---------
+    extract_rubric_data is used to extract the rubric grading data from the specified assessment.
+
+    Arguments
+    ---------
+    course_ID(Int):
+        Takes an int function argument that is used to specify the course.
+    assessment_ID(Int):
+        Takes an int function argument that is used to specify the assessment to extract rubric data from.
+    
+    Returns
+    -------
+    rubric_data(JSON):
+        returns the rubric data extracted from the specified assessment in JSON format.
+    '''
+    parameters = {'include[]': 'rubric_assessment'}
+    request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/assessments/{1}/submissions.json'.format(course_ID, assessment_ID)
+    response = canvas_API_request(request_url, request_parameters=parameters, request_method='GET')
+    return response
+
+            
 def update_canvas_emails(sheet_data, canvas_data, _headers):
+    #TODO: Setup front end for this feature
+    #TODO: Setup routes for this, identify database needs
     #Lambda to get student name from canvas for matching
     canvas_name_lambda = lambda x: x['name']
     #Lambda to get student ID from canvas to update email with
