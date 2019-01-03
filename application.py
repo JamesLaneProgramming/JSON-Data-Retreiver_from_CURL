@@ -125,7 +125,7 @@ def rubric_data():
     course_ID = 144
     assessment_ID = 667
     request = extract_rubric_data(course_ID, assessment_ID)
-    return request.text
+    return request.json
 
 @application.route('/student_search', methods=['GET', 'POST'])
 @login_required
