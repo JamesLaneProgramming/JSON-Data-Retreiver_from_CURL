@@ -134,7 +134,8 @@ def student_search():
     if(request.method == 'POST'):
         try:
             search_term = request.form['search_term']
-            search_students(search_term)
+            search_results = search_students(search_term)
+            return json.loads(search_results.text)
         except Exception as error:
             raise error
     else:
