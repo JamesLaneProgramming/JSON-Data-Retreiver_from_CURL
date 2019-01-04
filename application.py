@@ -22,9 +22,9 @@ import json
 from flask import Flask, flash, render_template, request, abort, redirect, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
-#Should not import canvas_API_request function. Instead create a function for specific action.
-from canvas_module import update_canvas_email, create_canvas_login,
-enroll_canvas_student, extract_rubric_data, search_students
+#Should not import canvas_API_request function. Instead create an endpoint for specific action.
+from canvas_module import update_canvas_email, create_canvas_login
+from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
 
 #Set the default folder for templates
