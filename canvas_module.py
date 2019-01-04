@@ -24,7 +24,11 @@ def extract_rubric_data(course_ID, assessment_ID):
     '''
     parameters = {'include[]': 'rubric_assessment'}
     request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/assessments/{1}/submissions.json'.format(course_ID, assessment_ID)
+    print("request_url: ")
+    print(request_url)
     response = canvas_API_request(request_url, request_parameters=parameters, request_method='GET')
+    print("request_data: ")
+    print(response.text)
     return response
 
             
@@ -57,6 +61,26 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
                                     student_sheet_email,
                                     _headers
                                    )
+def search_students(search_term):
+    '''
+    Docstring
+    ---------
+    search_students is used to search for canvas users that meet the
+    search_term
+
+    Arguments
+    ---------
+    search_term(String):
+        Takes a String argument that is used to query canvas user.
+
+    Returns
+    -------
+    response(response):
+        returns a response object.
+    '''
+    request_url = 'https://coderacademy.instructure.com/api/v1/accounts/1/users'
+    response = canvas_API_request(request_url, request_parameters={'search_term': search_term})
+    return response
 
 def enroll_canvas_student(student_ID, course_ID, section_ID=None):
     '''

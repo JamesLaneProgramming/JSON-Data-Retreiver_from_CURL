@@ -23,7 +23,8 @@ from flask import Flask, flash, render_template, request, abort, redirect, url_f
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create a function for specific action.
-from canvas_module import update_canvas_email, create_canvas_login, enroll_canvas_student, extract_rubric_data
+from canvas_module import update_canvas_email, create_canvas_login,
+enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
 
 #Set the default folder for templates
@@ -127,20 +128,19 @@ def rubric_data():
     request = extract_rubric_data(course_ID, assessment_ID)
     return request.text
 
-@application.route('/student_search', methods=['GET', 'POST'])
+@application.route('/students', methods=['GET', 'POST'])
 @login_required
 def student_search():
     if(request.method == 'POST'):
         try:
             search_term = request.form['search_term']
-            canvas_request = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', 
-                    request_parameters={'search_term': search_term})
-            return canvas_request.text
+            search_students(search_term)
         except Exception as error:
             raise error
     else:
         #TODO: Create the student search template
         return render_template('student_search.html')
+
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
