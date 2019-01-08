@@ -150,6 +150,7 @@ def map_rubric_data(submission_data):
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
                  submission_rubric_assessment):
+        self.criteria = []
         self.id = submission_ID
         self.assessment_ID = submission_assessment_ID
         for key, value in submission_rubric_assessment.items():
