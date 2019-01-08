@@ -156,11 +156,12 @@ class submission_object():
             criterion_object = criterion(key, value['points'], value['comments'])
             self.criteria.append(criterion_object)
         print(self.criteria)
-    class criterion():
-        def __init__(self, id, points, comments):
-            self.id = id
-            self.points = points
-            self.comments = comments
+
+class criterion():
+    def __init__(self, id, points, comments):
+        self.id = id
+        self.points = points
+        self.comments = comments
 
 @application.route('/students', methods=['GET', 'POST'])
 @login_required
