@@ -22,7 +22,7 @@ def extract_rubric_data(course_ID, assessment_ID):
     rubric_data(JSON):
         returns the rubric data extracted from the specified assessment in JSON format.
     '''
-    parameters = {'include[]': 'rubric_assessment'}
+    parameters = { 'include[]': 'rubric_assessment', 'per_page': '100'}
     request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/assignments/{1}/submissions'.format(course_ID, assessment_ID)
     print("request_url: ")
     print(request_url)
