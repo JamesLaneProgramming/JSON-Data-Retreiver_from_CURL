@@ -153,8 +153,8 @@ class submission_object():
         self.id = submission_ID
         self.assessment_ID = submission_assessment_ID
         for key, value in submission_rubric_assessment.items():
-            criterion = criterion(key, value['points'], value['comments'])
-            self.criteria.append(criterion)
+            criterion_object = criterion(key, value['points'], value['comments'])
+            self.criteria.append(criterion_object)
         print(self.criteria)
     class criterion():
         def __init__(self, id, points, comments):
