@@ -132,6 +132,7 @@ def rubric_data():
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
+        print(each_submission_item)
         try:
             submission_ID = each_submission_item['id']
             submission_assignment_ID = each_submission_item['assignment_id']
