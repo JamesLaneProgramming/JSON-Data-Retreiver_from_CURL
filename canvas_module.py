@@ -22,13 +22,11 @@ def extract_rubric_data(course_ID, assessment_ID):
     rubric_data(JSON):
         returns the rubric data extracted from the specified assessment in JSON format.
     '''
+    #TODO: Assert that the course_ID and assessment_ID are strings or can be
+    #converted to strings without error.
     parameters = { 'include[]': 'rubric_assessment', 'per_page': '100'}
     request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/assignments/{1}/submissions'.format(course_ID, assessment_ID)
-    print("request_url: ")
-    print(request_url)
     response = canvas_API_request(request_url, request_parameters=parameters, request_method='GET')
-    print("request_data: ")
-    print(response.text)
     return response
 
             
