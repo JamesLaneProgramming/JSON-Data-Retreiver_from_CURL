@@ -126,7 +126,30 @@ def rubric_data():
     course_ID = 144
     assessment_ID = 667
     request = extract_rubric_data(course_ID, assessment_ID)
+    #Perform analysis and remapping here:
+    map_rubric_data(request.json())
     return request.text
+
+def map_rubric_data(submission_data):
+    for each_submission_item in submission_data:
+        try:
+            submission_ID = each_submission_item['id']
+            submission_assignment_ID = each_submission_item['assignment_id']
+            submission_rubric_assessment = each_submission_item['rubric_assessment'] 
+        except Exception as error:
+            raise error
+        #Return each criterion ID, points and comments.
+        #Need to create a view for criterion ID to learning outcome objective.
+        submission = submission_object(submission_ID, submission_assignment_ID,
+                                      submission_rubric_assessment)
+        print(submission.id, submission.assessment_ID, submission.rubric_assessment)
+
+class submission_object():
+    def __init__(self, submission_ID, submission_assessment_ID,
+                 submission_rubric_assessment):
+        self.id = submission_ID
+        self.assessment_ID = submission_assessment_ID
+        self.rubric_assessment = submission_rubric_assessment
 
 @application.route('/students', methods=['GET', 'POST'])
 @login_required
