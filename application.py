@@ -148,8 +148,11 @@ def map_rubric_data(submission_data):
             submission = submission_object(submission_ID, submission_assignment_ID,
                                           submission_rubric_assessment)
             print("User ID: ", each_submission_item['user_id'])
+            report = ""
             for each in submission.criteria:
-                print("Criteria ID: ", each.id, ", ", "Criteria value: ", each.points)
+                report.append("Criteria ID: " + each.id, ", " + "Criteria
+                              value: " + "," + each.points)
+            print report
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
