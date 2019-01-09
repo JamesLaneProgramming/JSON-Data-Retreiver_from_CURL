@@ -144,11 +144,12 @@ def map_rubric_data(submission_data):
         #Return each criterion ID, points and comments.
         #Need to create a view for criterion ID to learning outcome objective.
         #TODO: What are the falsy values for python, print them out.
-        print("Check value returned from try catch: ")
-        print(submission_rubric_assessment)
         if(submission_rubric_assessment):
             submission = submission_object(submission_ID, submission_assignment_ID,
                                           submission_rubric_assessment)
+            print("User ID: ", each_submission_item['user_id'])
+            for each in submission.criteria:
+                print("Criteria ID: ", each.id, ", ", "Criteria value: ", each.points)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
@@ -169,7 +170,6 @@ class submission_object():
             if(points != None):
                 criterion_object = criterion(key, points, comments)
                 self.criteria.append(criterion_object)
-        print(self.criteria)
 
 class criterion():
     def __init__(self, id, points, comments):
