@@ -26,6 +26,7 @@ from flask_mongoengine import MongoEngine
 from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
+from assessments.assessment_model import Assessment
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
@@ -153,6 +154,7 @@ def map_rubric_data(submission_data):
                     grades = grades + ','
                 grades = grades + str(each.points)
             print("User ID: ", str(each_submission_item['user_id']), ',', grades)
+            Assessment.create(each_submission_item['user_id'], grades)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
