@@ -152,7 +152,7 @@ def map_rubric_data(submission_data):
             report = ""
             for each in submission.criteria:
                 report.append("Criteria ID: " + each.id, ", " + "Criteria value: " + "," + each.points)
-            print report
+            print(report)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
