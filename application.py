@@ -144,15 +144,15 @@ def map_rubric_data(submission_data):
         #Return each criterion ID, points and comments.
         #Need to create a view for criterion ID to learning outcome objective.
         #TODO: What are the falsy values for python, print them out.
-        assessment_mapping_hash = {}
         if(submission_rubric_assessment):
             submission = submission_object(submission_ID, submission_assignment_ID,
                                           submission_rubric_assessment)
-            print("User ID: ", each_submission_item['user_id'])
-            report = ""
+            grades = ''
             for each in submission.criteria:
-                report.append("Criteria ID: " + each.id, ", " + "Criteria value: " + "," + each.points)
-            print(report)
+                if(grades != ''):
+                    grades = grades + ','
+                grades = grades + each.points
+            print("User ID: ", each_submission_item['user_id'], ',', grades)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
