@@ -157,8 +157,8 @@ class submission_object():
         self.id = submission_ID
         self.assessment_ID = submission_assessment_ID
         for key, value in submission_rubric_assessment.items():
-            print(key)
-            print(value)
+            points = None
+            comments = None
             try:
                 points = value['points']
                 comments = value['comments']
@@ -166,7 +166,7 @@ class submission_object():
                 pass
             except Exception as error:
                 raise error
-            if(points):
+            if(points != None):
                 criterion_object = criterion(key, points, comments)
                 self.criteria.append(criterion_object)
         print(self.criteria)
