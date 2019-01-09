@@ -144,7 +144,7 @@ def map_rubric_data(submission_data):
         #Return each criterion ID, points and comments.
         #Need to create a view for criterion ID to learning outcome objective.
         #TODO: What are the falsy values for python, print them out.
-        print"Check value returned from try catch: ")
+        print("Check value returned from try catch: ")
         print(submission_rubric_assessment)
         if(submission_rubric_assessment):
             submission = submission_object(submission_ID, submission_assignment_ID,
