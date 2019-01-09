@@ -162,6 +162,8 @@ class submission_object():
             try:
                 points = value['points']
                 comments = value['comments']
+            except KeyError as error:
+                pass
             except Exception as error:
                 raise error
             if(points):
