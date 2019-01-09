@@ -154,7 +154,7 @@ def map_rubric_data(submission_data):
                     grades = grades + ','
                 grades = grades + str(each.points)
             print("User ID: ", str(each_submission_item['user_id']), ',', grades)
-            Assessment.create(each_submission_item['user_id'], grades)
+            Assessment.create(str(each_submission_item['user_id']), grades)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
