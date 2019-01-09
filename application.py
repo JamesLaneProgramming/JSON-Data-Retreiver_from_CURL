@@ -185,7 +185,7 @@ def student_search():
             search_term = request.form['search_term']
             search_results = search_students(search_term)
             #TODO: Replace this with request.json() for encoding purposes
-            return json.loads(search_results.text)
+            return search_results.text
         except Exception as error:
             raise error
     else:
