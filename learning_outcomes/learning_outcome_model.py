@@ -5,10 +5,6 @@ class Learning_Outcome(Document):
     id = IntField(required=True, unique=True)
     grade = FloatField(required=True)
 
-    def create(self, id, grade):
-        self.id = id
-        self.grade = grade
-
     def set_grade(self, grade):
         self.grade = grade
 
