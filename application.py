@@ -130,6 +130,7 @@ def rubric_data():
     request = extract_rubric_data(course_ID, assessment_ID)
     #Perform analysis and remapping here:
     map_rubric_data(request.json())
+    print(Assessment.objects().first())
     return request.text
 
 def map_rubric_data(submission_data):
