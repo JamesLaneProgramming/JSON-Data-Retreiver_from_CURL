@@ -147,17 +147,13 @@ def map_rubric_data(submission_data):
         #Need to create a view for criterion ID to learning outcome objective.
         #TODO: What are the falsy values for python, print them out.
         #TODO: Store learning outcomes in database.
-        assessment_mapping_hash = {
-
-                                  }
         if(submission_rubric_assessment):
             submission = submission_object(submission_ID, submission_assignment_ID,
                                           submission_rubric_assessment)
             submission_grades = []
             for each_criteria in submission.criteria:
                 if(each_criteria != None and each_criteria.points != None):
-                    learning_outcome = Learning_Outcome(int(each_criteria.id),
-                                                               float(each_criteria.points)).save()
+                    learning_outcome = Learning_Outcome(int(each_criteria.id), float(each_criteria.points)).save()
                 submission_grades.append(learning_outcome)
             Assessment.create(each_submission_item['user_id'], submission_grades)
 
