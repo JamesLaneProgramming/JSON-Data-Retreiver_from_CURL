@@ -1,4 +1,4 @@
-from mongoengine import Document, ListField, ReferenceField, StringField, BooleanField
+from mongoengine import Document, ListField, ReferenceField, IntField
 
 class Assessment(Document):
     meta = {'collection' : 'assessments'}
