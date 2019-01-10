@@ -2,7 +2,7 @@ from mongoengine import Document, ListField, ReferenceField, StringField, Boolea
 
 class Assessment(Document):
     meta = {'collection' : 'assessments'}
-    user_id=StringField(required = True, unique = True)
+    user_id=IntField(required = True, unique = True)
     grades=ListField(ReferenceField('Learning_Outcome'))
 
     def create(user_id, grades):
