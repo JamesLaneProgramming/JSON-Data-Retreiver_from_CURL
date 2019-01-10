@@ -155,12 +155,11 @@ def map_rubric_data(submission_data):
                                           submission_rubric_assessment)
             submission_grades = []
             for each_criteria in submission.criteria:
-                for k, v in each_criteria:
-                    learning_outcome = Learning_Outcome(k)
-                    learning_outcome.set_grade(v['points'])
-                    learning_outcome.save()
-                    submission_grades.append(learning_outcome)
-            Assessment.create(each_submission_item['user_id'], grades)
+                learning_outcome = Learning_Outcome(each_criteria.id)
+                learning_outcome.set_grade(each_criteria.points)
+                learning_outcome.save()
+                submission_grades.append(learning_outcome)
+            Assessment.create(each_submission_item['user_id'], submission_grades)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
