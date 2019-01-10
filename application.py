@@ -27,6 +27,7 @@ from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
 from assessments.assessment_model import Assessment
+from learning_outcomes.learning_outcome_model import Learning_Outcome
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
@@ -145,16 +146,20 @@ def map_rubric_data(submission_data):
         #Return each criterion ID, points and comments.
         #Need to create a view for criterion ID to learning outcome objective.
         #TODO: What are the falsy values for python, print them out.
+        #TODO: Store learning outcomes in database.
+        assessment_mapping_hash = {
+
+                                  }
         if(submission_rubric_assessment):
             submission = submission_object(submission_ID, submission_assignment_ID,
                                           submission_rubric_assessment)
-            grades = ''
+            submission_grades = []
             for each in submission.criteria:
-                if(grades != ''):
-                    grades = grades + ','
-                grades = grades + str(each.points)
-            print("User ID: ", str(each_submission_item['user_id']), ',', grades)
-            Assessment.create(str(each_submission_item['user_id']), grades)
+                learning_outcome = Learning_Outcome(each)
+                learning_outcome.set_grade(each['points'])
+                learning_outcome.save()
+                submission_grades.append(learning_outcome)
+            Assessment.create(each_submission_item['user_id'], grades)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
