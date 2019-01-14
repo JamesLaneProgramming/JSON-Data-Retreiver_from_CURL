@@ -145,9 +145,9 @@ def create_learning_outcome():
         return render_template('new_learning_outcome.html')
     if(request.method == 'POST'):
         try:
-            learning_outcome_id = request.args.get('learning_outcome_id')
-            learning_outcome_name = request.args.get('learning_outcome_name')
-            learning_outcome_description = request.args.get('learning_outcome_description')
+            learning_outcome_id = request.form['learning_outcome_id'[]
+            learning_outcome_name = request.form['learning_outcome_name']
+            learning_outcome_description = request.form['learning_outcome_description']
         except Exception as error:
             raise error
         try:
