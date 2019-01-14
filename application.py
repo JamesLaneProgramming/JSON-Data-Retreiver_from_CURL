@@ -26,7 +26,7 @@ from flask_mongoengine import MongoEngine
 from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
-from assessments.assessment_model import Assessment
+from assessments.rubric_assessment_model import Rubric_Assessment
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 
 #Set the default folder for templates
@@ -130,8 +130,32 @@ def rubric_data():
     request = extract_rubric_data(course_ID, assessment_ID)
     #Perform analysis and remapping here:
     map_rubric_data(request.json())
-    print(Assessment.objects().first())
+    print(Rubric_Assessment.objects().first())
     return request.text
+
+@application.route('/learning_outcomes')
+@login_required
+def learning_outcomes():
+    return Learning_Outcome.objects()
+
+@application.route('/learning_outcomes/new', methods=['GET', 'POST'])
+@login_required
+def create_learning_outcome():
+    if(request.method == 'GET'):
+        return render_template('new_learning_outcome.html')
+    if(request.method == 'POST'):
+        try:
+            learning_outcome_id = request.args.get('learning_outcome_id')
+            learning_outcome_name = request.args.get('learning_outcome_name')
+            learning_outcome_description = request.args.get('learning_outcome_description')
+        except Exception as error:
+            raise error
+        learning_outcome = Learning_Outcome(
+                         learning_outcome_id,
+                         learning_outcome_name,
+                         learning_outcome_description
+                        )
+        learning_outcome.save()
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
@@ -160,7 +184,18 @@ def map_rubric_data(submission_data):
                     #Some points are marked blank and cannot be converted. 
                     pass
                 submission_grades.append(learning_outcome)
-            Assessment.create(each_submission_item['user_id'], submission_grades)
+            assessment = Rubric_Assessment.create(each_submission_item['user_id'], 
+                                                  Assessment.objects(assessment_id=667),
+                                                  submission_grades)
+            learning_outcome_count = 0
+            grade_total = 0
+            for each_learning_outcome in assessment.grades:
+                learning_outcome_count = learning_outcome_count + 1
+                grade_total = grade_total + 1
+                if(grade_total == 21):
+                    print(grade_total)
+                if(grade_total == 36):
+                    print(grade_total)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,

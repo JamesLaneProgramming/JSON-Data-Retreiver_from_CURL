@@ -1,12 +1,11 @@
-from mongoengine import Document, ListField, ReferenceField, IntField
+from mongoengine import Document, ReferenceField, ListField
 
 class Assessment(Document):
-    meta = {'collection' : 'assessments'}
-    user_id=IntField(required = True, unique = True)
-    grades=ListField(ReferenceField('Learning_Outcome'))
+    criteria = ListField(ReferenceField('Criteria'))
 
-    def create(user_id, grades):
-        assessment = Assessment(user_id, grades).save()
+    def index(id):
+        return Assessment.objects(id).first()
+
+    def create(criteria):
+        assessment = Assessment(criteria)
         return assessment
-    def delete():
-        pass
