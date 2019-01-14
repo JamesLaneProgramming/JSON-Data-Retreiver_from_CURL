@@ -150,13 +150,16 @@ def create_learning_outcome():
             learning_outcome_description = request.args.get('learning_outcome_description')
         except Exception as error:
             raise error
-        learning_outcome = Learning_Outcome(
-                         learning_outcome_id,
-                         learning_outcome_name,
-                         learning_outcome_description
-                        )
-        learning_outcome.save()
-        return learning_outcome
+        try:
+            learning_outcome = Learning_Outcome(
+                             learning_outcome_id,
+                             learning_outcome_name,
+                             learning_outcome_description
+                            )
+            learning_outcome.save()
+            return "Success"
+        except Exception as error:
+            return "Failed to create learning outcome"
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
