@@ -156,6 +156,7 @@ def create_learning_outcome():
                          learning_outcome_description
                         )
         learning_outcome.save()
+        return learning_outcome
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
