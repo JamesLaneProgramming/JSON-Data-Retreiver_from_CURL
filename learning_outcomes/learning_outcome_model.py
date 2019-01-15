@@ -1,4 +1,5 @@
-from mongoengine import Document, IntField, FloatField, StringField
+from mongoengine import Document
+from mongoEngine import ReferenceFieldt, IntField, StringField
 
 class Learning_Outcome(Document):
     meta = {'collection': 'learning_outcomes'}
