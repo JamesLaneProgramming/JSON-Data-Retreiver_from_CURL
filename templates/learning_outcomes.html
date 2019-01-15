@@ -9,8 +9,8 @@
 	    <ul>
 	    	{% for outcome in learning_outcomes %}
 	    		<li>
-				<p> {{outcome['learning_outcome_name']}} </p>
-				<p> {{outcome['learning_outcome_description']}} </p>
+				<p> {{outcome.learning_outcome_name}} </p>
+				<p> {{outcome.learning_outcome_description}} </p>
 			</li>
 		{% endfor %}
 	    </ul>
