@@ -136,7 +136,7 @@ def rubric_data():
 @application.route('/learning_outcomes')
 @login_required
 def learning_outcomes():
-    return render_template('learning_outcomes', 
+    return render_template('learning_outcomes.html', 
                            learning_outcomes = Learning_Outcome.show())
 
 @application.route('/learning_outcomes/new', methods=['GET', 'POST'])
