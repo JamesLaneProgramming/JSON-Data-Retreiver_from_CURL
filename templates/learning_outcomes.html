@@ -7,8 +7,11 @@
   <body>
     <div class="container">
 	    <ul>
-	    {% for learning_outcome in learning_outcomes %}
-	    	<li>{{learning_outcome.text}}</li>
+	    	{% for k, v in learning_outcomes.items() %}
+	    		<li>
+				<p> {{k}} </p>
+				<p> {{v}} </p>
+			</li>
 		{% endfor %}
 	    </ul>
     </div>
