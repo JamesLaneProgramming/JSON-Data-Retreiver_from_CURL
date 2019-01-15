@@ -11,4 +11,4 @@ class Learning_Outcome(Document):
         return Learning_Outcome.objects(learning_outcome_id=id).first()
     
     def show():
-        return Learning_Outcome.objects()
+        return Learning_Outcome.objects().to_json()
