@@ -136,7 +136,8 @@ def rubric_data():
 @application.route('/learning_outcomes')
 @login_required
 def learning_outcomes():
-    return Learning_Outcome.objects()
+    return render_template('learning_outcomes', 
+                           learning_outcomes = Learning_Outcome.show())
 
 @application.route('/learning_outcomes/new', methods=['GET', 'POST'])
 @login_required
@@ -160,6 +161,8 @@ def create_learning_outcome():
             return "Success"
         except Exception as error:
             return "Failed to create learning outcome"
+
+
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
@@ -220,12 +223,6 @@ class submission_object():
             if(points != None):
                 criterion_object = criterion(key, points, comments)
                 self.criteria.append(criterion_object)
-
-class criterion():
-    def __init__(self, id, points, comments):
-        self.id = id
-        self.points = points
-        self.comments = comments
 
 @application.route('/students', methods=['GET', 'POST'])
 @login_required

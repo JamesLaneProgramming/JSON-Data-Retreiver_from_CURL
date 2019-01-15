@@ -5,6 +5,10 @@ class Learning_Outcome(Document):
     learning_outcome_id = IntField()
     learning_outcome_name = StringField()
     learning_outcome_description = StringField()
+    learning_outcome_subject = ReferenceField('subject')
     
     def index(id):
         return Learning_Outcome.objects(learning_outcome_id=id).first()
+    
+    def show():
+        return Learning_Outcome.objects()
