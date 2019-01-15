@@ -1,5 +1,6 @@
 <html>
   <head>
+	  <script> learning_outcomes_json = {{learning_outcomes|tojson}}; </script>
     <title>New Learning Outcome</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
@@ -7,12 +8,12 @@
   <body>
     <div class="container">
 	    <ul>
-	    	{% for outcome in learning_outcomes %}
+		    {% for each in learning_outcomes_json %}
 	    		<li>
-				<p> {{outcome.learning_outcome_name}} </p>
+				<p> {{each['learning_outcome_name']}} </p>
 				<p> {{outcome.learning_outcome_description}} </p>
 			</li>
-		{% endfor %}
+			{% endfor %}
 	    </ul>
     </div>
   </body>
