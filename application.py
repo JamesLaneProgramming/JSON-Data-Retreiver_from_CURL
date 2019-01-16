@@ -139,9 +139,10 @@ def rubric_data():
 def subjects():
     if(request.method == 'GET'):
         subjects = Subject.read()
-        learning_outcomes = Learning_Outcome.objects()
+        learning_outcomes = Learning_Outcome.objects().to_json()
+        learning_outcomes = json.dumps(learning_outcomes)
         return render_template('subjects.html',
-                               learning_outcomes=learning_outcomes.to_json())
+                               learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
             subject_name = request.form['subject_name']
