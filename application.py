@@ -141,7 +141,7 @@ def subjects():
         subjects = Subject.read()
         learning_outcomes = Learning_Outcome.objects()
         return render_template('subjects.html',
-                               learning_outcomes=json.dumps(learning_outcomes))
+                               learning_outcomes=learning_outcomes.to_json())
     elif(request.method == 'POST'):
         try:
             subject_name = request.form['subject_name']
