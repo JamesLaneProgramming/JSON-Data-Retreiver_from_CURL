@@ -21,6 +21,7 @@
           request.form.subject_name }}">
         <input type="text" placeholder="Subject Description" name="subject_description_field" value="{{
           request.form.subject_description }}">
+          <p>{{learning_outcomes}}</p>
           <select>
           {% for each_learning_outcome in learning_outcomes %}
             <p>each_learning_outcome</p>
