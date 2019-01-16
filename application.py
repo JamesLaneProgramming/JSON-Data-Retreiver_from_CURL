@@ -28,6 +28,7 @@ from canvas_module import enroll_canvas_student, extract_rubric_data, search_stu
 from users.user_model import User
 from assessments.rubric_assessment_model import Rubric_Assessment
 from learning_outcomes.learning_outcome_model import Learning_Outcome
+from subjects.subject_model import Subject
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
@@ -133,13 +134,19 @@ def rubric_data():
     print(Rubric_Assessment.objects().first())
     return request.text
 
+@application.route('/subjects')
+@login_required
+def subjects():
+    subjects = Subject.read()
+    return render_template('subjects.html', subjects=subjects)
+
 @application.route('/learning_outcomes')
 @login_required
 def learning_outcomes():
     learning_outcomes = Learning_Outcome.show()
     print(learning_outcomes)
     return render_template('learning_outcomes.html', 
-                           learning_outcomes = Learning_Outcome.show())
+                           learning_outcomes=learning_outcomes)
 
 @application.route('/learning_outcomes/new', methods=['GET', 'POST'])
 @login_required
