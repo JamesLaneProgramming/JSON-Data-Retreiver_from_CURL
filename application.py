@@ -143,13 +143,12 @@ def subjects():
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
-        subject_name = ''
-        subject_description = ''
-        learning_outcomes = []
-        test_learning_outcome = Learning_Outcome.objects().first()
-        learning_outcomes.append(test_learning_outcome)
+        try:
+            subject_name = request.form['subject_name']
+            subject_description = request.form['subject_description']
+            learning_outcomes = request.form['learning_outcomes']
         subject = Subject.create(subject_name, subject_description,
-                                 test_learning_outcome)
+                                 learning_outcomes)
         return subject.to_json()
 
 @application.route('/learning_outcomes')
