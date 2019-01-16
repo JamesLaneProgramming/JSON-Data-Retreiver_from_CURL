@@ -162,7 +162,7 @@ def learning_outcomes():
         learning_outcomes = Learning_Outcome.read()
         return render_template('learning_outcomes.html', 
                                learning_outcomes=learning_outcomes)
-    elif(request.method = 'POST'):
+    elif(request.method == 'POST'):
         try:
             learning_outcome_name = request.form['learning_outcome_name']
             learning_outcome_description = request.form['learning_outcome_description']
