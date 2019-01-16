@@ -159,7 +159,7 @@ def subjects():
 @login_required
 def learning_outcomes():
     if(request.method == 'GET'):
-        learning_outcomes = Learning_Outcome.show()
+        learning_outcomes = Learning_Outcome.read()
         return render_template('learning_outcomes.html', 
                                learning_outcomes=learning_outcomes)
     elif(request.method = 'POST'):
@@ -174,7 +174,7 @@ def learning_outcomes():
                              learning_outcome_description
                             )
             learning_outcome.save()
-            return learning_outcome.to_json()
+            return "success"
         except Exception as error:
             return abort(500)
 
