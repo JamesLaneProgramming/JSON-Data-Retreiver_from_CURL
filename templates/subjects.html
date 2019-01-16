@@ -23,10 +23,10 @@
           request.form.subject_description }}">
           <p>{{learning_outcomes}}</p>
           <select>
-          {% for each_learning_outcome in learning_outcomes %}
+          {% for each_learning_outcome in {{learning_outcomes}} %}
             <p>each_learning_outcome</p>
             <p>each_learning_outcome['learning_outcome_name']</p>
-            <option value={{each_learning_outcome.name}}>{{each_learning_outcome.learning_outcome_name}}</option>
+            <option value=each_learning_outcome['learning_outcome_name']>each_learning_outcome['learning_outcome_name']</option>
           {% endfor %}
         </select>
       </form>
