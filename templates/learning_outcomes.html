@@ -7,10 +7,10 @@
   <body>
     <div class="container">
 	    <ul>
-		    {% for each in learning_outcomes %}
+		    {% for each_learning_outcome in learning_outcomes %}
 	    	<li>
-				    <p> {{each['learning_outcome_name']}} </p>
-				    <p> {{outcome.learning_outcome_description}} </p>
+				    <p> {{each_learning_outcome['learning_outcome_name']}} </p>
+				    <p> {{each_learning_outcome['learning_outcome_description']}} </p>
 			  </li>
 			  {% endfor %}
       </ul>

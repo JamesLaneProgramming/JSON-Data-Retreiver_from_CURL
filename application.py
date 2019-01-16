@@ -139,8 +139,7 @@ def rubric_data():
 def subjects():
     if(request.method == 'GET'):
         subjects = Subject.read()
-        learning_outcomes = Learning_Outcome.read()
-        learning_outcomes = json.loads(learning_outcomes)
+        learning_outcomes = json.loads(Learning_Outcome.read())
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
@@ -159,7 +158,7 @@ def subjects():
 @login_required
 def learning_outcomes():
     if(request.method == 'GET'):
-        learning_outcomes = Learning_Outcome.read()
+        learning_outcomes = json.loads(Learning_Outcome.read())
         return render_template('learning_outcomes.html', 
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
