@@ -22,14 +22,15 @@
         <input type="text" placeholder="Subject Description" name="subject_description_field" value="{{
           request.form.subject_description }}">
           <p>{{learning_outcomes}}</p>
-          {% for each_learning_outcome in learning_outcomes %}
+          <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
+          {% for each_learning_outcome in learning_outcomes | tojson | safe %}
             <p>{{each_learning_outcome}}</p>
             <p>{{each_learning_outcome['learning_outcome_name']}}</p>
             <p>each_learning_outcome['learning_outcome_name']</p>
           {% endfor %}
         <select>
           <option>
-            
+
           </option>
         </select>
       </form>
