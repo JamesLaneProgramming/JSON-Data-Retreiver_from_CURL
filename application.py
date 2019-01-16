@@ -139,7 +139,7 @@ def rubric_data():
 def subjects():
     if(request.method == 'GET'):
         subjects = Subject.read()
-        learning_outcomes = Learning_Outcome.objects().to_json()
+        learning_outcomes = Learning_Outcome.read()
         learning_outcomes = json.loads(learning_outcomes)
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
@@ -155,38 +155,28 @@ def subjects():
                                  learning_outcomes)
         return subject.to_json()
 
-@application.route('/learning_outcomes')
+@application.route('/learning_outcomes', methods=['GET', 'POST'])
 @login_required
 def learning_outcomes():
-    learning_outcomes = Learning_Outcome.show()
-    print(learning_outcomes)
-    return render_template('learning_outcomes.html', 
-                           learning_outcomes=learning_outcomes)
-
-@application.route('/learning_outcomes/new', methods=['GET', 'POST'])
-@login_required
-def create_learning_outcome():
     if(request.method == 'GET'):
-        return render_template('new_learning_outcome.html')
-    if(request.method == 'POST'):
+        learning_outcomes = Learning_Outcome.show()
+        return render_template('learning_outcomes.html', 
+                               learning_outcomes=learning_outcomes)
+    elif(request.method = 'POST'):
         try:
-            learning_outcome_id = request.form['learning_outcome_id']
             learning_outcome_name = request.form['learning_outcome_name']
             learning_outcome_description = request.form['learning_outcome_description']
         except Exception as error:
             raise error
         try:
             learning_outcome = Learning_Outcome(
-                             learning_outcome_id,
                              learning_outcome_name,
                              learning_outcome_description
                             )
             learning_outcome.save()
-            return "Success"
+            return learning_outcome.to_json()
         except Exception as error:
-            return "Failed to create learning outcome"
-
-
+            return abort(500)
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
