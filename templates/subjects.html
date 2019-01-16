@@ -25,11 +25,11 @@
           <select>
             <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
             {% for each_learning_outcome in learning_outcomes %}
-              <option>{{each_learning_outcome}}</option>
+              <option value={{each_learning_id}}>{{each_learning_outcome['learning_outcome_name']}}</option>
             {% endfor %}
           </select>
+          <input class="btn btn-default" type="submit" value="Create">
       </form>
-
     </div>
   </body>
 </html>
