@@ -145,8 +145,8 @@ def subjects():
     elif(request.method == 'POST'):
         try:
             subject_name = request.form['subject_name']
-            subject_description = request.form['subject_description']
-            learning_outcomes = request.form['learning_outcomes']
+            subject_description = request.form['subject_description_field']
+            learning_outcomes = request.form['learning_outcomes_field']
         except Exception as error:
             raise error
 
@@ -163,8 +163,8 @@ def learning_outcomes():
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
-            learning_outcome_name = request.form['learning_outcome_name']
-            learning_outcome_description = request.form['learning_outcome_description']
+            learning_outcome_name = request.form['learning_outcome_name_field']
+            learning_outcome_description = request.form['learning_outcome_description_field']
         except Exception as error:
             raise error
         try:
