@@ -147,6 +147,9 @@ def subjects():
             subject_name = request.form['subject_name']
             subject_description = request.form['subject_description']
             learning_outcomes = request.form['learning_outcomes']
+        except Exception as error:
+            raise error
+
         subject = Subject.create(subject_name, subject_description,
                                  learning_outcomes)
         return subject.to_json()
