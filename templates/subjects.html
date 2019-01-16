@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>Subjects</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+	    <ul>
+		    {% for each_subject in subjects %}
+	    		<li>
+				<p> {{each_subject.subject_name}} </p>
+				<p> {{each_subject.subject_description}} </p>
+			</li>
+			{% endfor %}
+	    </ul>
+    </div>
+  </body>
+</html>
