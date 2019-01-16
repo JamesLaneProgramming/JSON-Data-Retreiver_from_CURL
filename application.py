@@ -139,7 +139,7 @@ def rubric_data():
 def subjects():
     if(request.method == 'GET'):
         subjects = Subject.read()
-        learning_outcomes = Learning_Outcomes.objects()
+        learning_outcomes = Learning_Outcome.objects()
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
