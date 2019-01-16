@@ -140,7 +140,7 @@ def subjects():
     if(request.method == 'GET'):
         subjects = Subject.read()
         learning_outcomes = Learning_Outcome.objects().to_json()
-        learning_outcomes = json.dumps(learning_outcomes)
+        learning_outcomes = json.loads(learning_outcomes)
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
