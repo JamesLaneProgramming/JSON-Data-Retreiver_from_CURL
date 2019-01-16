@@ -15,5 +15,19 @@
 			{% endfor %}
 	    </ul>
     </div>
+    <div class="container">
+	    <form action="/" method="post">
+        <input type="text" placeholder="Subject Name" name="subject_name_field" value="{{
+          request.form.subject_name }}">
+        <input type="text" placeholder="Subject Description" name="subject_description_field" value="{{
+          request.form.subject_description }}">
+        <select>
+          {% for each_learning_outcome in learning_outcomes %}
+          <option value=each_learning_outcome.name>each_learning_outcome.name</option>
+          {% endfor %}
+        </select>
+      </form>
+
+    </div>
   </body>
 </html>

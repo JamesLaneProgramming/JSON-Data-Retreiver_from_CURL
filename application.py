@@ -134,11 +134,23 @@ def rubric_data():
     print(Rubric_Assessment.objects().first())
     return request.text
 
-@application.route('/subjects')
+@application.route('/subjects', methods=['GET', 'POST'])
 @login_required
 def subjects():
-    subjects = Subject.read()
-    return render_template('subjects.html', subjects=subjects)
+    if(request.method == 'GET'):
+        subjects = Subject.read()
+        learning_outcomes = Learning_Outcomes.objects()
+        return render_template('subjects.html',
+                               learning_outcomes=learning_outcomes)
+    elif(request.method == 'POST'):
+        subject_name = ''
+        subject_description = ''
+        learning_outcomes = []
+        test_learning_outcome = Learning_Outcome.objects().first()
+        learning_outcomes.append(test_learning_outcome)
+        subject = Subject.create(subject_name, subject_description,
+                                 test_learning_outcome)
+        return subject.to_json()
 
 @application.route('/learning_outcomes')
 @login_required
