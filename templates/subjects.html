@@ -24,7 +24,7 @@
           <select multiple name="subject_learning_outcomes_field" form='subject_form'>
             <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
             {% for each_learning_outcome in learning_outcomes %}
-              <option value={{each_learning_id}}>{{each_learning_outcome['learning_outcome_name']}}</option>
+              <option value={{ each_learning_outcome['_id'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
             {% endfor %}
           </select>
         <input class="btn btn-default" type="submit" value="Create">
