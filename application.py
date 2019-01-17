@@ -151,7 +151,7 @@ def subjects():
                 passed_learning_outcomes.append(each_passed_learning_outcome)
         except Exception as error:
             raise error
-        print(learning_outcomes)
+        print(passed_learning_outcomes)
         subject_learning_outcomes = []
         for each_learning_outcome in learning_outcomes:
             subject_learning_outcomes.append(Learning_Outcome.index(each_learning_outcome))
