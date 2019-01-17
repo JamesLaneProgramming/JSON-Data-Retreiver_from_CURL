@@ -153,7 +153,7 @@ def subjects():
             raise error
         print(passed_learning_outcomes)
         subject_learning_outcomes = []
-        for each_learning_outcome in learning_outcomes:
+        for each_learning_outcome in passed_learning_outcomes:
             subject_learning_outcomes.append(Learning_Outcome.index(each_learning_outcome))
 
         subject = Subject(
