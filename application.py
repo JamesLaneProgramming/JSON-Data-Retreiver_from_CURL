@@ -143,17 +143,15 @@ def subjects():
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
-        passed_learning_outcomes = []
         try:
             subject_name = request.form['subject_name_field']
             subject_description = request.form['subject_description_field']
-            for each_passed_learning_outcome in request.form['subject_learning_outcomes_field']:
-                passed_learning_outcomes.append(each_passed_learning_outcome)
+            learning_outcomes = request.form['subject_learning_outcomes_field']
         except Exception as error:
             raise error
-        print(passed_learning_outcomes)
+
         subject_learning_outcomes = []
-        for each_learning_outcome in passed_learning_outcomes:
+        for each_learning_outcome in learning_outcomes:
             subject_learning_outcomes.append(Learning_Outcome.index(each_learning_outcome))
 
         subject = Subject(
