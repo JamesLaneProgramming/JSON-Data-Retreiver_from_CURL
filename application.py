@@ -146,7 +146,7 @@ def subjects():
         try:
             subject_name = request.form['subject_name_field']
             subject_description = request.form['subject_description_field']
-            learning_outcome_data = request.form['subject_learning_outcomes_field']
+            learning_outcome_data = request.form['subject_learning_outcomes_field'][1]
         except Exception as error:
             raise error
         print(learning_outcome_data)
