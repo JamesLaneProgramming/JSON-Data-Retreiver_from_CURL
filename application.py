@@ -149,7 +149,7 @@ def subjects():
             learning_outcome_data = request.form['subject_learning_outcomes_field']
         except Exception as error:
             raise error
-
+        print(learning_outcome_data)
         learning_outcomes = []
         for each_learning_outcome in learning_outcome_data:
             learning_outcomes.append(Learning_Outcome.index(each_learning_outcome))
