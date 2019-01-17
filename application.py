@@ -146,9 +146,13 @@ def subjects():
         try:
             subject_name = request.form['subject_name_field']
             subject_description = request.form['subject_description_field']
-            learning_outcomes = request.form['subject_learning_outcomes_field']
+            learning_outcome_data = json.loads(request.form['subject_learning_outcomes_field'])
         except Exception as error:
             raise error
+
+        learning_outcomes = []
+        for each_learning_outcome in learning_outcome_data:
+            learning_outcomes.append(Learning_Outcome.index(each_learning_outcome['_id']))
 
         subject = Subject(
                           subject_name, 
