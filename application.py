@@ -150,8 +150,11 @@ def subjects():
         except Exception as error:
             raise error
 
-        subject = Subject.create(subject_name, subject_description,
-                                 learning_outcomes)
+        subject = Subject(
+                          subject_name, 
+                          subject_description,
+                          learning_outcomes
+                         ).save()
         return subject.to_json()
 
 @application.route('/learning_outcomes', methods=['GET', 'POST'])

@@ -7,11 +7,3 @@ class Subject(Document):
     
     def read():
         return Subject.objects()
-
-    def create(subject_name, subject_description, learning_outcomes):
-        subject = Subject(
-                          subject_name, 
-                          subject_description,
-                          learning_outcomes
-                         )
-        return subject
