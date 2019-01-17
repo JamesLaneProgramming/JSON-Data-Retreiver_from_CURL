@@ -6,8 +6,8 @@ class Learning_Outcome(Document):
     learning_outcome_name = StringField()
     learning_outcome_description = StringField()
     
-    def index(id):
-        return Learning_Outcome.objects(learning_outcome_id=id).first()
+    def index(learning_outcome_id):
+        return Learning_Outcome.objects(pk=learning_outcome_id).first()
     
     def read():
         return Learning_Outcome.objects().to_json()
