@@ -21,8 +21,7 @@
           request.form.subject_name }}">
         <input type="text" placeholder="Subject Description" name="subject_description_field" value="{{
           request.form.subject_description }}">
-          <p>{{learning_outcomes}}</p>
-          <select>
+          <select multiple>
             <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
             {% for each_learning_outcome in learning_outcomes %}
               <option value={{each_learning_id}}>{{each_learning_outcome['learning_outcome_name']}}</option>
