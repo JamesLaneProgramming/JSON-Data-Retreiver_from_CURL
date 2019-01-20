@@ -7,11 +7,10 @@ class Learning_Outcome(Document):
     meta = {'collection': 'learning_outcomes'}
     learning_outcome_name = StringField()
     learning_outcome_description = StringField()
-    
+
     def index(learning_outcome_id):
         #Attempt to convert _id into an ObjectID for use with MongoDB fields
         #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
-        print(learning_outcome_id)
         try:
             o_id = ObjectId(learning_outcome_id)
         except Exception as error:
