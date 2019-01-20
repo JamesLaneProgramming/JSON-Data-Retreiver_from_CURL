@@ -143,10 +143,11 @@ def subjects():
         return render_template('subjects.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
+        request_data = request.get_json()
         try:
-            subject_name = request.form['subject_name_field']
-            subject_description = request.form['subject_description_field']
-            learning_outcomes = request.form['subject_learning_outcomes_field[]']
+            subject_name = request_data['subject_name_field']
+            subject_description = request_data['subject_description_field']
+            learning_outcomes = request_data['subject_learning_outcomes_field[]']
         except Exception as error:
             raise error
 
