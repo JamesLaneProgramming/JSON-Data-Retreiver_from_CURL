@@ -153,6 +153,7 @@ def subjects():
 
         subject_learning_outcomes = []
         for each_learning_outcome in learning_outcomes:
+            print(each_learning_outcome)
             subject_learning_outcomes.append(Learning_Outcome.index(each_learning_outcome))
 
         subject = Subject(
