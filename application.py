@@ -142,6 +142,7 @@ def subjects():
         learning_outcomes = json.loads(Learning_Outcome.read())
         #Send subjects and render in template.
         return render_template('subjects.html',
+                               subjects=subjects,
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
