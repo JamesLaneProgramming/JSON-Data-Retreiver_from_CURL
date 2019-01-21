@@ -1,7 +1,6 @@
 from mongoengine import Document
 from mongoengine import ReferenceField, IntField, StringField
-import bson
-from bson.objectid import ObjectId
+import mongo_methods
 
 class Learning_Outcome(Document):
     meta = {'collection': 'learning_outcomes'}
@@ -9,12 +8,7 @@ class Learning_Outcome(Document):
     learning_outcome_description = StringField()
 
     def index(learning_outcome_id):
-        #Attempt to convert _id into an ObjectID for use with MongoDB fields
-        #http://api.mongodb.com/python/current/tutorial.html#querying-by-objectid
-        try:
-            o_id = ObjectId(learning_outcome_id)
-        except Exception as error:
-            raise error
+        o_id = mongo_methods.generate_objectid_from_string(learning_outcome_id)
         return Learning_Outcome.objects(pk=o_id).first()
     
     def read():

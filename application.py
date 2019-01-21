@@ -146,6 +146,7 @@ def subjects():
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
+            subject_code = request.form['subject_code_field']
             subject_name = request.form['subject_name_field']
             subject_description = request.form['subject_description_field']
             learning_outcome_ids = request.form.getlist('subject_learning_outcomes_field[]')
@@ -157,6 +158,7 @@ def subjects():
             subject_learning_outcomes.append(Learning_Outcome.index(each_learning_outcome_id))
 
         subject = Subject(
+                          subject_code,
                           subject_name, 
                           subject_description,
                           subject_learning_outcomes
@@ -185,6 +187,15 @@ def learning_outcomes():
             return "success"
         except Exception as error:
             return abort(500)
+
+@application.route('/assessments', methods=['GET', 'POST'])
+@login_required
+def assessments():
+    if(request.method == 'GET'):
+        assessments = json.loads(Assessment.read())
+        return render_template('assessments.html', 
+                               assessments = assessments)
+    #TODO: ADD POST logic
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:

@@ -11,15 +11,15 @@ class Assessment(Document):
         return assessment
 
 class Criterion(Document):
-    criterion_id = IntField()
+    criterion_assessment = ReferenceField(Assessment)
     criterion_points = IntField()
     criterion_comments = ListField(StringField())
-    
-    def create(criterion_id, criterion_points, criterion_comments):
-        criterion = Criterion(criterion_id, criterion_points,
-                              criterion_comments)
-        return criterion
+    criterion_mapping_id = IntField()
 
+    def read():
+        Criterion.objects()
+    def index(id):
+        Criterion.objects(pk=id)
 class Grade(Document):
     user_id = ReferenceField('User')
     learning_outcome = ReferenceField('Learning_Outcome')
