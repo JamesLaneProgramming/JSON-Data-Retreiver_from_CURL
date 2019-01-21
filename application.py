@@ -165,6 +165,12 @@ def subjects():
                          ).save()
         return subject.to_json()
 
+@application.route('/subjects/<int:subject_id>', methods=['GET', 'POST'])
+@login_required
+def subject(subject_id):
+    if(request.method == 'GET'):
+        return Subject.index(subject_id)
+
 @application.route('/learning_outcomes', methods=['GET', 'POST'])
 @login_required
 def learning_outcomes():

@@ -1,5 +1,6 @@
 from mongoengine import Document, StringField, ListField, ReferenceField
 from learning_outcomes.learning_outcome_model import Learning_Outcome
+import mongo_methods
 
 class Subject(Document):
     subject_code = StringField(required=True)
@@ -9,3 +10,11 @@ class Subject(Document):
     
     def read():
         return Subject.objects()
+    
+    def index(id):
+        o_id = mongo_methods.generate_objectid_from_string(id)
+        return Subject.objects(pk=o_id)
+
+    def delete(id):
+        o_id = mongo_methods.generate_objectid_from_string(id)
+        return Subject.objects(o_id).delete()
