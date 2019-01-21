@@ -165,7 +165,7 @@ def subjects():
                          ).save()
         return subject.to_json()
 
-@application.route('/subjects/<int:subject_id>', methods=['GET', 'POST'])
+@application.route('/subjects/<string:subject_id>', methods=['GET', 'POST'])
 @login_required
 def subject(subject_id):
     if(request.method == 'GET'):
