@@ -25,7 +25,7 @@ class Criterion(Document):
     criterion_learning_outcomes = ListField(ReferenceField(Learning_Outcome))
 
     def read():
-        return Criterion.objects()
+        return Criterion.objects().to_json()
     def index(id):
         return Criterion.objects(pk=id)
     def map_learning_outcomes(learning_outcomes):
