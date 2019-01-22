@@ -205,11 +205,15 @@ def criterion():
             criterion_learning_outcomes = request.form.getlist('criterion_learning_outcomes_field[]')
         except Exception as error:
             raise error
-        return Criterion(criterion_name=criterion_name,
-                         criterion_description=criterion_description,
-                         criterion_points=criterion_points,
-                         criterion_learning_outcomes=criterion_learning_outcomes).save()
 
+        try:
+            criterion = Criterion(criterion_name=criterion_name,
+                                  criterion_description=criterion_description,
+                                  criterion_points=criterion_points,
+                                  criterion_learning_outcomes=criterion_learning_outcomes).save()
+            return "Success"
+        except Exception as error:
+            raise error
 #<path: assessment_id>
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
