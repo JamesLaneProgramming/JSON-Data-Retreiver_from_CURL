@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <title>Criterion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+	    <ul>
+		    {% for each_criterion in criterion %}
+	    		<li>
+            <div>
+				      <p> {{each_criterion.criterion_name}} </p>
+              <p> {{each_criterion.criterion_description}} </p>
+              <p> Learning Outcome Mappings: </p>
+              <ul>
+                {% for each_learning_outcome in each_criterion.learning_outcomes %}
+                  <li>
+                    {{each_learning_outcome.learning_outcome_name}}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+			    </li>
+			{% endfor %}
+	    </ul>
+    </div>
+    <div class="container">
+	    <form id='subject_form'action="" method="post">
+        <input type="text" placeholder="Criterion Name" name="criterion_name_field" value="{{request.form.criterion_name_field}}">
+        <input type="text" placeholder="Criterion Description" name="criterion_description_field" value="{{request.form.criterion_description_field}}">
+        <input type="number" placeholder="Criterion Points" name="criterion_points_field" value="{{request.form.criteiron_points_field}}">
+          <select multiple name="criterion_learning_outcomes_field[]" form='criterion_form'>
+            <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
+            {% for each_learning_outcome in learning_outcomes %}
+              <option value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
+            {% endfor %}
+          </select>
+        <input class="btn btn-default" type="submit" value="Create">
+      </form>
+    </div>
+  </body>
+</html>

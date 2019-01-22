@@ -1,4 +1,6 @@
-from mongoengine import Document, IntField ReferenceField, ListField
+from mongoengine import Document, IntField, FloatField, ReferenceField, ListField
+from learning_outcomes.learning_outcome_model import Learning_Outcome
+from users.user_model import User
 
 class Assessment(Document):
     criteria = ListField(ReferenceField('Criterion'))
@@ -10,21 +12,34 @@ class Assessment(Document):
         assessment = Assessment(criteria)
         return assessment
 
+    def load_from_json(assessment_json_data):
+        #Loop json and extract criterion data
+        #Create criterion
+        #Save to database
+
 class Criterion(Document):
-    criterion_assessment = ReferenceField(Assessment)
-    criterion_points = IntField()
-    criterion_comments = ListField(StringField())
-    criterion_mapping_id = IntField()
+    criterion_name = StringField()
+    criterion_description = StringField()
+    criterion_points = FloatField()
+    criterion_learning_outcomes = ListField(ReferenceField(Learning_Outcome))
 
     def read():
-        Criterion.objects()
+        return Criterion.objects()
     def index(id):
-        Criterion.objects(pk=id)
+        return Criterion.objects(pk=id)
+    def map_learning_outcomes(learning_outcomes):
+        criterion_learning_outcomes = learning_outcomes
+
 class Grade(Document):
-    user_id = ReferenceField('User')
-    learning_outcome = ReferenceField('Learning_Outcome')
-    points = IntField()
+    user_id = ReferenceField(User)
+    learning_outcome = ReferenceField(Learning_Outcome)
+    canvas_outcome_id = StringField()
+    points = FloatField()
+
+    def canvas_outcome_mapped_to_learning_outcome():
+        pass
 
 class Assessment_Submission(Document):
-    assessment_id = ReferenceField('Assessment')
-    grades = ListField(ReferenceField('Grade'))
+    user_id = ReferenceField(User)
+    assessment_id = ReferenceField(Assessment)
+    grades = ListField(ReferenceField(Grade))

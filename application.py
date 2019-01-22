@@ -26,7 +26,7 @@ from flask_mongoengine import MongoEngine
 from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
-from assessments.rubric_assessment_model import Rubric_Assessment
+from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
 
@@ -165,12 +165,6 @@ def subjects():
                          ).save()
         return subject.to_json()
 
-@application.route('/subjects/<string:subject_id>', methods=['GET', 'POST'])
-@login_required
-def subject(subject_id):
-    if(request.method == 'GET'):
-        return Subject.index(subject_id)
-
 @application.route('/learning_outcomes', methods=['GET', 'POST'])
 @login_required
 def learning_outcomes():
@@ -194,6 +188,28 @@ def learning_outcomes():
         except Exception as error:
             return abort(500)
 
+@application.route('/criterion', methods=['GET', 'POST'])
+@login_required
+def criterion():
+    if(request.method == 'GET'):
+        criterion = json.loads(Criterion.read())
+        learning_outcomes = json.loads(Learning_Outcome.read())
+        return render_template('criterion.html',
+                              criterion=criterion,
+                              learning_outcomes=learning_outcomes)
+    elif(request.method == 'POST'):
+        try:
+            criterion_name = request.form['criterion_name_field']
+            criterion_description = request.form['criterion_description_field']
+            criterion_points = request.form['criterion_points_field']
+            criterion_learning_outcomes = request.form.getlist('criterion_learning_outcomes_field[]')
+        except Exception as error:
+            raise error
+        return Criterion(criterion_name=criterion_name,
+                        criterion_description=criterion_description
+                        criterion_points=criterion_points
+                        criterion_learning_outcomes=criterion_learning_outcomes)
+    
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
 def assessments():
