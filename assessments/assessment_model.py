@@ -4,7 +4,7 @@ from users.user_model import User
 
 class Assessment(Document):
     criteria = ListField(ReferenceField('Criterion'))
-
+    
     def index(id):
         return Assessment.objects(id).first()
 
@@ -13,6 +13,7 @@ class Assessment(Document):
         return assessment
 
     def load_from_json(assessment_json_data):
+        pass
         #Loop json and extract criterion data
         #Create criterion
         #Save to database

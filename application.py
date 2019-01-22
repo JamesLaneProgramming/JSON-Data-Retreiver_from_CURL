@@ -208,7 +208,7 @@ def criterion():
         return Criterion(criterion_name=criterion_name,
                         criterion_description=criterion_description,
                         criterion_points=criterion_points,
-                        criterion_learning_outcomes=criterion_learning_outcomes)
+                         criterion_learning_outcomes=criterion_learning_outcomes).save()
     
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
