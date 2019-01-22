@@ -1,4 +1,4 @@
-from mongoengine import Document, IntField, FloatField, ReferenceField, ListField
+from mongoengine import Document, StringField, IntField, FloatField, ReferenceField, ListField
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from users.user_model import User
 
