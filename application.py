@@ -174,7 +174,7 @@ def request_refresh_token():
 
     _headers = {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-                'Data': 'grant_type=authorization_code&client_id={0}&client_secret={1}&redirect_uri={2}&code={3}'.format(client_id,
+                'Data': 'grant_type=refresh_token&client_id={0}&client_secret={1}&redirect_uri={2}&code={3}'.format(client_id,
                                                                                                            client_secret,
                                                                                                            redirect_uri,
                                                                                                            code)
