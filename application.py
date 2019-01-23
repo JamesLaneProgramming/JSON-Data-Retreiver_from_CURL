@@ -183,25 +183,13 @@ def request_refresh_token():
             'redirect_uri': redirect_uri,
             'code': code}
 
-    return str(requests.post('https://api.hubapi.com/oauth/v1/token',
-                         headers=_headers, data=data).json())
-
-@application.route('/hubspot/set_refresh_token')
-@login_required
-def set_refresh_token():
-    request_json_data = request.json
+    post_request = requests.post('https://api.hubapi.com/oauth/v1/token',
+                         headers=_headers, data=data)
     try:
-        json.loads(request_json_data)
-    except Exception as error:
-        raise error
-    
-    refresh_token = request_json_data['refresh_token']
-    access_token = request_json_data['access_token']
-    pint(refresh_token)
-    #User.set_access_token(current_user.id, access_token)
-    return User.set_refresh_token(current_user.id, refresh_token)
+        access_token = request.json()['access_token']
+        refresh_token = request.json()['refresh_token']
 
-@application.route('/hubspot')
+    return User.set_refresh_token(current_user.id, refresh_token).__repr__()
 
 @application.route('/rubric_data')
 @login_required
