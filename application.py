@@ -186,8 +186,10 @@ def request_refresh_token():
     post_request = requests.post('https://api.hubapi.com/oauth/v1/token',
                          headers=_headers, data=data)
     try:
-        access_token = request.json()['access_token']
-        refresh_token = request.json()['refresh_token']
+        access_token = post_request.json()['access_token']
+        refresh_token = post_request.json()['refresh_token']
+    except Exception as error:
+        raise error
 
     return User.set_refresh_token(current_user.id, refresh_token).__repr__()
 
