@@ -176,7 +176,8 @@ def refresh_token():
                                                                                                            redirect_uri,
                                                                                                            code)
                }
-    requests.post('https://api.hubapi.com/oauth/v1/token', headers=_headers)
+    return requests.post('https://api.hubapi.com/oauth/v1/token',
+                         headers=_headers).status_code
 
 @application.route('/hubspot/set_refresh_token')
 @login_required()
@@ -190,7 +191,7 @@ def set_refresh_token():
     access_token = request.json()['access_token']
 
     #User.set_access_token(current_user.id, access_token)
-    User.set_refresh_token(current_user.id, refresh_token)
+    return User.set_refresh_token(current_user.id, refresh_token).__repr__()
 
 @application.route('/hubspot')
 
