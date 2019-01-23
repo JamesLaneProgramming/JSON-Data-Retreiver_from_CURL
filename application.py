@@ -160,7 +160,7 @@ def authenticate_hubspot():
                                                                                                   redirect_uri))
 @application.route('/hubspot/request_refresh_token')
 @login_required
-def refresh_token():
+def request_refresh_token():
     try:
         code = request.args.get('code')
         client_id = environ.get('hubspot_client_id')
