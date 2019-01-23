@@ -179,6 +179,7 @@ def request_refresh_token():
                                                                                                            redirect_uri,
                                                                                                            code)
                }
+    print(_headers)
     return str(requests.post('https://api.hubapi.com/oauth/v1/token',
                          headers=_headers).status_code)
 
