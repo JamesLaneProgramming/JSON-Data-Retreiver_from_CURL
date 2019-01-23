@@ -180,7 +180,7 @@ def refresh_token():
                          headers=_headers).status_code
 
 @application.route('/hubspot/set_refresh_token')
-@login_required()
+@login_required
 def set_refresh_token():
     try:
         json.loads(request.json)
