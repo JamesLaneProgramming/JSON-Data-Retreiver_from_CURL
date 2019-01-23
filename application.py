@@ -166,7 +166,7 @@ def request_refresh_token():
     try:
         code = request.args.get('code')
         client_id = environ.get('hubspot_client_id')
-        client_secret = environ.get('hubspot_secret')
+        client_secret = environ.get('hubspot_client_secret')
         redirect_uri = url_for('set_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
