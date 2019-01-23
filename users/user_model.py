@@ -142,7 +142,7 @@ class User(UserMixin, Document):
         #Todo: Encrypt access token and save to database
         pass
     def set_refresh_token(user_id, refresh_token):
-        User.get(user_id).update(hubspot_refresh_token=refresh_token)
+        user = User.get(user_id).update(hubspot_refresh_token=refresh_token)
         return user
 
     def create(username, password):
