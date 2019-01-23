@@ -167,21 +167,24 @@ def request_refresh_token():
         code = request.args.get('code')
         client_id = environ.get('hubspot_client_id')
         client_secret = environ.get('hubspot_client_secret')
+        #redirect_uri must match the redirect_uri used to intitiate the OAuth
+        #connection
         redirect_uri = url_for('request_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
         raise error
 
     _headers = {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-                'Data': 'grant_type=authorization_code&client_id={0}&client_secret={1}&redirect_uri={2}&code={3}'.format(client_id,
-                                                                                                           client_secret,
-                                                                                                           redirect_uri,
-                                                                                                           code)
+                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
                }
-    print(_headers)
+    data = {'grant_type':'authorization_code', 
+            'client_id': client_id,
+            'client_secret': client_secret, 
+            'redirect_uri': redirect_uri,
+            'code': code}
+
     return str(requests.post('https://api.hubapi.com/oauth/v1/token',
-                         headers=_headers).json())
+                         headers=_headers, data=data).json())
 
 @application.route('/hubspot/set_refresh_token')
 @login_required
