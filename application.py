@@ -178,7 +178,7 @@ def refresh_token():
                }
     requests.post('https://api.hubapi.com/oauth/v1/token', headers=_headers)
 
-@applicaiton.route('/hubspot/set_refresh_token')
+@application.route('/hubspot/set_refresh_token')
 @login_required()
 def set_refresh_token():
     try:
