@@ -153,6 +153,7 @@ def authenticate_hubspot():
         client_id = environ.get('hubspot_client_id')
         scope = environ.get('hubspot_scopes')
         redirect_uri = url_for('request_refresh_token')
+        print(redirect_uri)
     except Exception as error:
         raise error
     return redirect('https://app.hubspot.com/oauth/authorize?client_id={0}&scope={1}&redirect_uri={2}'.format(client_id,
