@@ -4,6 +4,7 @@ import mongo_methods
 
 class Learning_Outcome(Document):
     meta = {'collection': 'learning_outcomes'}
+
     learning_outcome_name = StringField()
     learning_outcome_description = StringField()
 

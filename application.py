@@ -123,6 +123,77 @@ def logout():
     logout_user()
     return redirect('/')
 
+@application.route('/hubspot')
+@login_required
+def authenticate_hubspot():
+    '''
+    Hubspot OAuth workflow:
+
+    Direct users to https://app.hubspot.com/oauth/authorize with the following
+    query parameters:
+        -client_id
+        -scope
+        -redirect_uri
+
+    They will be prompted to authenticate and authorise the application.
+
+    Users will be redirected to the redirect_uri with a code query parameter.
+    
+    Use the code above to request access token and refresh token.
+    Headers = Content-Type: application/x-www-form-urlencoded;charset=utf-8
+    Data:
+        -grant_type=authorisation_code
+        -client_id
+        -client_secret
+        -redirect_uri
+        -code
+    POST https://app.hubspot.com/oauth/v1/token
+    '''
+    try:
+        client_id = environ.get('hubspot_client_id')
+        scope = environ.get('hubspot_scopes')
+        redirect_uri = url_for('/hubspot/refresh_token')
+    except Exception as error:
+        raise error
+    return redirect('https://app.hubspot.com/oauth/authorize?client_id={0}&scope={1}&redirect_uri={2}'.format(client_id,
+                                                                                                  scope,
+                                                                                                  redirect_uri))
+@application.route('/hubspot/request_refresh_token')
+@login_required
+def refresh_token():
+    try:
+        code = request.args.get('code')
+        client_id = environ.get('hubspot_client_id')
+        client_secret = environ.get('hubspot_secret')
+        redirect_uri = url_for('/')
+    except Exception as error:
+        raise error
+
+    _headers = {
+                Content-Type: 'application/x-www-form-urlencoded;charset=utf-8'
+                Data: 'grant_type=refresh_token&client_id={0}&client_secret={1}&redirect_uri={2}&code={3}'.format(client_id,
+                                                                                                           client_secret,
+                                                                                                           redirect_uri,
+                                                                                                           code)
+               }
+    requests.post('https://api.hubapi.com/oauth/v1/token', headers=_headers)
+
+@applicaiton.route('/hubspot/set_refresh_token')
+@login_required()
+def set_refresh_token():
+    try:
+        json.loads(request.json)
+    except Exception as error:
+        raise error
+
+    refresh_token = request.json()['refresh_token']
+    access_token = request.json()['access_token']
+
+    #User.set_access_token(current_user.id, access_token)
+    User.set_refresh_token(current_user.id, refresh_token)
+
+@application.route('/hubspot')
+
 @application.route('/rubric_data')
 @login_required
 def rubric_data():
