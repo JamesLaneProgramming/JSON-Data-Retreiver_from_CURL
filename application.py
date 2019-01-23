@@ -152,7 +152,7 @@ def authenticate_hubspot():
     try:
         client_id = environ.get('hubspot_client_id')
         scope = environ.get('hubspot_scopes')
-        redirect_uri = url_for('request_refresh_token')
+        redirect_uri = url_for('request_refresh_token', _external=True)
         print(redirect_uri)
     except Exception as error:
         raise error
@@ -166,7 +166,7 @@ def request_refresh_token():
         code = request.args.get('code')
         client_id = environ.get('hubspot_client_id')
         client_secret = environ.get('hubspot_secret')
-        redirect_uri = url_for('set_refresh_token')
+        redirect_uri = url_for('set_refresh_token', _external=True)
     except Exception as error:
         raise error
 
