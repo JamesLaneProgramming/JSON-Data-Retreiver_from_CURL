@@ -193,6 +193,12 @@ def request_refresh_token():
 
     return User.set_refresh_token(current_user.id, refresh_token).__repr__()
 
+@application.route('hubspot/workflow_history/<workflow_id>')
+@login_required
+def workflow_history(workflow_id):
+    url = '/automation/v3/logevents/workflows/{0}/filter'.format(workflow_id)
+    return requests.post('https://app.hubspot.com{0}'.format(url)).json()
+
 @application.route('/rubric_data')
 @login_required
 def rubric_data():
