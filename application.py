@@ -191,6 +191,8 @@ def request_refresh_token():
         refresh_token = post_request.json()['refresh_token']
     except Exception as error:
         raise error
+
+    print(access_token)
     response = make_response()
     response.set_cookie('hubspot_access_token', access_token)
     User.set_refresh_token(current_user.id, refresh_token)
@@ -211,7 +213,7 @@ def workflow_history(workflow_id):
                        'Content-Type': 'application/json'
                       }
     request_parameters = {
-                          'hapikey': access_token,
+                          'apikey': access_token,
                           'types': ['COMPLETE_WORKFLOW']
                          }
     '''NB: The documentation at
