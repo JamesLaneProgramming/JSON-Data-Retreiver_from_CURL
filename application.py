@@ -19,7 +19,7 @@ from os import environ
 import sys
 import requests
 import json
-from flask import Flask, flash, render_template, request, abort, redirect, url_for
+from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
@@ -196,6 +196,7 @@ def request_refresh_token():
     set_refresh_token(current_user.id, refresh_token)
     return response
 
+#TODO: create decorator method to require hubspot oath workflow
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @login_required
 def workflow_history(workflow_id):
@@ -299,7 +300,7 @@ def criterion():
             return "Success"
         except Exception as error:
             raise error
-#<path: assessment_id>
+
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
 def assessments():
