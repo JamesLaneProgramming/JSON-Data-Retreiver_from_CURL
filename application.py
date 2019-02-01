@@ -210,7 +210,7 @@ def workflow_history(workflow_id):
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
     request_headers = {
-                       'Content-Type': 'application/json'
+                       'Content-Type': 'application/json',
                        'oauth-token': access_token
                       }
     request_parameters = {
