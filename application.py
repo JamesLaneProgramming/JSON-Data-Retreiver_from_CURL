@@ -185,6 +185,7 @@ def request_refresh_token():
 
     post_request = requests.post('https://api.hubapi.com/oauth/v1/token',
                          headers=_headers, data=data)
+    print(post_request)
     try:
         access_token = post_request.json()['access_token']
         refresh_token = post_request.json()['refresh_token']
