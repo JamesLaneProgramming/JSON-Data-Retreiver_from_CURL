@@ -214,7 +214,7 @@ def workflow_history(workflow_id):
                        'Authorization': 'Bearer ' + str(access_token)
                       }
     request_parameters = {
-                          'types': ['COMPLETE_WORKFLOW']
+                          'types': ['ENROLLED']
                          }
     '''NB: The documentation at
         https://developers.hubspot.com/docs/methods/workflows/log_events is
