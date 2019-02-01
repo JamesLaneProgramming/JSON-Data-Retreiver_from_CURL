@@ -204,7 +204,7 @@ def workflow_history(workflow_id):
         access_token = request.cookies.get('hubspot_access_token')
     else:
         return redirect(url_for('request_refresh_token'))
-    domain = 'https://app.hubspot.com'
+    domain = 'https://api.hubapi.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
     request_headers = {
@@ -212,6 +212,7 @@ def workflow_history(workflow_id):
                       }
     request_parameters = {
                           'hapikey': access_token
+                          'types': ['COMPLETE_WORKFLOW']
                          }
     '''NB: The documentation at
         https://developers.hubspot.com/docs/methods/workflows/log_events is
@@ -221,7 +222,7 @@ def workflow_history(workflow_id):
     article acknowledges that no data is being updated on the server:
         https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
     '''
-    return requests.get(
+    return requests.put(
                          request_url, 
                          headers=request_headers,
                          data=request_parameters
