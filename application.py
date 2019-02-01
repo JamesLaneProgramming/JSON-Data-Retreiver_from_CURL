@@ -225,7 +225,7 @@ def workflow_history(workflow_id):
     return requests.put(
                          request_url, 
                          headers=request_headers,
-                         data=request_parameters
+                         params=request_parameters
                         ).text
 
 @application.route('/rubric_data')
