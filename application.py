@@ -210,7 +210,7 @@ def workflow_history(workflow_id):
     request_parameters = {
                           'hapikey': access_token
                          }
-    return requests.post(request_url, data=request_parameters)
+    return requests.post(request_url, data=request_parameters).text
 
 @application.route('/rubric_data')
 @login_required
