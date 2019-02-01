@@ -207,7 +207,7 @@ def workflow_history(workflow_id):
     domain = 'https://app.hubspot.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
-    return requests.post(request_url, hapikey=access_token)
+    return requests.post(request_url, hapikey=[access_token])
 
 @application.route('/rubric_data')
 @login_required
