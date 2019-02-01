@@ -190,17 +190,22 @@ def request_refresh_token():
         refresh_token = post_request.json()['refresh_token']
     except Exception as error:
         raise error
-
-    return User.set_refresh_token(current_user.id, refresh_token).__repr__()
+    response = make_response()
+    response.set_cookie('hubspot_access_token', access_token)
+    set_refresh_token(current_user.id, refresh_token)
+    return response
 
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @login_required
 def workflow_history(workflow_id):
-    access_token = current_user.access_token
+    if('hubspot_access_token' in request.cookies):
+        access_token = request.cookies.get('hubspot_access_token')
+    else:
+        return redirect(url_for('/request_refresh_token'))
     domain = 'https://app.hubspot.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
-    return requests.post(request_url, hapikey=
+    return requests.post(request_url, hapikey=access_token)
 
 @application.route('/rubric_data')
 @login_required
