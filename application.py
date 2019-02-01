@@ -201,7 +201,7 @@ def workflow_history(workflow_id):
     if('hubspot_access_token' in request.cookies):
         access_token = request.cookies.get('hubspot_access_token')
     else:
-        return redirect(url_for('/request_refresh_token'))
+        return redirect(url_for('request_refresh_token'))
     domain = 'https://app.hubspot.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
