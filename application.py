@@ -209,6 +209,11 @@ def workflow_history(workflow_id):
     request_url = domain + endpoint.format(workflow_id)
     request_parameters = {
                           'hapikey': access_token
+                          'filter': {
+                                     'types': [
+                                               'COMPLETED_WORKFLOW'
+                                              ]
+                                    }
                          }
     return requests.post(request_url, data=request_parameters).text
 
