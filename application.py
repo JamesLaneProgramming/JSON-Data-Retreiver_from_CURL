@@ -211,7 +211,7 @@ def workflow_history(workflow_id):
                        'Content-Type': 'application/json'
                       }
     request_parameters = {
-                          'hapikey': access_token
+                          'hapikey': access_token,
                           'types': ['COMPLETE_WORKFLOW']
                          }
     '''NB: The documentation at
