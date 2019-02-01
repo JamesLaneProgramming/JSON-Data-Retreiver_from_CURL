@@ -215,7 +215,8 @@ def workflow_history(workflow_id):
                       }
     request_parameters = {
                           'types': ['ENROLLED'],
-                          'offset': 1546300800
+                          'offset': '1548979200',
+                          'limit': 1546300800
                          }
     '''NB: The documentation at
         https://developers.hubspot.com/docs/methods/workflows/log_events is
