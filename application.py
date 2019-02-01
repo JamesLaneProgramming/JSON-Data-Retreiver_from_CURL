@@ -208,7 +208,7 @@ def workflow_history(workflow_id):
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
     request_parameters = {
-                          'hapikey': access_token
+                          'hapikey': access_token,
                           'filter': {
                                      'types': [
                                                'COMPLETED_WORKFLOW'
