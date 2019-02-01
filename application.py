@@ -211,7 +211,7 @@ def workflow_history(workflow_id):
     request_url = domain + endpoint.format(workflow_id)
     request_headers = {
                        'Content-Type': 'application/json',
-                       'oauth-token': access_token
+                       'Authorization': 'Bearer ' + str(access_token)
                       }
     request_parameters = {
                           'types': ['COMPLETE_WORKFLOW']
