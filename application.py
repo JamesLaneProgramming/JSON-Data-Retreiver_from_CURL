@@ -193,7 +193,7 @@ def request_refresh_token():
         raise error
     response = make_response()
     response.set_cookie('hubspot_access_token', access_token)
-    set_refresh_token(current_user.id, refresh_token)
+    User.set_refresh_token(current_user.id, refresh_token)
     return response
 
 #TODO: create decorator method to require hubspot oath workflow
