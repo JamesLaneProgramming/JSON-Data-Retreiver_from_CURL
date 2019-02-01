@@ -205,20 +205,18 @@ def workflow_history(workflow_id):
     else:
         return redirect(url_for('request_refresh_token'))
     domain = 'https://app.hubspot.com'
-    endpoint = '/automation/v3/logevents/workflows/{0}'
+    endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
     request_headers = {
-                       'Content-Type': 'application/json',
-                       'filter': {
-                                  'types': ['COMPLETED_WORKFLOW']
-                                 }
+                       'Content-Type': 'application/json'
                       }
     request_parameters = {
-                          'hapikey': access_token
+                          'hapikey': access_token,
+                          'types': ['COMPLETED_WORKFLOW']
                          }
     print(request_url)
     print(request_parameters)
-    return requests.post(request_url, headers=request_headers, data=request_parameters).text
+    return requests.put(request_url, headers=request_headers, data=request_parameters).text
 
 @application.route('/rubric_data')
 @login_required
