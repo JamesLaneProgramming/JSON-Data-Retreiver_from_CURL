@@ -240,7 +240,7 @@ def workflow_history(workflow_id):
                        'Authorization': 'Bearer ' + str(access_token)
                       }
     request_parameters = {
-                          'types': ['ENROLLED'],
+                          'types': ['COMPLETED_WORKFLOW'],
                           'offset': '1548979200',
                           'limit': 1546300800
                          }
