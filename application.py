@@ -256,7 +256,7 @@ def workflow_history(workflow_id):
                          request_url, 
                          headers=request_headers,
                          params=request_parameters
-                        ).text
+                        )
     print(put_request.status_code)
     #TODO: test status code differences for expired access token and 401.
     if put_request.status_code == 401:
@@ -264,6 +264,8 @@ def workflow_history(workflow_id):
         access token url if yes, redirect to url_for authenticate_hubspot if
         no'''
         return redirect(url_for(''))
+    else:
+        return put_request.text
     
 @application.route('/rubric_data')
 @login_required
