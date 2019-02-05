@@ -222,8 +222,7 @@ def request_refresh_token():
     User.set_refresh_token(current_user.id, refresh_token)
     return response
 
-def refresh_access_token():
-
+#TODO: CREATE METHOD FOR RENEWING ACCESS TOKEN WITH REFRESH TOKEN
 
 #TODO: create decorator method to require hubspot oath workflow
 @application.route('/hubspot/workflow_history/<workflow_id>')
