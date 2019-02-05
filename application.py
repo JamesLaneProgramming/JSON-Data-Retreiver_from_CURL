@@ -259,7 +259,7 @@ def workflow_history(workflow_id):
                         ).text
     print(put_request.status_code)
     #TODO: test status code differences for expired access token and 401.
-    if put_request.status_code = 401:
+    if put_request.status_code == 401:
         '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
         access token url if yes, redirect to url_for authenticate_hubspot if
         no'''
