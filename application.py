@@ -19,6 +19,8 @@ from os import environ
 import sys
 import requests
 import json
+import hashlib
+from functools import wraps
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
@@ -96,8 +98,30 @@ def signup():
     else:
         return render_template('signup.html')
 
+def require_hubspot_signature_validation(func):
+    @wraps(func)
+    def validate_hubspot_response_signature(*args, **kwargs):
+        hubspot_signature_secret = environ.get('hubspot_signature_secret')
+        hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
+        http_method = request.method
+        request_uri = request.base_url
+        request_body = request.data
+        request_signature = hashlib.sha256(
+                                           http_method + 
+                                           request_method +
+                                           request_url + 
+                                           request_body
+                                          )
+        print(request_signature)
+        if(hubspot_request_signature == hubspot_request_signature):
+            return func(*args, **kwargs)
+        else:
+            return abort(401)
+    return validate_hubspot_response_signature
+
 @application.route('/login', methods=['GET','POST'])
 def login():
+    '''TODO: Check if the X-HubSpot-Signature header is present(SHA-256) of App secret + http method + URI + request body (if present)'''
     if(request.method == 'POST'):
         username = request.form['username']
         password = request.form['password']
@@ -198,6 +222,9 @@ def request_refresh_token():
     User.set_refresh_token(current_user.id, refresh_token)
     return response
 
+def refresh_access_token():
+
+
 #TODO: create decorator method to require hubspot oath workflow
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @login_required
@@ -226,12 +253,19 @@ def workflow_history(workflow_id):
     article acknowledges that no data is being updated on the server:
         https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
     '''
-    return requests.put(
+    put_request = requests.put(
                          request_url, 
                          headers=request_headers,
                          params=request_parameters
                         ).text
-
+    print(put_request.status_code)
+    #TODO: test status code differences for expired access token and 401.
+    if put_request.status_code = 401:
+        '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
+        access token url if yes, redirect to url_for authenticate_hubspot if
+        no'''
+        return redirect(url_for(''))
+    
 @application.route('/rubric_data')
 @login_required
 def rubric_data():
@@ -409,6 +443,7 @@ def student_search():
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
+@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -423,7 +458,7 @@ def create_canvas_account():
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
-    '''  
+    '''
     #Extract the required data from the URL string.
     try:
         course_ID = int(request.args.get('course_id'))
