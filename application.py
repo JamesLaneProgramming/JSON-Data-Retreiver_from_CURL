@@ -101,17 +101,15 @@ def signup():
 def require_hubspot_signature_validation(func):
     @wraps(func)
     def validate_hubspot_response_signature(*args, **kwargs):
-        hubspot_app_id = environ.get('hubspot_app_id')
+        hubspot_client_secret = environ.get('hubspot_client_secret')
         hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
-        http_method = request.method
-        request_url = request.base_url
         request_body = request.data
-        hash_string = str(hubspot_app_id) + str(request_body)
+        hash_string = str(hubspot_client_secret) + str(request_body)
 
         request_signature = hashlib.sha256(hash_string.encode("utf-8"))
         print(hubspot_request_signature)
         print(request_signature.hexdigest())
-        if(hubspot_app_id == request_signature.hexdigest()):
+        if(hubspot_request_signature == request_signature.hexdigest()):
             return func(*args, **kwargs)
         else:
             return abort(401)
