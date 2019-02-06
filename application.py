@@ -106,7 +106,7 @@ def require_hubspot_signature_validation(func):
         http_method = request.method
         request_url = request.base_url
         request_body = request.data
-        hash_string = http_method + request_method + request_url + request_body
+        hash_string = hubspot_signature_secret + http_method + request_url + request_body
 
         request_signature = hashlib.sha256(hash_string)
 
