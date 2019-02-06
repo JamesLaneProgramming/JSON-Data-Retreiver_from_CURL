@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 '''
 #Google OATH imports
 try:
@@ -112,9 +113,9 @@ def require_hubspot_signature_validation(func):
         print('client_secret: ', type(hubspot_client_secret))
         print('request_method: ', type(request_method))
         print('request_uri: ', type(request_uri))
-        print('request_body: ', type(request_body.decode('utf-8').encode('utf-8')))
+        print('request_body: ', type(request_body)
 
-        hash_string = hubspot_client_secret + request_method + request_uri + request_body.decode('utf-8').encode('utf-8')
+        hash_string = hubspot_client_secret + request_method + request_uri + request_body
 
         
         request_signature = hashlib.sha256(hash_string)
