@@ -99,6 +99,8 @@ def signup():
         return render_template('signup.html')
 
 def require_hubspot_signature_validation(func):
+    #https://developers.hubspot.com/docs/faq/validating-requests-from-hubspot
+    #https://developers.hubspot.com/docs/methods/webhooks/webhooks-overview
     @wraps(func)
     def validate_hubspot_response_signature(*args, **kwargs):
         hubspot_client_secret = environ.get('hubspot_client_secret')
@@ -110,11 +112,11 @@ def require_hubspot_signature_validation(func):
         hash_string = str(hubspot_client_secret) + str(request_method) + str(request_uri) + str(request_body)
         
         request_signature = hashlib.sha256(hash_string.encode("utf-8"))
-        print('client_secret: ', hubspot_client_secret)
-        print('request_method: ', request_method)
-        print('request_uri: ', request_uri)
-        print('request_body: ', request_body)
-        print('hash_string', hash_string)
+        print('client_secret: ', type(hubspot_client_secret))
+        print('request_method: ', type(request_method))
+        print('request_uri: ', type(request_uri))
+        print('request_body: ', type(request_body))
+        print('hash_string, ', type(hash_string))
         print(hubspot_request_signature)
         print(request_signature.hexdigest())
         if(hubspot_request_signature == request_signature.hexdigest()):
