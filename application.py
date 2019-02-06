@@ -239,11 +239,14 @@ def workflow_history(workflow_id):
                        'Content-Type': 'application/json',
                        'Authorization': 'Bearer ' + str(access_token)
                       }
-    request_parameters = {
-                          'types': ['COMPLETED_WORKFLOW'],
+    request_parameters = {}
+
+    '''
+                            'types': ['COMPLETED_WORKFLOW'],
                           'offset': '1548979200',
                           'limit': 1546300800
-                         }
+
+    '''
     '''NB: The documentation at
         https://developers.hubspot.com/docs/methods/workflows/log_events is
     incorrect and the PUT request returns a 405 error. Using a GET request
