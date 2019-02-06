@@ -101,18 +101,18 @@ def signup():
 def require_hubspot_signature_validation(func):
     @wraps(func)
     def validate_hubspot_response_signature(*args, **kwargs):
-        hubspot_signature_secret = environ.get('hubspot_signature_secret')
+        hubspot_app_id = environ.get('hubspot_app_id')
         hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
         http_method = request.method
         request_url = request.base_url
         request_body = request.data
-        hash_string = str(hubspot_signature_secret) + str(http_method) + str(request_url) + str(request_body)
+        hash_string = str(hubspot_app_id) + str(http_method) + str(request_url) + str(request_body)
 
         request_signature = hashlib.sha256(hash_string.encode("utf-8"))
         print(request.headers)
-        print(hubspot_request_signature)
+        print(hubspot_app_id)
         print(request_signature)
-        if(hubspot_request_signature == hubspot_request_signature):
+        if(hubspot_app_id == hubspot_request_signature):
             return func(*args, **kwargs)
         else:
             return abort(401)
@@ -446,7 +446,7 @@ def student_search():
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
-@require_hubspot_signature_validation
+#@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -462,6 +462,7 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
+    print(request.headers)
     #Extract the required data from the URL string.
     try:
         course_ID = int(request.args.get('course_id'))
