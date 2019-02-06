@@ -446,7 +446,7 @@ def student_search():
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
-#@require_hubspot_signature_validation
+@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -462,7 +462,6 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
-    print(request.headers)
     #Extract the required data from the URL string.
     try:
         course_ID = int(request.args.get('course_id'))
