@@ -104,7 +104,7 @@ def require_hubspot_signature_validation(func):
         hubspot_client_secret = environ.get('hubspot_client_secret')
         hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
         request_method = request.method
-        request_uri = request.path
+        request_uri = request.full_path
         request_body = request.data
         
         hash_string = str(hubspot_client_secret) + str(request_method) + str(request_uri) + str(request_body)
