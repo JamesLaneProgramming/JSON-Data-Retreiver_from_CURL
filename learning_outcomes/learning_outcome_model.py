@@ -1,10 +1,16 @@
-from mongoengine import Document, IntField, FloatField
+from mongoengine import Document
+from mongoengine import ReferenceField, IntField, StringField
+import mongo_methods
 
 class Learning_Outcome(Document):
     meta = {'collection': 'learning_outcomes'}
-    learning_id = IntField(required=True)
-    grade = FloatField(required=True)
 
-    def set_grade(self, grade):
-        self.grade = grade
+    learning_outcome_name = StringField()
+    learning_outcome_description = StringField()
 
+    def index(learning_outcome_id):
+        o_id = mongo_methods.generate_objectid_from_string(learning_outcome_id)
+        return Learning_Outcome.objects(pk=o_id).first()
+    
+    def read():
+        return Learning_Outcome.objects().to_json()

@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Learning Outcomes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+	    <ul>
+		    {% for each_learning_outcome in learning_outcomes %}
+	    	<li>
+				    <p> {{each_learning_outcome['learning_outcome_name']}} </p>
+				    <p> {{each_learning_outcome['learning_outcome_description']}} </p>
+			  </li>
+			  {% endfor %}
+      </ul>
+      <form action="" method="post">
+        <input type="text" placeholder="Learning Outcome Name" name="learning_outcome_name_field" value="{{
+          request.form.learning_outcome_name }}">
+        <input type="text" placeholder="Learning Outcome Description" name="learning_outcome_description_field" value="{{
+          request.form.learning_outcome_description }}">
+        <input class="btn btn-default" type="submit" value="Create">
+      </form>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>New Learning Outcome</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+      <h1>New Learning Outcome</h1>
+      <br>
+      <form action="" method="post">
+        <input type="number" placeholder="learning_outcome_id" name="learning_outcome_id" value="{{
+          request.form.learning_outcome_id }}">
+         <input type="text" placeholder="learning_outcome_name" name="learning_outcome_name" value="{{
+          request.form.learning_outcome_name }}">
+	 <input type="text" placeholder="learning_outcome_description" name="learning_outcome_description" value="{{
+	 request.form.learning_outcome_desctiption}}">
+        <input class="btn btn-default" type="submit" value="Create">
+      </form>
+      {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}
+      {% endif %}
+    </div>
+  </body>
+</html>

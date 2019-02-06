@@ -19,15 +19,18 @@ from os import environ
 import sys
 import requests
 import json
-from flask import Flask, flash, render_template, request, abort, redirect, url_for
+import hashlib
+from functools import wraps
+from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
 from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
-from assessments.assessment_model import Assessment
+from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
+from subjects.subject_model import Subject
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
@@ -95,8 +98,30 @@ def signup():
     else:
         return render_template('signup.html')
 
+def require_hubspot_signature_validation(func):
+    @wraps(func)
+    def validate_hubspot_response_signature(*args, **kwargs):
+        hubspot_signature_secret = environ.get('hubspot_signature_secret')
+        hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
+        http_method = request.method
+        request_uri = request.base_url
+        request_body = request.data
+        request_signature = hashlib.sha256(
+                                           http_method + 
+                                           request_method +
+                                           request_url + 
+                                           request_body
+                                          )
+        print(request_signature)
+        if(hubspot_request_signature == hubspot_request_signature):
+            return func(*args, **kwargs)
+        else:
+            return abort(401)
+    return validate_hubspot_response_signature
+
 @application.route('/login', methods=['GET','POST'])
 def login():
+    '''TODO: Check if the X-HubSpot-Signature header is present(SHA-256) of App secret + http method + URI + request body (if present)'''
     if(request.method == 'POST'):
         username = request.form['username']
         password = request.form['password']
@@ -122,6 +147,129 @@ def logout():
     logout_user()
     return redirect('/')
 
+@application.route('/hubspot')
+@login_required
+def authenticate_hubspot():
+    '''
+    Hubspot OAuth workflow:
+
+    Direct users to https://app.hubspot.com/oauth/authorize with the following
+    query parameters:
+        -client_id
+        -scope
+        -redirect_uri
+
+    They will be prompted to authenticate and authorise the application.
+
+    Users will be redirected to the redirect_uri with a code query parameter.
+    
+    Use the code above to request access token and refresh token.
+    Headers = Content-Type: application/x-www-form-urlencoded;charset=utf-8
+    Data:
+        -grant_type=authorisation_code
+        -client_id
+        -client_secret
+        -redirect_uri
+        -code
+    POST https://app.hubspot.com/oauth/v1/token
+    '''
+    try:
+        client_id = environ.get('hubspot_client_id')
+        scope = environ.get('hubspot_scopes')
+        redirect_uri = url_for('request_refresh_token', _external=True,
+                               _scheme='https')
+        print(redirect_uri)
+    except Exception as error:
+        raise error
+    return redirect('https://app.hubspot.com/oauth/authorize?client_id={0}&scope={1}&redirect_uri={2}'.format(client_id,
+                                                                                                  scope,
+                                                                                                  redirect_uri))
+@application.route('/hubspot/request_refresh_token')
+@login_required
+def request_refresh_token():
+    try:
+        code = request.args.get('code')
+        client_id = environ.get('hubspot_client_id')
+        client_secret = environ.get('hubspot_client_secret')
+        #redirect_uri must match the redirect_uri used to intitiate the OAuth
+        #connection
+        redirect_uri = url_for('request_refresh_token', _external=True,
+                               _scheme='https')
+    except Exception as error:
+        raise error
+
+    _headers = {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+               }
+    data = {'grant_type':'authorization_code', 
+            'client_id': client_id,
+            'client_secret': client_secret, 
+            'redirect_uri': redirect_uri,
+            'code': code}
+
+    post_request = requests.post('https://api.hubapi.com/oauth/v1/token',
+                         headers=_headers, data=data)
+    print(post_request.text)
+    try:
+        access_token = post_request.json()['access_token']
+        refresh_token = post_request.json()['refresh_token']
+    except Exception as error:
+        raise error
+
+    print(access_token)
+    response = make_response()
+    response.set_cookie('hubspot_access_token', access_token)
+    User.set_refresh_token(current_user.id, refresh_token)
+    return response
+
+#TODO: CREATE METHOD FOR RENEWING ACCESS TOKEN WITH REFRESH TOKEN
+
+#TODO: create decorator method to require hubspot oath workflow
+@application.route('/hubspot/workflow_history/<workflow_id>')
+@login_required
+def workflow_history(workflow_id):
+    if('hubspot_access_token' in request.cookies):
+        access_token = request.cookies.get('hubspot_access_token')
+    else:
+        return redirect(url_for('request_refresh_token'))
+    domain = 'https://api.hubapi.com'
+    endpoint = '/automation/v3/logevents/workflows/{0}/filter'
+    request_url = domain + endpoint.format(workflow_id)
+    request_headers = {
+                       'Content-Type': 'application/json',
+                       'Authorization': 'Bearer ' + str(access_token)
+                      }
+    request_parameters = {}
+
+    '''
+                            'types': ['COMPLETED_WORKFLOW'],
+                          'offset': '1548979200',
+                          'limit': 1546300800
+
+    '''
+    '''NB: The documentation at
+        https://developers.hubspot.com/docs/methods/workflows/log_events is
+    incorrect and the PUT request returns a 405 error. Using a GET request
+    instead returns an unfiltered list of events which is mentioned nowhere in
+    the documentation. Even though the endpoint is specified as PUT this
+    article acknowledges that no data is being updated on the server:
+        https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
+    '''
+    put_request = requests.put(
+                         request_url, 
+                         headers=request_headers,
+                         params=request_parameters
+                        )
+    print(put_request.status_code)
+    #TODO: test status code differences for expired access token and 401.
+    if put_request.status_code == 401:
+        '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
+        access token url if yes, redirect to url_for authenticate_hubspot if
+        no'''
+        return redirect(url_for(''))
+    else:
+        return put_request.text
+    
 @application.route('/rubric_data')
 @login_required
 def rubric_data():
@@ -130,8 +278,98 @@ def rubric_data():
     request = extract_rubric_data(course_ID, assessment_ID)
     #Perform analysis and remapping here:
     map_rubric_data(request.json())
-    print(Assessment.objects().first())
+    print(Rubric_Assessment.objects().first())
     return request.text
+
+@application.route('/subjects', methods=['GET', 'POST'])
+@login_required
+def subjects():
+    if(request.method == 'GET'):
+        subjects = Subject.read()
+        learning_outcomes = json.loads(Learning_Outcome.read())
+        #Send subjects and render in template.
+        return render_template('subjects.html',
+                               subjects=subjects,
+                               learning_outcomes=learning_outcomes)
+    elif(request.method == 'POST'):
+        try:
+            subject_code = request.form['subject_code_field']
+            subject_name = request.form['subject_name_field']
+            subject_description = request.form['subject_description_field']
+            learning_outcome_ids = request.form.getlist('subject_learning_outcomes_field[]')
+        except Exception as error:
+            raise error
+
+        subject_learning_outcomes = []
+        for each_learning_outcome_id in learning_outcome_ids:
+            subject_learning_outcomes.append(Learning_Outcome.index(each_learning_outcome_id))
+
+        subject = Subject(
+                          subject_code,
+                          subject_name, 
+                          subject_description,
+                          subject_learning_outcomes
+                         ).save()
+        return subject.to_json()
+
+@application.route('/learning_outcomes', methods=['GET', 'POST'])
+@login_required
+def learning_outcomes():
+    if(request.method == 'GET'):
+        learning_outcomes = json.loads(Learning_Outcome.read())
+        return render_template('learning_outcomes.html', 
+                               learning_outcomes=learning_outcomes)
+    elif(request.method == 'POST'):
+        try:
+            learning_outcome_name = request.form['learning_outcome_name_field']
+            learning_outcome_description = request.form['learning_outcome_description_field']
+        except Exception as error:
+            raise error
+        try:
+            learning_outcome = Learning_Outcome(
+                             learning_outcome_name,
+                             learning_outcome_description
+                            )
+            learning_outcome.save()
+            return "success"
+        except Exception as error:
+            return abort(500)
+
+@application.route('/criterion', methods=['GET', 'POST'])
+@login_required
+def criterion():
+    if(request.method == 'GET'):
+        criterion = json.loads(Criterion.read())
+        learning_outcomes = json.loads(Learning_Outcome.read())
+        return render_template('criterion.html',
+                              criterion=criterion,
+                              learning_outcomes=learning_outcomes)
+    elif(request.method == 'POST'):
+        try:
+            criterion_name = request.form['criterion_name_field']
+            criterion_description = request.form['criterion_description_field']
+            criterion_points = request.form['criterion_points_field']
+            criterion_learning_outcomes = request.form.getlist('criterion_learning_outcomes_field[]')
+        except Exception as error:
+            raise error
+
+        try:
+            criterion = Criterion(criterion_name=criterion_name,
+                                  criterion_description=criterion_description,
+                                  criterion_points=criterion_points,
+                                  criterion_learning_outcomes=criterion_learning_outcomes).save()
+            return "Success"
+        except Exception as error:
+            raise error
+
+@application.route('/assessments', methods=['GET', 'POST'])
+@login_required
+def assessments():
+    if(request.method == 'GET'):
+        assessments = json.loads(Assessment.read())
+        return render_template('assessments.html', 
+                               assessments = assessments)
+    #TODO: ADD POST logic
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
@@ -160,7 +398,18 @@ def map_rubric_data(submission_data):
                     #Some points are marked blank and cannot be converted. 
                     pass
                 submission_grades.append(learning_outcome)
-            Assessment.create(each_submission_item['user_id'], submission_grades)
+            assessment = Rubric_Assessment.create(each_submission_item['user_id'], 
+                                                  Assessment.objects(assessment_id=667),
+                                                  submission_grades)
+            learning_outcome_count = 0
+            grade_total = 0
+            for each_learning_outcome in assessment.grades:
+                learning_outcome_count = learning_outcome_count + 1
+                grade_total = grade_total + 1
+                if(grade_total == 21):
+                    print(grade_total)
+                if(grade_total == 36):
+                    print(grade_total)
 
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
@@ -182,12 +431,6 @@ class submission_object():
                 criterion_object = criterion(key, points, comments)
                 self.criteria.append(criterion_object)
 
-class criterion():
-    def __init__(self, id, points, comments):
-        self.id = id
-        self.points = points
-        self.comments = comments
-
 @application.route('/students', methods=['GET', 'POST'])
 @login_required
 def student_search():
@@ -204,6 +447,7 @@ def student_search():
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
+@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -218,7 +462,7 @@ def create_canvas_account():
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
-    '''  
+    '''
     #Extract the required data from the URL string.
     try:
         course_ID = int(request.args.get('course_id'))

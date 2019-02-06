@@ -19,7 +19,9 @@ class User(UserMixin, Document):
     authenticated = BooleanField(default = False)
     anonymous = BooleanField(default = False)
     active = BooleanField(default = True)
-    
+    hubspot_refresh_token = StringField()
+    hubspot_access_token = StringField()
+
     def is_authenticated(self):
         '''
         Docstring
@@ -135,7 +137,11 @@ class User(UserMixin, Document):
             return None
         except Exception as error:
             raise error
-       
+
+    def set_refresh_token(user_id, refresh_token):
+        user = User.get(user_id).update(hubspot_refresh_token=refresh_token)
+        return user
+
     def create(username, password):
         assert isinstance(username, str)
         assert isinstance(password, str)
