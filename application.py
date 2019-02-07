@@ -117,7 +117,7 @@ def require_hubspot_signature_validation(func):
 
         hash_string = hubspot_client_secret + request_body
 
-        request_signature = hashlib.sha256(hash_string)
+        request_signature = hashlib.sha256(hash_string.encode('utf-8'))
         print('hash_string, ', type(hash_string))
         print(hubspot_request_signature)
         print(request_signature.hexdigest())
