@@ -87,6 +87,11 @@ def main():
 def home():
     return render_template('home.html')
 
+@application.route('/log' methods=['POST'])
+def log():
+    print(request.body)
+    return redirect(url_for('home'))
+
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
     if(request.method == 'POST'):
