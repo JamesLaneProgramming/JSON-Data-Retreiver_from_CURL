@@ -87,7 +87,7 @@ def main():
 def home():
     return render_template('home.html')
 
-@application.route('/log' methods=['POST'])
+@application.route('/log', methods=['POST'])
 def log():
     print(request.body)
     return redirect(url_for('home'))
