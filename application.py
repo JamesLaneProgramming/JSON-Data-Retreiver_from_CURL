@@ -89,7 +89,7 @@ def home():
 
 @application.route('/log', methods=['POST'])
 def log():
-    print(request.body)
+    print(request.data)
     return redirect(url_for('home'))
 
 @application.route('/signup', methods=['GET', 'POST'])
