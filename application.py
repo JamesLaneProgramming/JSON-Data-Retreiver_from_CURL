@@ -238,6 +238,17 @@ def request_refresh_token():
 
 #TODO: CREATE METHOD FOR RENEWING ACCESS TOKEN WITH REFRESH TOKEN
 
+@application.route('/hubspot/workflows' methods=['GET'])
+@login_required
+def workflows():
+    endpoint = 'https://api.hubapi.com/automation/v3/workflow'
+    request_headers = {
+                       'Content-Type': 'application/json',
+                       'Authorization': 'Bearer ' + str(access_token)
+                      }
+    get_request = request.get(endpoint, headers=headers)
+    return get_request.json()
+
 #TODO: create decorator method to require hubspot oath workflow
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @login_required
