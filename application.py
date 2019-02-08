@@ -238,7 +238,7 @@ def request_refresh_token():
 
 #TODO: CREATE METHOD FOR RENEWING ACCESS TOKEN WITH REFRESH TOKEN
 
-@application.route('/hubspot/workflows' methods=['GET'])
+@application.route('/hubspot/workflows', methods=['GET'])
 @login_required
 def workflows():
     endpoint = 'https://api.hubapi.com/automation/v3/workflow'
