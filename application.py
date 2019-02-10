@@ -253,10 +253,14 @@ def workflows():
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @login_required
 def workflow_history(workflow_id):
-    if('hubspot_access_token' in request.cookies):
+    try:
+        #Access token will be None if cookie does not exist.
         access_token = request.cookies.get('hubspot_access_token')
-    else:
+    except Exception as error:
+        raise error
+    else: 
         return redirect(url_for('request_refresh_token'))
+    
     domain = 'https://api.hubapi.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
@@ -265,13 +269,6 @@ def workflow_history(workflow_id):
                        'Authorization': 'Bearer ' + str(access_token)
                       }
     request_parameters = {}
-
-    '''
-                            'types': ['COMPLETED_WORKFLOW'],
-                          'offset': '1548979200',
-                          'limit': 1546300800
-
-    '''
     '''NB: The documentation at
         https://developers.hubspot.com/docs/methods/workflows/log_events is
     incorrect and the PUT request returns a 405 error. Using a GET request
@@ -280,20 +277,22 @@ def workflow_history(workflow_id):
     article acknowledges that no data is being updated on the server:
         https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
     '''
-    put_request = requests.put(
-                         request_url, 
-                         headers=request_headers,
-                         params=request_parameters
-                        )
-    print(put_request.status_code)
-    #TODO: test status code differences for expired access token and 401.
-    if put_request.status_code == 401:
-        '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
-        access token url if yes, redirect to url_for authenticate_hubspot if
-        no'''
-        return redirect(url_for(''))
-    else:
-        return put_request.text
+    try:
+        put_request = requests.put(
+                             request_url, 
+                             headers=request_headers,
+                             params=request_parameters
+                            )
+        #TODO: test status code differences for expired access token and 401.
+        if put_request.status_code == 401:
+            '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
+            access token url if yes, redirect to url_for authenticate_hubspot if
+            no'''
+            return redirect(url_for('request_refresh_token'))
+        else:
+            return put_request.text
+    except Exception as error:
+        raise error
     
 @application.route('/rubric_data')
 @login_required
