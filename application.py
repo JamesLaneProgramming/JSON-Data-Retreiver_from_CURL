@@ -249,6 +249,7 @@ def refresh_access_token():
         raise error
 
     #Request.
+
 @application.route('/hubspot/workflows', methods=['GET'])
 @login_required
 def workflows():
