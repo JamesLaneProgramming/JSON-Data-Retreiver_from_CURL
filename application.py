@@ -259,7 +259,7 @@ def workflows():
     except Exception as error:
         return redirect(url_for('authenticate_hubspot'))
 
-    endpoint = 'https://api.hubapi.com/automation/v3/workflow'
+    endpoint = 'https://api.hubapi.com/automation/v3/workflows'
     request_headers = {
                        'Content-Type': 'application/json',
                        'Authorization': 'Bearer ' + str(access_token)
