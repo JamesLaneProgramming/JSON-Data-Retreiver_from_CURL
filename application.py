@@ -299,6 +299,9 @@ def workflow_history(workflow_id):
         https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
     '''
     try:
+        print(request_url)
+        print(request_headers)
+        print(request_parameters)
         put_request = requests.put(
                              request_url, 
                              headers=request_headers,
