@@ -215,22 +215,25 @@ def request_refresh_token():
     _headers = {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
                }
-    data = {'grant_type':'authorization_code', 
+    data = {
+            'grant_type':'authorization_code', 
             'client_id': client_id,
             'client_secret': client_secret, 
             'redirect_uri': redirect_uri,
-            'code': code}
+            'code': code
+           }
 
-    post_request = requests.post('https://api.hubapi.com/oauth/v1/token',
-                         headers=_headers, data=data)
-    print(post_request.text)
     try:
+        post_request = requests.post(
+                                     'https://api.hubapi.com/oauth/v1/token',
+                                     headers=_headers, 
+                                     data=data
+                                    )
         access_token = post_request.json()['access_token']
         refresh_token = post_request.json()['refresh_token']
     except Exception as error:
         raise error
 
-    print(access_token)
     response = make_response()
     response.set_cookie('hubspot_access_token', access_token)
     User.set_refresh_token(current_user.id, refresh_token)
@@ -259,7 +262,7 @@ def workflow_history(workflow_id):
     except Exception as error:
         raise error
     else: 
-        return redirect(url_for('request_refresh_token'))
+        return redirect(url_for('authenticate_hubspot'))
     
     domain = 'https://api.hubapi.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
@@ -288,7 +291,7 @@ def workflow_history(workflow_id):
             '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
             access token url if yes, redirect to url_for authenticate_hubspot if
             no'''
-            return redirect(url_for('request_refresh_token'))
+            return redirect(url_for('authenticate_hubspot'))
         else:
             return put_request.text
     except Exception as error:
