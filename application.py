@@ -261,8 +261,8 @@ def workflows():
 
     endpoint = 'https://api.hubapi.com/automation/v3/workflows'
     request_headers = {
-                       'Content-Type': 'application/json',
-                       'Authorization': 'Bearer ' + str(access_token)
+                       "Content-Type": "application/json",
+                       "Authorization": "Bearer " + str(access_token)
                       }
     try:
         get_request = requests.get(endpoint, headers=request_headers)
@@ -284,11 +284,11 @@ def workflow_history(workflow_id):
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
     request_headers = {
-                       'Content-Type': 'application/json',
-                       'Authorization': 'Bearer ' + str(access_token)
+                       "Content-Type": "application/json",
+                       "Authorization": "Bearer " + str(access_token)
                       }
     request_parameters = {
-                          'types': ['ENROLLED']
+                          "types": ["ENROLLED"]
                          }
     '''NB: The documentation at
         https://developers.hubspot.com/docs/methods/workflows/log_events is
