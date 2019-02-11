@@ -260,8 +260,6 @@ def workflow_history(workflow_id):
         #Access token will be None if cookie does not exist.
         access_token = request.cookies.get('hubspot_access_token')
     except Exception as error:
-        raise error
-    else: 
         return redirect(url_for('authenticate_hubspot'))
     
     domain = 'https://api.hubapi.com'
