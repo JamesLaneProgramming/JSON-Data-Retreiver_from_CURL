@@ -266,7 +266,7 @@ def workflows():
                       }
     try:
         get_request = requests.get(endpoint, headers=request_headers)
-        return get_request.json()
+        return get_request.text
     except Exception as error:
         raise error
 
