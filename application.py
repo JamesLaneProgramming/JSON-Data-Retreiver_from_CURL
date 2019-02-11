@@ -266,8 +266,9 @@ def workflows():
                       }
     try:
         get_request = requests.get(endpoint, headers=request_headers)
-        return get_request.text
+        return json.loads(get_request.text)
     except Exception as error:
+        print(get_request.text)
         raise error
 
 #TODO: create decorator method to require hubspot oath workflow
