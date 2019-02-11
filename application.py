@@ -244,13 +244,22 @@ def request_refresh_token():
 @application.route('/hubspot/workflows', methods=['GET'])
 @login_required
 def workflows():
+    try:
+        #Access token will be None if cookie does not exist.
+        access_token = request.cookies.get('hubspot_access_token')
+    except Exception as error:
+        return redirect(url_for('authenticate_hubspot'))
+
     endpoint = 'https://api.hubapi.com/automation/v3/workflow'
     request_headers = {
                        'Content-Type': 'application/json',
                        'Authorization': 'Bearer ' + str(access_token)
                       }
-    get_request = request.get(endpoint, headers=headers)
-    return get_request.json()
+    try:
+        get_request = request.get(endpoint, headers=headers)
+        return get_request.json()
+    except Exception as error:
+        raise error
 
 #TODO: create decorator method to require hubspot oath workflow
 @application.route('/hubspot/workflow_history/<workflow_id>')
