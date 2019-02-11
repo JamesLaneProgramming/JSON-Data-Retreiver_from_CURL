@@ -240,6 +240,15 @@ def request_refresh_token():
     return response
 
 #TODO: CREATE METHOD FOR RENEWING ACCESS TOKEN WITH REFRESH TOKEN
+@application.route('/hubspot/refresh_access_token', methods=['GET'])
+@login_required
+def refresh_access_token():
+    try:
+        refresh_token = current_user.refresh_token
+    except Exception as error:
+        raise error
+
+    #Request.
 
 @application.route('/hubspot/workflows', methods=['GET'])
 @login_required
@@ -256,7 +265,7 @@ def workflows():
                        'Authorization': 'Bearer ' + str(access_token)
                       }
     try:
-        get_request = request.get(endpoint, headers=headers)
+        get_request = requests.get(endpoint, headers=headers)
         return get_request.json()
     except Exception as error:
         raise error
