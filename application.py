@@ -290,18 +290,7 @@ def workflow_history(workflow_id):
     request_parameters = {
                           "types": ["ENROLLED"]
                          }
-    '''NB: The documentation at
-        https://developers.hubspot.com/docs/methods/workflows/log_events is
-    incorrect and the PUT request returns a 405 error. Using a GET request
-    instead returns an unfiltered list of events which is mentioned nowhere in
-    the documentation. Even though the endpoint is specified as PUT this
-    article acknowledges that no data is being updated on the server:
-        https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
-    '''
     try:
-        print(request_url)
-        print(request_headers)
-        print(request_parameters)
         put_request = requests.put(
                              request_url, 
                              headers=request_headers,
@@ -513,6 +502,8 @@ def create_canvas_account():
     '''
     #Extract the required data from the URL string.
     try:
+        #Must save query parameter before conversion as int() cannot handle
+        #None
         course_ID = int(request.args.get('course_id'))
         section_ID = int(request.args.get('section_id'))
     except Exception as error:
