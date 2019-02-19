@@ -50,10 +50,7 @@ application.config['MONGODB_SETTINGS'] = {
 }
 
 #Initialise the mongo engine.
-#TODO: Add testing when MongoEngine cannot be initialised. For example when MongoDB_Password cannot be retreived from environment
 db = MongoEngine(application)
-#AssertTrue(db.connection, pymongo.MongoClient)
-#AssertRaises(InvalidSettingsError, MongoEngine, db)
 
 #Configure flask-login
 login_manager = LoginManager()
@@ -63,22 +60,12 @@ login_manager.session_protection = 'strong'
 login_manager.login_view = 'login'
 login_manager.init_app(application)
 
-'''
-Notes:
-    https://blog.teamtreehouse.com/how-to-create-bulletproof-sessions
-    What parts of the website need access to the cookie?
-    Will the cookie need to work across sub domains?
-    Will the cookie need to persist if the user leaves an SSL portion of the site?
-    TODO: See development task: https://trello.com/c/qZfDhqaE/9-create-a-session-collection-in-the-database-track-views-actions-etc-when-a-user-authenticates-add-those-values-to-the-user-docum
-'''
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def main():
-    print('Starting production server')
-    #Set application.debug to False if running a production server.
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
@@ -86,11 +73,6 @@ def main():
 @application.route('/')
 def home():
     return render_template('home.html')
-
-@application.route('/log', methods=['POST'])
-def log():
-    print(request.data)
-    return redirect(url_for('home'))
 
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -135,7 +117,6 @@ def require_hubspot_signature_validation(func):
 
 @application.route('/login', methods=['GET','POST'])
 def login():
-    '''TODO: Check if the X-HubSpot-Signature header is present(SHA-256) of App secret + http method + URI + request body (if present)'''
     if(request.method == 'POST'):
         username = request.form['username']
         password = request.form['password']
@@ -192,7 +173,6 @@ def authenticate_hubspot():
         scope = environ.get('hubspot_scopes')
         redirect_uri = url_for('request_refresh_token', _external=True,
                                _scheme='https')
-        print(redirect_uri)
     except Exception as error:
         raise error
     return redirect('https://app.hubspot.com/oauth/authorize?client_id={0}&scope={1}&redirect_uri={2}'.format(client_id,
@@ -205,8 +185,11 @@ def request_refresh_token():
         code = request.args.get('code')
         client_id = environ.get('hubspot_client_id')
         client_secret = environ.get('hubspot_client_secret')
-        #redirect_uri must match the redirect_uri used to intitiate the OAuth
-        #connection
+        '''
+        redirect_uri must match the redirect_uri used to intitiate the OAuth
+        connection
+
+        '''
         redirect_uri = url_for('request_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
@@ -239,7 +222,6 @@ def request_refresh_token():
     User.set_refresh_token(current_user.id, refresh_token)
     return response
 
-#TODO: CREATE METHOD FOR RENEWING ACCESS TOKEN WITH REFRESH TOKEN
 @application.route('/hubspot/refresh_access_token', methods=['GET'])
 @login_required
 def refresh_access_token():
@@ -254,7 +236,6 @@ def refresh_access_token():
 @login_required
 def workflows():
     try:
-        #Access token will be None if cookie does not exist.
         access_token = request.cookies.get('hubspot_access_token')
     except Exception as error:
         return redirect(url_for('authenticate_hubspot'))
@@ -270,12 +251,10 @@ def workflows():
     except Exception as error:
         raise error
 
-#TODO: create decorator method to require hubspot oath workflow
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @login_required
 def workflow_history(workflow_id):
     try:
-        #Access token will be None if cookie does not exist.
         access_token = request.cookies.get('hubspot_access_token')
     except Exception as error:
         return redirect(url_for('authenticate_hubspot'))
@@ -290,25 +269,13 @@ def workflow_history(workflow_id):
     request_parameters = {
                           "types": ["ENROLLED"]
                          }
-    '''NB: The documentation at
-        https://developers.hubspot.com/docs/methods/workflows/log_events is
-    incorrect and the PUT request returns a 405 error. Using a GET request
-    instead returns an unfiltered list of events which is mentioned nowhere in
-    the documentation. Even though the endpoint is specified as PUT this
-    article acknowledges that no data is being updated on the server:
-        https://community.hubspot.com/t5/APIs-Integrations/Why-isn-t-Log-events-a-GET/m-p/224059
-    '''
     try:
         put_request = requests.put(
                              request_url, 
                              headers=request_headers,
                              params=request_parameters
                             )
-        #TODO: test status code differences for expired access token and 401.
         if put_request.status_code == 401:
-            '''TODO: Check user for is_hubspot_authenticated. Redirect to refresh
-            access token url if yes, redirect to url_for authenticate_hubspot if
-            no'''
             return redirect(url_for('authenticate_hubspot'))
         else:
             return put_request.text
@@ -321,7 +288,6 @@ def rubric_data():
     course_ID = 144
     assessment_ID = 667
     request = extract_rubric_data(course_ID, assessment_ID)
-    #Perform analysis and remapping here:
     map_rubric_data(request.json())
     print(Rubric_Assessment.objects().first())
     return request.text
@@ -332,7 +298,6 @@ def subjects():
     if(request.method == 'GET'):
         subjects = Subject.read()
         learning_outcomes = json.loads(Learning_Outcome.read())
-        #Send subjects and render in template.
         return render_template('subjects.html',
                                subjects=subjects,
                                learning_outcomes=learning_outcomes)
@@ -414,7 +379,6 @@ def assessments():
         assessments = json.loads(Assessment.read())
         return render_template('assessments.html', 
                                assessments = assessments)
-    #TODO: ADD POST logic
 
 def map_rubric_data(submission_data):
     for each_submission_item in submission_data:
@@ -427,10 +391,6 @@ def map_rubric_data(submission_data):
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
         except Exception as error:
             pass
-        #Return each criterion ID, points and comments.
-        #Need to create a view for criterion ID to learning outcome objective.
-        #TODO: What are the falsy values for python, print them out.
-        #TODO: Store learning outcomes in database.
         if(submission_rubric_assessment):
             submission = submission_object(submission_ID, submission_assignment_ID,
                                           submission_rubric_assessment)
@@ -488,11 +448,10 @@ def student_search():
         except Exception as error:
             raise error
     else:
-        #TODO: Create the student search template
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
-@require_hubspot_signature_validation
+#@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -508,16 +467,24 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
-    #Extract the required data from the URL string.
     try:
-        course_ID = int(request.args.get('course_id'))
-        section_ID = int(request.args.get('section_id'))
+        '''
+        Must save query parameter before conversion as int() cannot handle
+        None
+        '''
+        course_ID = request.args.get('course_id')
+        section_ID = request.args.get('section_id')
+        try:
+            course_ID = int(course_ID)
+            section_ID = int(section_ID)
+        except Exception as error:
+            print('Could not convert course/section ids to int')
+            raise error
     except Exception as error:
         raise error
     
     #Validate POST payload
     if not request.json:
-        #If the request has invalid json return 415 status code.
         return abort(415)
     else:
         json_data = request.get_json()
@@ -530,7 +497,7 @@ def create_canvas_account():
             return abort(415)
         except Exception as error:
             print(error)
-    #Concatenate student_name from json data.
+
     student_name = first_name + " " + last_name
     #TODO YOU NEED TO CHECK IF THE USER ALREADY EXISTS
     creation_response = create_canvas_login(student_name, student_email)
@@ -552,8 +519,11 @@ def create_canvas_account():
             print(enrollment_response.text)
         except Exception as error:
             raise error
-        #TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
-        #This ID will be used to enroll the student in selected course.
+        '''
+        TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
+        This ID will be used to enroll the student in selected course if their
+        account already exists
+        '''
         return str(enrollment_response.status_code)
     '''
     user_data = post_request.get_json()
