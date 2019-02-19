@@ -451,7 +451,7 @@ def student_search():
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
-@require_hubspot_signature_validation
+#@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -472,8 +472,14 @@ def create_canvas_account():
         Must save query parameter before conversion as int() cannot handle
         None
         '''
-        course_ID = int(request.args.get('course_id'))
-        section_ID = int(request.args.get('section_id'))
+        course_ID = request.args.get('course_id')
+        section_ID = request.args.get('section_id')
+        try:
+            course_ID = int(course_ID)
+            section_ID = int(section_ID)
+        except Exception as error:
+            print('Could not convert course/section ids to int')
+            raise error
     except Exception as error:
         raise error
     
