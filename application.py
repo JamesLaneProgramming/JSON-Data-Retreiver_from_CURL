@@ -292,7 +292,9 @@ def rubric_data(course_ID, assessment_id):
             request = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
             map_rubric_data(request.json())
-            return request.text
+            return json.loads(request.text)
+        except Exception as error:
+            raise error
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
