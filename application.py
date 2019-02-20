@@ -501,45 +501,47 @@ def create_canvas_account():
             last_name = json_data['properties']['lastname']['value'] 
             student_email = json_data['properties']['email']['value']
             student_name = first_name + " " + last_name
+            
+            creation_response = create_canvas_login(student_name, student_email)
+            if(creation_response.status_code == 400):
+                print("The user already exists")
+                students_found = json.loads(search_students(student_email).text)
+                for each_student in students_found:
+                    existing_user_id = each_student['id']
+                    enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
+                    if(enrollment_response.status_code == 200):
+                        print("Existing student successfully enrolled in course: ", course_ID)
+                        return enrollment_response.status_code
+                    else:
+                        return enrollment_response.status_code
+
+            elif(creation_response.status_code == 200):
+                try:
+                    student_details = json.loads(creation_response.text)
+                    try:
+                        student_ID = int(student_details['id'])
+                    except TypeError as error:
+                        print("Webhook is most likely sending array of student data.")
+                    except Exception as error:
+                        raise error
+                    enrollment_response = enroll_canvas_student(student_ID, course_ID, section_ID)
+                    print(enrollment_response.text)
+                except Exception as error:
+                    raise error
+                '''
+                TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
+                This ID will be used to enroll the student in selected course if their
+                account already exists
+                '''
+                return str(enrollment_response.status_code)
+
         except KeyError as error:
             print("Could not extract json fields")
             return abort(415)
         except Exception as error:
             print(error)
 
-    creation_response = create_canvas_login(student_name, student_email)
-    if(creation_response.status_code == 400):
-        print("The user already exists")
-        students_found = json.loads(search_students(student_email).text)
-        for each_student in students_found:
-            existing_user_id = each_student['id']
-            enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
-            if(enrollment_response.status_code == 200):
-                print("Existing student successfully enrolled in course: ", course_ID)
-                return enrollment_response.status_code
-            else:
-                return enrollment_response.status_code
-
-    elif(creation_response.status_code == 200):
-        try:
-            student_details = json.loads(creation_response.text)
-            try:
-                student_ID = int(student_details['id'])
-            except TypeError as error:
-                print("Webhook is most likely sending array of student data.")
-            except Exception as error:
-                raise error
-            enrollment_response = enroll_canvas_student(student_ID, course_ID, section_ID)
-            print(enrollment_response.text)
-        except Exception as error:
-            raise error
         '''
-        TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
-        This ID will be used to enroll the student in selected course if their
-        account already exists
-        '''
-        return str(enrollment_response.status_code)
-    '''
     user_data = post_request.get_json()
     #enroll_post_request = enroll_canvas_student(create_post_request)
     if (post_request.status_code == 201):
