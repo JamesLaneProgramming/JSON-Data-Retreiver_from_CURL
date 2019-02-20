@@ -500,13 +500,13 @@ def create_canvas_account():
             first_name = json_data['properties']['firstname']['value']
             last_name = json_data['properties']['lastname']['value'] 
             student_email = json_data['properties']['email']['value']
+            student_name = first_name + " " + last_name
         except KeyError as error:
             print("Could not extract json fields")
             return abort(415)
         except Exception as error:
             print(error)
 
-    student_name = first_name + " " + last_name
     creation_response = create_canvas_login(student_name, student_email)
     if(creation_response.status_code == 400):
         print("The user already exists")
