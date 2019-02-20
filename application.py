@@ -503,12 +503,15 @@ def create_canvas_account():
     creation_response = create_canvas_login(student_name, student_email)
     if(creation_response.status_code == 400):
         print("The user already exists")
-        existing_user_details = search_students(student_email)
-        print("User details: ", type(existing_user_details))
-        existing_user_id = existing_user_details['id']
-        enroll_canvas_student(existing_user_id, course_ID)
-        return "User already exists, user not enrolled"
-        #Use Student_Search endpoint to retrieve existing student.
+        students_found = json.loads(search_students(student_email).text)
+        for each_student in students_found:
+            #Need to implement code for response containing array of users.
+            existing_user_id = existing_user_details['id']
+            enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
+            if(enrollment_response.status_code == 200):
+                return enrollment_response
+            else:
+                return enrollment_response.status_code
 
     elif(creation_response.status_code == 200):
         try:
