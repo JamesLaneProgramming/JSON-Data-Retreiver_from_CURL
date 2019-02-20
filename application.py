@@ -509,7 +509,8 @@ def create_canvas_account():
             existing_user_id = each_student['id']
             enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
             if(enrollment_response.status_code == 200):
-                return enrollment_response
+                print("Existing student successfully added to new course.")
+                return enrollment_response.status_code
             else:
                 return enrollment_response.status_code
 
