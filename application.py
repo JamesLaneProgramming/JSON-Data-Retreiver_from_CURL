@@ -230,8 +230,6 @@ def refresh_access_token():
     except Exception as error:
         raise error
 
-    #Request.
-
 @application.route('/hubspot/workflows', methods=['GET'])
 @login_required
 def workflows():
@@ -246,8 +244,8 @@ def workflows():
                        "Authorization": "Bearer " + str(access_token)
                       }
     try:
-        get_request = requests.get(endpoint, headers=request_headers)
-        return get_request.json()
+        workflow_request = requests.get(endpoint, headers=request_headers)
+        return workflow_request.json()
     except Exception as error:
         raise error
 
@@ -282,15 +280,19 @@ def workflow_history(workflow_id):
     except Exception as error:
         raise error
     
-@application.route('/rubric_data')
+@application.route('/rubric_data', methods=['GET', 'POST'])
 @login_required
-def rubric_data():
-    course_ID = 144
-    assessment_ID = 667
-    request = extract_rubric_data(course_ID, assessment_ID)
-    map_rubric_data(request.json())
-    print(Rubric_Assessment.objects().first())
-    return request.text
+def rubric_data(course_ID, assessment_id):
+    if(request.method == 'GET'):
+        return render_template('rubric_data.html')
+    else:
+        try:
+            course_ID = request.form['course_ID']
+            assessment_ID = request.form['assessment_ID']
+            request = extract_rubric_data(course_ID, assessment_ID)
+            #Save rubric data to the database.
+            map_rubric_data(request.json())
+            return request.text
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
@@ -321,6 +323,8 @@ def subjects():
                           subject_learning_outcomes
                          ).save()
         return subject.to_json()
+    else:
+        return abort(405)
 
 @application.route('/learning_outcomes', methods=['GET', 'POST'])
 @login_required
@@ -339,11 +343,12 @@ def learning_outcomes():
             learning_outcome = Learning_Outcome(
                              learning_outcome_name,
                              learning_outcome_description
-                            )
-            learning_outcome.save()
-            return "success"
+                            ).save()
+            return learning_outcome.to_json()
         except Exception as error:
             return abort(500)
+    else:
+        return abort(405)
 
 @application.route('/criterion', methods=['GET', 'POST'])
 @login_required
@@ -478,8 +483,9 @@ def create_canvas_account():
             course_ID = int(course_ID)
             section_ID = int(section_ID)
         except Exception as error:
-            print('Could not convert course/section ids to int')
-            raise error
+            print("course_ID: ", course_ID)
+            print("section_id: ", section_ID)
+            print('Could not convert course/section ids to integers')
     except Exception as error:
         raise error
     
@@ -499,17 +505,15 @@ def create_canvas_account():
             print(error)
 
     student_name = first_name + " " + last_name
-    #TODO YOU NEED TO CHECK IF THE USER ALREADY EXISTS
     creation_response = create_canvas_login(student_name, student_email)
     if(creation_response.status_code == 400):
         print("The user already exists")
         students_found = json.loads(search_students(student_email).text)
         for each_student in students_found:
-            #Need to implement code for response containing array of users.
             existing_user_id = each_student['id']
             enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
             if(enrollment_response.status_code == 200):
-                print("Existing student successfully added to new course.")
+                print("Existing student successfully enrolled in course: ", course_ID)
                 return enrollment_response.status_code
             else:
                 return enrollment_response.status_code
