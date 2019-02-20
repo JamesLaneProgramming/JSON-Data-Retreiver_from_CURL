@@ -245,7 +245,7 @@ def workflows():
                       }
     try:
         workflow_request = requests.get(endpoint, headers=request_headers)
-        return workflow_request.json()
+        return json.loads(workflow_request.text)
     except Exception as error:
         raise error
 
