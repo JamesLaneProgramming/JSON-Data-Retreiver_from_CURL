@@ -503,6 +503,10 @@ def create_canvas_account():
     creation_response = create_canvas_login(student_name, student_email)
     if(creation_response.status_code == 400):
         print("The user already exists")
+        existing_user_details = search_students(student_email)
+        print("User details: " type(existing_user_details))
+        existing_user_id = existing_user_details['id']
+        enroll_canvas_student(existing_user_id, course_ID)
         return "User already exists, user not enrolled"
         #Use Student_Search endpoint to retrieve existing student.
 
