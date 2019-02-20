@@ -506,7 +506,7 @@ def create_canvas_account():
         students_found = json.loads(search_students(student_email).text)
         for each_student in students_found:
             #Need to implement code for response containing array of users.
-            existing_user_id = existing_user_details['id']
+            existing_user_id = each_student['id']
             enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
             if(enrollment_response.status_code == 200):
                 return enrollment_response
