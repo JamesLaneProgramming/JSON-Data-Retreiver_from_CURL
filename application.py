@@ -329,7 +329,7 @@ def workflow_history(workflow_id):
         else:
             return json.loads(put_request.text)
     except Exception as error:
-        raise error
+        return redirect(url_for('home'))
     
 @application.route('/rubric_data', methods=['GET', 'POST'])
 @login_required
