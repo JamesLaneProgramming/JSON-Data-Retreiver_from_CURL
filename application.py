@@ -132,7 +132,8 @@ def require_hubspot_access_token(func):
                 else:
                     response = make_response(redirect(url_for('home')))
                     response.set_cookie('hubspot_access_token', access_token)
-                    return func(*args, **kwargs)
+                    #To redirect to original endpoint
+                    return response
             except Exception as error:
                 print("Error updating access token")
                 return redirect(url_for('authenticate_hubspot'))
