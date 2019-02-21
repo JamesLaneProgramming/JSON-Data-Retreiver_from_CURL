@@ -1,11 +1,12 @@
 from os import environ
+import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import bson
 from bson.objectid import ObjectId
 from flask_mongoengine import *
 #http://zetcode.com/python/pymongo/
-from mongoengine import Document, StringField, BooleanField
+from mongoengine import Document, StringField, IntField, BooleanField, DateTimeField
 
 class User(UserMixin, Document):
     '''
@@ -20,7 +21,8 @@ class User(UserMixin, Document):
     anonymous = BooleanField(default = False)
     active = BooleanField(default = True)
     hubspot_refresh_token = StringField()
-    hubspot_access_token = StringField()
+    hubspot_access_token_expiry = IntField()
+    last_hubspot_access_token_request = DateTimeField()
 
     def is_authenticated(self):
         '''
@@ -142,8 +144,11 @@ class User(UserMixin, Document):
         user = User.get(user_id).update(hubspot_refresh_token=refresh_token)
         return user
 
-    def set_access_token(user_id, access_token):
-        user = User.get(user_id).update(hubspot_access_token=access_token)
+    def set_access_token(user_id, access_token, access_token_expiry):
+        user = User.get(user_id)
+        user.update(hubspot_access_token=access_token)
+        user.update(hubspot_access_token_expiry=access_token_expiry)
+        user.update(last_hubspot_access_token_request=datetime.now())
         return user
 
     def create(username, password):

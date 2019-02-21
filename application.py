@@ -202,7 +202,12 @@ def request_refresh_token():
                                      data=data
                                     )
         refresh_token = post_request.json()['refresh_token']
-        User.set_refresh_token(current_user.id, refresh_token)
+        access_token_expiry = post_request.json()['expires_in']
+        User.set_refresh_token(
+                               current_user.id, 
+                               refresh_token,
+                               access_token_expiry
+                              )
     except Exception as error:
         raise error
     return redirect(url_for('refresh_access_token'))
