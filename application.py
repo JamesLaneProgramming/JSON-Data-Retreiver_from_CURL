@@ -128,19 +128,14 @@ def require_hubspot_access_token(func):
                 token_expiry = current_user.hubspot_access_token_expiry
                 last_token_refresh = current_user.last_hubspot_access_token_request
                 if(last_hubspot_access_token_request + hubspot_access_expiry > datetime.now()):
-                    return redirect(url_for('request_refresh_token'))
+                    return redirect(url_for('refresh_access_token'))
                 else:
-                    if('referer' in request.headers):
-                        response = make_response(redirect(request.headers['referer']))
-                        response.set_cookie('hubspot_access_token', access_token)
-                        return func(*args, **kwargs)
-                    else:
-                        response = make_response(redirect(url_for('home')))
-                        response.set_cookie('hubspot_access_token', access_token)
-                        return func(*args, **kwargs)
+                    response = make_response(redirect(url_for('home')))
+                    response.set_cookie('hubspot_access_token', access_token)
+                    return func(*args, **kwargs)
             except Exception as error:
                 print("Error updating access token")
-                return func(*args, **kwargs)
+                return redirect(url_for('authenticate_hubspot'))
         else:
             return func(*args, **kwargs)
     return update_hubspot_access_token
@@ -183,7 +178,10 @@ def request_refresh_token():
     except Exception as error:
         raise error
     User.set_refresh_token(current_user.id, refresh_token)
-    return response
+    if('referer' in request.headers):
+        return redirect(request.headers['referer'])
+    else:
+        return redirect(url_for('home'))
 
 def refresh_access_token():
     try:
@@ -328,7 +326,7 @@ def workflow_history(workflow_id):
         if put_request.status_code == 401:
             return redirect(url_for('authenticate_hubspot'))
         else:
-            return json.loads(put_request.text)
+            return put_request.text
     except Exception as error:
         return redirect(url_for('home'))
     
@@ -344,7 +342,7 @@ def rubric_data(course_ID, assessment_id):
             request = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
             map_rubric_data(request.json())
-            return json.loads(request.text)
+            return request.text
         except Exception as error:
             raise error
 
