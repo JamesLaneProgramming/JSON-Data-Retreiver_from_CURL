@@ -178,10 +178,7 @@ def request_refresh_token():
     except Exception as error:
         raise error
     User.set_refresh_token(current_user.id, refresh_token)
-    if('referer' in request.headers):
-        return redirect(request.headers['referer'])
-    else:
-        return redirect(url_for('home'))
+    return redirect(url_for('home'))
 
 def refresh_access_token():
     try:
@@ -298,7 +295,7 @@ def workflows():
                       }
     try:
         workflow_request = requests.get(endpoint, headers=request_headers)
-        return json.loads(workflow_request.text)
+        return workflow_request.text
     except Exception as error:
         raise error
 
