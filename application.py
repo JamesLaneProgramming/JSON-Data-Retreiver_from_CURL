@@ -17,6 +17,7 @@ except Exception as error:
 
 import os, sys
 from os import environ
+import datetime
 import sys
 import requests
 import json
@@ -115,6 +116,111 @@ def require_hubspot_signature_validation(func):
             return func(*args, **kwargs)
     return validate_hubspot_response_signature
 
+def require_hubspot_access_token(func):
+    @wraps(func)
+    def require_hubspot_access_token(*args, **kwargs):
+        if('hubspot_access_token' not in request.cookies):
+            '''
+            https://tools.ietf.org/html/rfc6749#section-1.5
+            '''
+            try:
+                access_token = current_user.access_token
+                token_expiry = current_user.hubspot_access_token_expiry
+                last_token_refresh = current_user.last_hubspot_access_token_request
+                if(last_hubspot_access_token_request + hubspot_access_expiry > datetime.now()):
+                    return redirect(url_for('request_refresh_token'))
+                else:
+                    if('referer' in request.headers):
+                        response = make_response(redirect(request.headers['referer']))
+                        response.set_cookie('hubspot_access_token', access_token)
+                        return func(*args, **kwargs)
+                    else:
+                        response = make_response(redirect(url_for('home')))
+                        response.set_cookie('hubspot_access_token', access_token)
+            except Exception as error:
+                pass
+        else:
+            return func(*args, **kwargs)    
+
+@application.route('/request_refresh_token', methods=['GET'])
+def request_refresh_token():
+    try:
+        code = request.args.get('code')
+        client_id = environ.get('hubspot_client_id')
+        client_secret = environ.get('hubspot_client_secret')
+        '''
+        redirect_uri must match the redirect_uri used to intitiate the OAuth
+        connection
+
+        '''
+        redirect_uri = url_for('request_refresh_token', _external=True,
+                               _scheme='https')
+    except Exception as error:
+        raise error
+
+    _headers = {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+               }
+    data = {
+            'grant_type':'authorization_code', 
+            'client_id': client_id,
+            'client_secret': client_secret, 
+            'redirect_uri': redirect_uri,
+            'code': code
+           }
+
+    try:
+        post_request = requests.post(
+                                     'https://api.hubapi.com/oauth/v1/token',
+                                     headers=_headers, 
+                                     data=data
+                                    )
+        access_token = post_request.json()['access_token']
+        refresh_token = post_request.json()['refresh_token']
+    except Exception as error:
+        raise error
+    User.set_refresh_token(current_user.id, refresh_token)
+    return response
+
+def refresh_access_token():
+    try:
+        client_id = environ.get('hubspot_client_id')
+        client_secret = environ.get('hubspot_client_secret')
+        try:
+            #Ensure no refresh token raises error
+            refresh_token = current_user.refresh_token
+        except Exception as error:
+            request_refresh_token()
+        endpoint = "https://api.hubapi.com/oauth/v1/token"
+        headers = {
+                   "Content-Type": "application/x-www-form-urlencoded",
+                   "charset": "utf-8"
+                  }
+        data = {
+                "grant_type": "refresh_token",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "refresh_token": refresh_token
+               }
+
+        post_request = requests.post(
+                                     endpoint,
+                                     headers=headers,
+                                     data=data
+                                    )
+        
+        access_token = json.loads(post_request.text)['access_token']
+        User.set_access_token(current_user.id, access_token)
+
+        if('referer' in request.headers):
+            referer = request.headers['referer']
+            response = flask.make_response(redirect(referer))
+            response.set_cookie('hubspot_access_token', access_token)
+        else:
+            response = flask.make_response(redirect(url_for('home')))
+    except Exception as error:
+        raise error
+
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
@@ -178,66 +284,12 @@ def authenticate_hubspot():
     return redirect('https://app.hubspot.com/oauth/authorize?client_id={0}&scope={1}&redirect_uri={2}'.format(client_id,
                                                                                                   scope,
                                                                                                   redirect_uri))
-@application.route('/hubspot/request_refresh_token')
-@login_required
-def request_refresh_token():
-    try:
-        code = request.args.get('code')
-        client_id = environ.get('hubspot_client_id')
-        client_secret = environ.get('hubspot_client_secret')
-        '''
-        redirect_uri must match the redirect_uri used to intitiate the OAuth
-        connection
-
-        '''
-        redirect_uri = url_for('request_refresh_token', _external=True,
-                               _scheme='https')
-    except Exception as error:
-        raise error
-
-    _headers = {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-               }
-    data = {
-            'grant_type':'authorization_code', 
-            'client_id': client_id,
-            'client_secret': client_secret, 
-            'redirect_uri': redirect_uri,
-            'code': code
-           }
-
-    try:
-        post_request = requests.post(
-                                     'https://api.hubapi.com/oauth/v1/token',
-                                     headers=_headers, 
-                                     data=data
-                                    )
-        access_token = post_request.json()['access_token']
-        refresh_token = post_request.json()['refresh_token']
-    except Exception as error:
-        raise error
-
-    response = make_response()
-    response.set_cookie('hubspot_access_token', access_token)
-    User.set_refresh_token(current_user.id, refresh_token)
-    return response
-
-@application.route('/hubspot/refresh_access_token', methods=['GET'])
-@login_required
-def refresh_access_token():
-    try:
-        refresh_token = current_user.refresh_token
-    except Exception as error:
-        raise error
 
 @application.route('/hubspot/workflows', methods=['GET'])
+@require_hubspot_access_token
 @login_required
 def workflows():
-    try:
-        access_token = request.cookies.get('hubspot_access_token')
-    except Exception as error:
-        return redirect(url_for('authenticate_hubspot'))
-
+    access_token = request.cookies.get('hubspot_access_token')
     endpoint = 'https://api.hubapi.com/automation/v3/workflows'
     request_headers = {
                        "Content-Type": "application/json",
@@ -245,18 +297,15 @@ def workflows():
                       }
     try:
         workflow_request = requests.get(endpoint, headers=request_headers)
-        return workflow_request.json()
+        return json.loads(workflow_request.text)
     except Exception as error:
         raise error
 
 @application.route('/hubspot/workflow_history/<workflow_id>')
+@require_hubspot_access_token
 @login_required
 def workflow_history(workflow_id):
-    try:
-        access_token = request.cookies.get('hubspot_access_token')
-    except Exception as error:
-        return redirect(url_for('authenticate_hubspot'))
-    
+    access_token = request.cookies.get('hubspot_access_token')
     domain = 'https://api.hubapi.com'
     endpoint = '/automation/v3/logevents/workflows/{0}/filter'
     request_url = domain + endpoint.format(workflow_id)
@@ -264,19 +313,19 @@ def workflow_history(workflow_id):
                        "Content-Type": "application/json",
                        "Authorization": "Bearer " + str(access_token)
                       }
-    request_parameters = {
-                          "types": ["ENROLLED"]
-                         }
+    request_body = {
+                    "types": ["ENROLLED"]
+                   }
     try:
         put_request = requests.put(
                              request_url, 
                              headers=request_headers,
-                             params=request_parameters
+                             params=request_body
                             )
         if put_request.status_code == 401:
             return redirect(url_for('authenticate_hubspot'))
         else:
-            return put_request.text
+            return json.loads(put_request.text)
     except Exception as error:
         raise error
     
