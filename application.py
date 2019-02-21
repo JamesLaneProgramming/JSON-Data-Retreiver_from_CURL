@@ -75,6 +75,33 @@ def main():
 def home():
     return render_template('home.html')
 
+@application.route('/login', methods=['GET','POST'])
+def login():
+    if(request.method == 'POST'):
+        username = request.form['username']
+        password = request.form['password']
+        assert username is not None
+        assert password is not None
+        user = User.authenticate(username, password)
+        if(user != None and user.is_authenticated):
+            login_status = login_user(user)
+            flash('Logged in successfully.')
+            #TODO: Issue redirecting to /None after successful login
+            next = request.args.get('next')
+            # is_safe_url should check if the url is safe for redirects.
+            # See http://flask.pocoo.org/snippets/62/ for an example.
+            return redirect(next)
+        else:
+            return redirect(url_for('signup'), code=302)
+    else:
+        return render_template('login.html')
+
+@application.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
     if(request.method == 'POST'):
@@ -83,7 +110,7 @@ def signup():
         assert username is not None
         assert password is not None
         User.create(username, password)
-        return redirect('/')
+        return redirect(url_for('login'))
     else:
         return render_template('signup.html')
 
@@ -222,33 +249,6 @@ def refresh_access_token():
             return response
     except Exception as error:
         raise error
-
-@application.route('/login', methods=['GET','POST'])
-def login():
-    if(request.method == 'POST'):
-        username = request.form['username']
-        password = request.form['password']
-        assert username is not None
-        assert password is not None
-        user = User.authenticate(username, password)
-        if(user != None and user.is_authenticated):
-            login_status = login_user(user)
-            flash('Logged in successfully.')
-            #TODO: Issue redirecting to /None after successful login
-            next = request.args.get('next')
-            # is_safe_url should check if the url is safe for redirects.
-            # See http://flask.pocoo.org/snippets/62/ for an example.
-            return redirect(next)
-        else:
-            return redirect('login', code=302)
-    else:
-        return render_template('login.html')
-
-@application.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect('/')
 
 @application.route('/hubspot')
 @login_required
