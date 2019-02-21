@@ -136,7 +136,7 @@ def require_hubspot_access_token(func):
                     return response
             except Exception as error:
                 print("Error updating access token")
-                return redirect(url_for('authenticate_hubspot'))
+            return redirect(url_for('authenticate_hubspot'))
         else:
             return func(*args, **kwargs)
     return update_hubspot_access_token
@@ -174,13 +174,14 @@ def request_refresh_token():
                                      headers=_headers, 
                                      data=data
                                     )
-        access_token = post_request.json()['access_token']
         refresh_token = post_request.json()['refresh_token']
+        User.set_refresh_token(current_user.id, refresh_token)
     except Exception as error:
         raise error
-    User.set_refresh_token(current_user.id, refresh_token)
-    return redirect(url_for('home'))
+    return redirect(url_for('refresh_access_token'))
 
+@application.route('/refresh_access_token', methods=['GET'])
+@login_required
 def refresh_access_token():
     try:
         client_id = environ.get('hubspot_client_id')
@@ -209,14 +210,16 @@ def refresh_access_token():
                                     )
         
         access_token = json.loads(post_request.text)['access_token']
-        User.set_access_token(current_user.id, access_token)
 
         if('referer' in request.headers):
             referer = request.headers['referer']
             response = flask.make_response(redirect(referer))
             response.set_cookie('hubspot_access_token', access_token)
+            return response
         else:
             response = flask.make_response(redirect(url_for('home')))
+            response.set_cookie('hubspot_access_token', access_token)
+            return response
     except Exception as error:
         raise error
 

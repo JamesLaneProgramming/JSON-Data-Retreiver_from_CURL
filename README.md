@@ -11,3 +11,7 @@ You can install pip through the default python3 installer, guides for installing
 
 
 When a Canvas course section is 'Cross-List' into another course, the 'section_id' and 'course_id' will change. Any webhooks pointing to the original endpoint will need to be updated. This can be accomplished by creating a new section in the original course and updating any webhooks to acknowledge these changes, this is done when you are treating this section as a staging ground for students about to start a course. The second option is to create an addition section in the new course to store any students that are added after the 'Cross-List' action.
+
+Notes:
+
+A contact will only be enrolled in a workflow if the close date of the enrollment trigger is before the current date/time.
