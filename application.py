@@ -118,7 +118,7 @@ def require_hubspot_signature_validation(func):
 
 def require_hubspot_access_token(func):
     @wraps(func)
-    def require_hubspot_access_token(*args, **kwargs):
+    def update_hubspot_access_token(*args, **kwargs):
         if('hubspot_access_token' not in request.cookies):
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
