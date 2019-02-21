@@ -190,7 +190,7 @@ def refresh_access_token():
             #Ensure no refresh token raises error
             refresh_token = current_user.refresh_token
         except Exception as error:
-            request_refresh_token()
+            return redirect(url_for('authenticate_hubspot'))
         endpoint = "https://api.hubapi.com/oauth/v1/token"
         headers = {
                    "Content-Type": "application/x-www-form-urlencoded",
