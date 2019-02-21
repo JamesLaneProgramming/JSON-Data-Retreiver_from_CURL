@@ -142,6 +142,10 @@ class User(UserMixin, Document):
         user = User.get(user_id).update(hubspot_refresh_token=refresh_token)
         return user
 
+    def set_access_token(user_id, access_token):
+        user = User.get(user_id).update(hubspot_access_token=access_token)
+        return user
+
     def create(username, password):
         assert isinstance(username, str)
         assert isinstance(password, str)
