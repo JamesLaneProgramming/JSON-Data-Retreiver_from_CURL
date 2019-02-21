@@ -139,7 +139,8 @@ def require_hubspot_access_token(func):
                         response.set_cookie('hubspot_access_token', access_token)
                         return func(*args, **kwargs)
             except Exception as error:
-                pass
+                print("Error updating access token")
+                return func(*args, **kwargs)
         else:
             return func(*args, **kwargs)
     return update_hubspot_access_token
