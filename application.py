@@ -118,7 +118,7 @@ def require_hubspot_signature_validation(func):
 
 def require_hubspot_access_token(func):
     @wraps(func)
-    def require_hubspot_access_token(*args, **kwargs):
+    def update_hubspot_access_token(*args, **kwargs):
         if('hubspot_access_token' not in request.cookies):
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
@@ -137,10 +137,12 @@ def require_hubspot_access_token(func):
                     else:
                         response = make_response(redirect(url_for('home')))
                         response.set_cookie('hubspot_access_token', access_token)
+                        return func(*args, **kwargs)
             except Exception as error:
                 pass
         else:
-            return func(*args, **kwargs)    
+            return func(*args, **kwargs)
+    return update_hubspot_access_token
 
 @application.route('/request_refresh_token', methods=['GET'])
 def request_refresh_token():
