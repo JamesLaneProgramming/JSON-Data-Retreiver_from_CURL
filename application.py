@@ -326,7 +326,7 @@ def workflow_history(workflow_id):
         if put_request.status_code == 401:
             return redirect(url_for('authenticate_hubspot'))
         else:
-            return json.loads(put_request.text)
+            return put_request.text
     except Exception as error:
         return redirect(url_for('home'))
     
@@ -342,7 +342,7 @@ def rubric_data(course_ID, assessment_id):
             request = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
             map_rubric_data(request.json())
-            return json.loads(request.text)
+            return request.text
         except Exception as error:
             raise error
 
