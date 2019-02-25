@@ -30,6 +30,7 @@ from flask_mongoengine import MongoEngine
 from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
+from hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
@@ -161,7 +162,12 @@ def require_hubspot_access_token(func):
                     response.set_cookie('hubspot_access_token', access_token)
                     #To redirect to original endpoint
                     return response
+                '''TODO: Implement logic if access token revolked but expiry is
+                still valid
+                '''
             except Exception as error:
+                print('Could not update cookie with user access token, refreshing access token')
+                    
                 print("Error updating access token")
             return redirect(url_for('authenticate_hubspot'))
         else:
@@ -530,6 +536,10 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
+    try:
+        Hubspot_Webook.create(json.loads(request.text))
+    except Exception as error:
+        raise error
     try:
         '''
         Must save query parameter before conversion as int() cannot handle
