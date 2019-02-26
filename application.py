@@ -540,7 +540,7 @@ def create_canvas_account():
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
     try:
-        Hubspot_Webook.create(json.loads(request.text))
+        Hubspot_Webhook.create(json.loads(request.text))
     except Exception as error:
         raise error
     try:
