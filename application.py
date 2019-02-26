@@ -88,10 +88,13 @@ def login():
             login_status = login_user(user)
             flash('Logged in successfully.')
             #TODO: Issue redirecting to /None after successful login
-            next = request.args.get('next')
+            if('next' in request.args):
+                next = request.args.get('next')
+                return redirect(next)
+            else:
+                return redirect(url_for('home'))
             # is_safe_url should check if the url is safe for redirects.
             # See http://flask.pocoo.org/snippets/62/ for an example.
-            return redirect(next)
         else:
             return redirect(url_for('signup'), code=302)
     else:
@@ -618,6 +621,34 @@ def create_canvas_account():
         return "Canvas account could not be created at this time...\
                 Please try again later or contact us for more information"
     '''
+
+#TODO: File upload uri with student
+#url https://coderacademy/
+#uri /users/:id
+@application.route('/sis_id_update', methods=['GET', 'POST'])
+@login_required
+def update_sis_id():
+    if(request.method == 'GET'):
+        #send template
+        pass
+    if(request.method == 'POST'):
+        user_id = request.args.get('user_id')
+        sid_id = request.args.get('sis_id')
+        
+        #GET USERS LOGIN ID.
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = 'api/v1/users/{0}/logins'.format(user_id)
+        user_login = canvas_API_request(
+                                        domain + endpoint,
+                                        request_method = 'GET'
+                                       )
+        user_login_id = json.loads(user_login.text)['id']
+        user_login_details = canvas_API_request(
+                                                'https://coderacademy.instructure.com/api/v1/accounts/0/logins/{0}'.format(user_login_id), 
+                                                request_parameters={login[sis_user_id]:sis_id},
+                                                request_method = 'PUT'
+                                               )
+        return user_login_details
 
 #Opens the YAML file at the specified directory and returns the scriptable YAML object.
 def get_config(_dir):
