@@ -79,6 +79,12 @@ def main():
 def home():
     return render_template('home.html')
 
+@application.route('/display_cookies', methods=['GET'])
+@login_required
+def display_cookies():
+    for each in request.cookies:
+        print(each)
+    return redirect(url_for('home'))
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
