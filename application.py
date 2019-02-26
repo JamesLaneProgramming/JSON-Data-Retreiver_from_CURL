@@ -30,7 +30,7 @@ from flask_mongoengine import MongoEngine
 from canvas_module import update_canvas_email, create_canvas_login
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
-from hubspot_webhook_model import Hubspot_Webhook
+from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
@@ -630,8 +630,6 @@ def create_canvas_account():
 def update_sis_id():
     if(request.method == 'GET'):
         #send template
-        pass
-    if(request.method == 'POST'):
         user_id = request.args.get('user_id')
         sid_id = request.args.get('sis_id')
         
@@ -650,6 +648,8 @@ def update_sis_id():
                                                )
         return user_login_details
 
+    if(request.method == 'POST'):
+        pass
 #Opens the YAML file at the specified directory and returns the scriptable YAML object.
 def get_config(_dir):
     '''
