@@ -656,7 +656,7 @@ def update_sis_id():
         print(uploaded_file)
         print(type(uploaded_file))
         print(uploaded_file.filename)
-        excel_document = workbook.save(uploaded_file.filename)
+        excel_document = workbook.save(request.files['File'].filename)
 
         sheet_names_available = excel_document.get_sheet_names()
         print("Available sheets in given file: ", sheet_names_available)
