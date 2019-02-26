@@ -644,7 +644,7 @@ def update_sis_id():
             return redirect(url_for(update_sis_id))
         if uploaded_file:
             filename = secure_filename(uploaded_file.filename)
-            uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            uploaded_file.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
         
         workbook = Workbook()
         print(uploaded_file)
