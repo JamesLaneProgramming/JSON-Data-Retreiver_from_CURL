@@ -647,7 +647,7 @@ def update_sis_id():
                                                 request_parameters={'login[sis_user_id]':sis_id},
                                                 request_method = 'PUT'
                                                )
-        return user_login_details
+        return user_login_details.text
     if(request.method == 'POST'):
         pass
 #Opens the YAML file at the specified directory and returns the scriptable YAML object.
