@@ -641,6 +641,7 @@ def update_sis_id():
         return render_template('sis_id_uploader.html')
     if(request.method == 'POST'):
         # https://openpyxl.readthedocs.io/en/stable/
+        '''
         if 'File' not in request.files:
             flask("No file uploaded")
             return redirect(url_for(update_sis_id))
@@ -651,7 +652,7 @@ def update_sis_id():
         if uploaded_file:
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
-        
+        '''
         workbook = Workbook()
         print(uploaded_file)
         print(type(uploaded_file))
