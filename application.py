@@ -635,14 +635,15 @@ def update_sis_id():
         
         #GET USERS LOGIN ID.
         domain = 'https://coderacademy.instructure.com'
-        endpoint = 'api/v1/users/{0}/logins'.format(user_id)
+        endpoint = '/api/v1/users/{0}/logins'.format(user_id)
         user_login = canvas_API_request(
                                         domain + endpoint,
                                         request_method = 'GET'
                                        )
+        endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
         user_login_id = json.loads(user_login.text)['id']
         user_login_details = canvas_API_request(
-                                                'https://coderacademy.instructure.com/api/v1/accounts/0/logins/{0}'.format(user_login_id), 
+                                                domain + endpoint,
                                                 request_parameters={login[sis_user_id]:sis_id},
                                                 request_method = 'PUT'
                                                )
