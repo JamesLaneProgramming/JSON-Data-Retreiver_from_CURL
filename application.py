@@ -640,6 +640,7 @@ def update_sis_id():
                                         domain + endpoint,
                                         request_method = 'GET'
                                        )
+        print(user_login.text)
         user_login_id = json.loads(user_login.text)['id']
         endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
         user_login_details = canvas_API_request(
