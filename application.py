@@ -22,6 +22,7 @@ import sys
 import requests
 import json
 import hashlib
+import openpyxl
 from functools import wraps
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -540,7 +541,7 @@ def create_canvas_account():
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
     try:
-        Hubspot_Webhook.create(json.loads(request.text))
+        Hubspot_Webhook.create(request.get_json())
     except Exception as error:
         raise error
     try:
