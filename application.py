@@ -27,7 +27,7 @@ from flask import Flask, flash, render_template, request, abort, redirect, url_f
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
-from canvas_module import update_canvas_email, create_canvas_login
+from canvas_module import update_canvas_email, create_canvas_login, canvas_API_request
 from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
 from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
