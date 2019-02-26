@@ -25,6 +25,7 @@ import hashlib
 from werkzeug import secure_filename
 from openpyxl import Workbook
 from functools import wraps
+from urlparse import urlparse, urljoin
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
@@ -85,29 +86,47 @@ def display_cookies():
     for each in request.cookies:
         print(each)
     return redirect(url_for('home'))
+
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
-        username = request.form['username']
-        password = request.form['password']
-        assert username is not None
-        assert password is not None
-        user = User.authenticate(username, password)
-        if(user != None and user.is_authenticated):
-            login_status = login_user(user)
-            flash('Logged in successfully.')
-            #TODO: Issue redirecting to /None after successful login
-            if('next' in request.args):
-                next = request.args.get('next')
-                return redirect(next)
-            else:
-                return redirect(url_for('home'))
-            # is_safe_url should check if the url is safe for redirects.
-            # See http://flask.pocoo.org/snippets/62/ for an example.
+        try:
+            username = request.form['username']
+            password = request.form['password']
+        except Exception as error:
+            raise error
         else:
-            return redirect(url_for('signup'), code=302)
+            user = User.authenticate(username, password)
+            if user.is_authenticated:
+                login_status = login_user(user)
+                flash('Logged in successfully.')
+                next = get_redirect_target()
+                return redirect_back('home')
+                # is_safe_url should check if the url is safe for redirects.
+                # See http://flask.pocoo.org/snippets/62/ for an example.
+            else:
+                return redirect(url_for('signup'), code=302)
     else:
         return render_template('login.html')
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    target_url = urlparse(urljoin(request.host_url, target))
+    return target_url.scheme in ('http', 'https') and \
+           ref_url.netloc == test_url.netloc
+
+def get_redirect_target():
+    for target in request.values.get('next'), request.referrer:
+        if not target:
+            continue
+        if is_safe_url(target):
+            return target
+
+def redirect_back(endpoint, **values):
+    target = request.form['next']
+    if not target or not is_safe_url(target):
+        target = url_for(endpoint, **values)
+    return redirect(target)
 
 @application.route('/logout')
 @login_required
