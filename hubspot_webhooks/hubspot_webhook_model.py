@@ -7,5 +7,5 @@ class Hubspot_Webhook(DynamicDocument):
     meta = {'collection': 'hubspot_webhooks'}
 
     def create(json_data):
-        hubspot_webhook = Hubspot_Webhook(**json_data).save()
+        hubspot_webhook = Hubspot_Webhook(**json_data)
         return hubspot_webhook
