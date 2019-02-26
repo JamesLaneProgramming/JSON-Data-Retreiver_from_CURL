@@ -22,6 +22,7 @@ import sys
 import requests
 import json
 import hashlib
+from werkzeug import secure_filename
 from openpyxl import Workbook
 from functools import wraps
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
@@ -42,6 +43,7 @@ application = Flask(__name__, template_folder='templates')
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
 application.config['SESSION_TYPE'] = 'filesystem'
+application.config['UPLOAD_FOLDER'] = '/uploads'
 
 #Configure mongodb server connection
 application.config['MONGODB_SETTINGS'] = {
@@ -633,8 +635,21 @@ def update_sis_id():
         return render_template('sis_id_uploader.html')
     if(request.method == 'POST'):
         # https://openpyxl.readthedocs.io/en/stable/
+        if 'File' not in request.files:
+            flask("No file uploaded")
+            return redirect(url_for(update_sis_id))
         uploaded_file = request.files['File']
+        if(uploaded_file.filename = ""):
+            flask("No selected file")
+            return redirect(url_for(update_sis_id))
+        if uploaded_file:
+            filename = secure_filename(uploaded_file.filename)
+            uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
         workbook = Workbook()
+        print(uploaded_file)
+        print(type(uploaded_file))
+        print(uploaded_file.filename)
         excel_document = workbook.save(uploaded_file.filename)
 
         sheet_names_available = excel_document.get_sheet_names()
