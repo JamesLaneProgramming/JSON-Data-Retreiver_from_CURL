@@ -639,7 +639,7 @@ def update_sis_id():
             flask("No file uploaded")
             return redirect(url_for(update_sis_id))
         uploaded_file = request.files['File']
-        if(uploaded_file.filename = ""):
+        if(uploaded_file.filename == ""):
             flask("No selected file")
             return redirect(url_for(update_sis_id))
         if uploaded_file:
