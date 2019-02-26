@@ -540,7 +540,7 @@ def create_canvas_account():
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
     try:
-        Hubspot_Webook.create(json.loads(request.text))
+        Hubspot_Webhook.create(json.loads(request.text))
     except Exception as error:
         raise error
     try:
@@ -631,7 +631,7 @@ def update_sis_id():
     if(request.method == 'GET'):
         #send template
         user_id = request.args.get('user_id')
-        sid_id = request.args.get('sis_id')
+        sis_id = request.args.get('sis_id')
         
         #GET USERS LOGIN ID.
         domain = 'https://coderacademy.instructure.com'
