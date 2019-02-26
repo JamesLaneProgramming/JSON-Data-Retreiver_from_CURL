@@ -22,7 +22,7 @@ import sys
 import requests
 import json
 import hashlib
-import openpyxl
+from openpyxl import Workbook
 from functools import wraps
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -634,7 +634,8 @@ def update_sis_id():
     if(request.method == 'POST'):
         # https://openpyxl.readthedocs.io/en/stable/
         uploaded_file = request.files['File']
-        excel_document = openpyxl.save(uploaded_file.filename)
+        workbook = Workbook()
+        excel_document = workbook.save(uploaded_file.filename)
 
         sheet_names_available = excel_document.get_sheet_names()
         print("Available sheets in given file: ", sheet_names_available)
