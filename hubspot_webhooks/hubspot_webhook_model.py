@@ -7,5 +7,5 @@ class Hubspot_Webhook(DynamicDocument):
 
     def create(json_data):
         for each in json_data:
-            hubspot_webhook = Hubspot_Webhook(each).save()
+            hubspot_webhook = Hubspot_Webhook(**each).save()
             return hubspot_webhook
