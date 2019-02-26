@@ -631,7 +631,7 @@ def update_sis_id():
     if(request.method == 'GET'):
         #send template
         user_id = request.args.get('user_id')
-        sid_id = request.args.get('sis_id')
+        sis_id = request.args.get('sis_id')
         
         #GET USERS LOGIN ID.
         domain = 'https://coderacademy.instructure.com'
