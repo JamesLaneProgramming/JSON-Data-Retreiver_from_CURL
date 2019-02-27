@@ -83,20 +83,24 @@ class User(UserMixin, Document):
             Returns None if the username was not found in the database or if the password asociated with a user is incorrect
         '''
         #TODO: Sanitise inputs before query database 
-        assert isinstance(username, str)
-        assert isinstance(password, str)
-        user = User.objects(username=username).first()
-        if user:
-            if check_password_hash(user.password, password):
-                user.authenticated = True
-                user.save()
-                return(user)
-            else:
-                print("Wrong password")
-                return None
+        try:
+            username = str(username)
+            password = str(password)
+        except Exception as error:
+            raise error
         else:
-            print("No user with that username found")
-            return None
+            user = User.objects(username=username).first()
+            if user:
+                if check_password_hash(user.password, password):
+                    user.authenticated = True
+                    user.save()
+                    return(user)
+                else:
+                    print("User could not be authenticated.")
+                    return None
+            else:
+                print("No user with that username found")
+                return None
 
     def get_id(self):
         '''
