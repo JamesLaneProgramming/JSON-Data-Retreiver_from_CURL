@@ -91,8 +91,8 @@ def display_cookies():
 def login():
     if(request.method == 'POST'):
         try:
-            username = request.form['username']
-            password = request.form['password']
+            username = str(request.form['username'])
+            password = str(request.form['password'])
         except Exception as error:
             raise error
         else:
@@ -137,12 +137,17 @@ def logout():
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
     if(request.method == 'POST'):
-        username = request.form['username']
-        password = request.form['password']
-        assert username is not None
-        assert password is not None
-        User.create(username, password)
-        return redirect(url_for('login'))
+        try:
+            username = str(request.form['username'])
+            password = str(request.form['password'])
+        except Exception as error:
+            raise error
+        else:
+            if username is not None or password is not None:
+                User.create(username, password)
+                return redirect(url_for('login'))
+            else:
+                return redirect(url_for('signup'))
     else:
         return render_template('signup.html')
 
@@ -151,28 +156,28 @@ def require_hubspot_signature_validation(func):
     #https://developers.hubspot.com/docs/methods/webhooks/webhooks-overview
     @wraps(func)
     def validate_hubspot_response_signature(*args, **kwargs):
-        hubspot_client_secret = environ.get('hubspot_client_secret')
-        hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
-        request_method = request.method
-        request_uri = request.base_url
-        request_body = request.get_data(as_text=True)
-        
-        print('client_secret: ', type(hubspot_client_secret))
-        print('request_method: ', type(request_method))
-        print('request_uri: ', type(request_uri))
-        print('request_body: ', type(request_body))
-
-        hash_string = hubspot_client_secret + request_method + request_uri+ request_body
-
-        request_signature = hashlib.sha256(hash_string.encode('utf-8'))
-        print('hash_string, ', hash_string)
-        print(hubspot_request_signature)
-        print(request_signature.hexdigest())
-        if(hubspot_request_signature == request_signature.hexdigest()):
-            return func(*args, **kwargs)
+        try:
+            hubspot_client_secret = environ.get('hubspot_client_secret')
+            hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
+            request_method = request.method
+            request_uri = request.base_url
+            request_body = request.get_data(as_text=True)
+        except Exception as error:
+            raise error
         else:
-            print('Unauthenticated')
-            return func(*args, **kwargs)
+            hash_string = hubspot_client_secret + request_method + request_uri + request_body
+            try:
+                encoded_hash_string = hash_string.encode('utf-8')
+                request_signature = hashlib.sha256(encoded_hash_string)
+            except Exception as error:
+                raise error
+            else:
+                if(hubspot_request_signature == request_signature.hexdigest()):
+                    return func(*args, **kwargs)
+                else:
+                    print('Unauthenticated')
+                    #Replace next line when hubspot works
+                    return func(*args, **kwargs)
     return validate_hubspot_response_signature
 
 def require_hubspot_access_token(func):
@@ -676,7 +681,7 @@ def update_sis_id():
         print(uploaded_file)
         print(type(uploaded_file))
         print(uploaded_file.filename)
-        excel_document = workbook.save(request.files['File'].filename)
+        excel_document = load_workbook(request.files['File'].filename)
 
         sheet_names_available = excel_document.get_sheet_names()
         print("Available sheets in given file: ", sheet_names_available)
