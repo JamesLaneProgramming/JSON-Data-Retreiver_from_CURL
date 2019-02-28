@@ -609,47 +609,36 @@ def create_canvas_account():
                         students_found = search_students(student_email).json()
                         if isinstance(students_found, dict):
                             try:
-                                existing_user_id = each_student['id']
+                                user_ID = students_found['id']
                             except KeyError as error:
                                 print("Specified JSON fields are not present")
                                 return abort(422)
-                            else:
-                                data = {
-                                        "student_id": existing_student_ID,
-                                        "course_id": course_ID,
-                                        "section_id": section_ID
-                                       }
-                                student_enrollment_request = request.post(
-                                                                          url_for('enroll_canvas_student'),
-                                                                          data = data
-                                                                         )
-                                return str(enrollment_response.text)
                         else:
+                            print('students_found is not a json object')
                             return abort(422)
                     elif(creation_response.status_code == 200):
-                        student_details = creation_response.json()
-                        if student_details:
-                            try:
-                                student_ID = student_details['id']
-                            except TypeError as error:
-                                return abort(422)
-                            except Exception as error:
-                                raise error
-                            else:
-                                data = {
-                                        "student_id": student_ID,
-                                        "course_id": course_ID,
-                                        "section_id": section_ID
-                                       }
-                                student_enrollment_request = request.post(
-                                                                          url_for('enroll_canvas_student'),
-                                                                          data = data
-                                                                         )
-                                return str(enrollment_response.text)
-                        else:
-                            creation_response.text
+                        user_details = creation_response.json()
+                        try:
+                            user_ID = user_details['id']
+                        except TypeError as error:
+                            print("Specified JSON fields are not present")
+                            return abort(422)
+                        except Exception as error:
+                            raise error
                     else:
                         return creation_response.text
+                    #Endpoint will return 422 if student_id doesn't exist
+                    data = {
+                            "student_id": user_ID,
+                            "course_id": course_ID,
+                            "section_id": section_ID
+                           }
+                    student_enrollment_request = request.post(
+                                                              url_for('enroll_canvas_student'),
+                                                              data = data
+                                                             )
+                    return str(enrollment_response.text)
+
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
