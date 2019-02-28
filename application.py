@@ -585,7 +585,10 @@ def create_canvas_account():
             #http://flask.pocoo.org/docs/1.0/api/#response-objects
             #Returns None if JSON could not be parsed.
             json_data = request.get_json()
-            Hubspot_Webhook.create(json_data)
+            try:
+                Hubspot_Webhook.create(json_data)
+            except Exception as error:
+                pass
             #Check if JSON data was parsed correctly.
             #Validate JSON Object is dict not array.
             if json_data and isinstance(json_data, dict):
