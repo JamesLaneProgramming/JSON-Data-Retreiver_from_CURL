@@ -23,7 +23,7 @@ import requests
 import json
 import hashlib
 from werkzeug import secure_filename
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from functools import wraps
 from urllib.parse import urlparse, urljoin
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
