@@ -614,8 +614,16 @@ def create_canvas_account():
                                 print("Specified JSON fields are not present")
                                 return abort(422)
                             else:
-                                enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
-                                return enrollment_response
+                                data = {
+                                        "student_id": existing_student_ID,
+                                        "course_id": course_ID,
+                                        "section_id": section_ID
+                                       }
+                                student_enrollment_request = request.post(
+                                                                          url_for('enroll_canvas_student'),
+                                                                          data = data
+                                                                         )
+                                return str(enrollment_response.text)
                         else:
                             return abort(422)
                     elif(creation_response.status_code == 200):
