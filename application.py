@@ -547,11 +547,11 @@ def student_search():
     if(request.method == 'POST'):
         try:
             search_term = request.form['search_term']
-            search_results = search_students(search_term)
-            #TODO: Replace this with request.json() for encoding purposes
-            return search_results.text
         except Exception as error:
             raise error
+        else:
+            search_results = search_students(search_term)
+            return search_results.text
     else:
         return render_template('student_search.html')
 
@@ -606,8 +606,8 @@ def create_canvas_account():
                     creation_response = create_canvas_login(student_name, student_email)
                     if(creation_response.status_code == 400):
                         print("The user already exists")
-                        students_found = search_students(student_email).get_json()
-                        if json_data and isinstance(students_found, dict):
+                        students_found = search_students(student_email).json()
+                        if isinstance(students_found, dict):
                             try:
                                 existing_user_id = each_student['id']
                             except KeyError as error:
@@ -619,7 +619,7 @@ def create_canvas_account():
                         else:
                             return abort(422)
                     elif(creation_response.status_code == 200):
-                        student_details = creation_response.get_json()
+                        student_details = creation_response.json()
                         if student_details:
                             try:
                                 student_ID = student_details['id']
