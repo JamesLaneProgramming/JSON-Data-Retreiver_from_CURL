@@ -666,7 +666,6 @@ def update_sis_id():
         return render_template('sis_id_uploader.html')
     if(request.method == 'POST'):
         # https://openpyxl.readthedocs.io/en/stable/
-        '''
         if 'File' not in request.files:
             flask("No file uploaded")
             return redirect(url_for(update_sis_id))
@@ -677,9 +676,9 @@ def update_sis_id():
         if uploaded_file:
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
-        '''
+
         workbook = Workbook()
-        excel_document = load_workbook(request.files['File'].filename)
+        excel_document = load_workbook(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         sheet_names_available = excel_document.get_sheet_names()
         print("Available sheets in given file: ", sheet_names_available)
