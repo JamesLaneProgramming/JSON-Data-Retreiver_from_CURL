@@ -573,87 +573,88 @@ def create_canvas_account():
     Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
     try:
-        Hubspot_Webhook.create(request.get_json())
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
     except Exception as error:
-        raise error
-    try:
-        '''
-        Must save query parameter before conversion as int() cannot handle
-        None
-        '''
-        course_ID = request.args.get('course_id')
-        section_ID = request.args.get('section_id')
-        try:
-            course_ID = int(course_ID)
-            section_ID = int(section_ID)
-        except Exception as error:
-            print("course_ID: ", course_ID)
-            print("section_id: ", section_ID)
-            print('Could not convert course/section ids to integers')
-    except Exception as error:
-        raise error
-    
-    #Validate POST payload
-    if not request.json:
-        return abort(415)
+        print("Could not convert course/section id's to strings")
     else:
-        json_data = request.get_json()
-        try:
-            first_name = json_data['properties']['firstname']['value']
-            last_name = json_data['properties']['lastname']['value'] 
-            student_email = json_data['properties']['email']['value']
-            student_name = first_name + " " + last_name
-            
-            creation_response = create_canvas_login(student_name, student_email)
-            if(creation_response.status_code == 400):
-                print("The user already exists")
-                students_found = json.loads(search_students(student_email).text)
-                for each_student in students_found:
-                    existing_user_id = each_student['id']
-                    enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
-                    if(enrollment_response.status_code == 200):
-                        print("Existing student successfully enrolled in course: ", course_ID)
-                        return enrollment_response.status_code
-                    else:
-                        return enrollment_response.status_code
-
-            elif(creation_response.status_code == 200):
-                try:
-                    student_details = json.loads(creation_response.text)
-                    try:
-                        student_ID = int(student_details['id'])
-                    except TypeError as error:
-                        print("Webhook is most likely sending array of student data.")
-                    except Exception as error:
-                        raise error
-                    enrollment_response = enroll_canvas_student(student_ID, course_ID, section_ID)
-                    print(enrollment_response.text)
-                except Exception as error:
-                    raise error
-                '''
-                TODO You will need to query the canvas Users endpoint with the search_term query parameter to find the user and return ID.
-                This ID will be used to enroll the student in selected course if their
-                account already exists
-                '''
-                return str(enrollment_response.status_code)
-
-        except KeyError as error:
-            print("Could not extract json fields")
+        #Validate POST payload
+        if not request.is_json:
             return abort(415)
-        except Exception as error:
-            print(error)
+        else:
+            #http://flask.pocoo.org/docs/1.0/api/#response-objects
+            #Returns None if JSON could not be parsed.
+            json_data = request.get_json()
+            Hubspot_Webhook.create(json_data)
+            #Check if JSON data was parsed correctly.
+            #Validate JSON Object is dict not array.
+            if json_data and isinstance(json_data, dict):
+                try:
+                    first_name = json_data['properties']['firstname']['value']
+                    last_name = json_data['properties']['lastname']['value'] 
+                    student_email = json_data['properties']['email']['value']
+                    student_name = first_name + " " + last_name
+                except KeyError as error:
+                    print("Specified JSON fields are not present")
+                    return abort(422)
+                except Exception as error:
+                    print(error)
+                else:
+                    creation_response = create_canvas_login(student_name, student_email)
+                    if(creation_response.status_code == 400):
+                        print("The user already exists")
+                        students_found = search_students(student_email).get_json()
+                        if json_data and isinstance(students_found, dict):
+                            try:
+                                existing_user_id = each_student['id']
+                            except KeyError as error:
+                                print("Specified JSON fields are not present")
+                                return abort(422)
+                            else:
+                                enrollment_response = enroll_canvas_student(existing_user_id, course_ID)
+                                return enrollment_response
+                        else:
+                            return abort(422)
+                    elif(creation_response.status_code == 200):
+                        student_details = creation_response.get_json()
+                        if student_details:
+                            try:
+                                student_ID = student_details['id']
+                            except TypeError as error:
+                                return abort(422)
+                            except Exception as error:
+                                raise error
+                            else:
+                                data = {
+                                        "student_id": student_ID,
+                                        "course_id": course_ID,
+                                        "section_id": section_ID
+                                       }
+                                student_enrollment_request = request.post(
+                                                                          url_for('enroll_canvas_student'),
+                                                                          data = data
+                                                                         )
+                                return str(enrollment_response.text)
+                        else:
+                            creation_response.text
+                    else:
+                        return creation_response.text
+            else:
+                flash("Could not parse JSON, Bad Request")
+                return abort(400)
 
-        '''
-    user_data = post_request.get_json()
-    #enroll_post_request = enroll_canvas_student(create_post_request)
-    if (post_request.status_code == 201):
-        application.logger.info(post_request)
-        return render_template('Canvas_Account_Creation_Successful.html'), 201
+@application.route('/enroll_student', methods=['POST'])
+@login_required
+def enroll_canvas_student():
+    try:
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
+        student_ID = str(request.args.get('student_id'))
+    except Exception as error:
+        raise error
     else:
-        application.logger.info(post_request)
-        return "Canvas account could not be created at this time...\
-                Please try again later or contact us for more information"
-    '''
+        student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
+        return student_enrollment_request.text
 
 #TODO: File upload uri with student
 #url https://coderacademy/
