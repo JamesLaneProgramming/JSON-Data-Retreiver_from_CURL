@@ -187,6 +187,7 @@ def require_hubspot_access_token(func):
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
             '''
+            return redirect(url_for('refresh_access_token'))
         else:
             try:
                 token_expiry = current_user.hubspot_access_token_expiry
@@ -200,8 +201,7 @@ def require_hubspot_access_token(func):
                 if(last_hubspot_access_token_request + hubspot_access_expiry > datetime.now()):
                     return redirect(url_for('refresh_access_token'))
                 else:
-                    return redirect(url_for('refresh_access_token'))
-            return func(*args, **kwargs)
+                    return func(*args, **kwargs)
     return update_hubspot_access_token
 
 @application.route('/request_refresh_token', methods=['GET'])
@@ -334,17 +334,18 @@ def authenticate_hubspot():
 @require_hubspot_access_token
 @login_required
 def workflows():
-    access_token = request.cookies.get('hubspot_access_token')
-    endpoint = 'https://api.hubapi.com/automation/v3/workflows'
-    request_headers = {
-                       "Content-Type": "application/json",
-                       "Authorization": "Bearer " + str(access_token)
-                      }
     try:
-        workflow_request = requests.get(endpoint, headers=request_headers)
-        return workflow_request.text
+        access_token = request.cookies.get('hubspot_access_token')
     except Exception as error:
         raise error
+    else:
+        endpoint = 'https://api.hubapi.com/automation/v3/workflows'
+        request_headers = {
+                           "Content-Type": "application/json",
+                           "Authorization": "Bearer " + str(access_token)
+                          }
+        workflow_request = requests.get(endpoint, headers=request_headers)
+        return workflow_request.get_json()
 
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @require_hubspot_access_token
