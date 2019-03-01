@@ -187,8 +187,8 @@ def require_hubspot_access_token(func):
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
             '''
+        else:
             try:
-                access_token = current_user.access_token
                 token_expiry = current_user.hubspot_access_token_expiry
                 last_token_refresh = current_user.last_hubspot_access_token_request
                 '''TODO: Implement logic if access token revolked but expiry is
@@ -196,23 +196,16 @@ def require_hubspot_access_token(func):
                 '''
             except Exception as error:
                 print('Could not update cookie with user access token, refreshing access token')
-                try:
-
             else:
                 if(last_hubspot_access_token_request + hubspot_access_expiry > datetime.now()):
                     return redirect(url_for('refresh_access_token'))
                 else:
-                    response = make_response(redirect(url_for('home')))
-                    response.set_cookie('hubspot_access_token', access_token)
-                    #To redirect to original endpoint
-                    return response
-
-            return redirect(url_for('authenticate_hubspot'))
-        else:
+                    return redirect(url_for('refresh_access_token'))
             return func(*args, **kwargs)
     return update_hubspot_access_token
 
 @application.route('/request_refresh_token', methods=['GET'])
+@login_required
 def request_refresh_token():
     try:
         code = request.args.get('code')
@@ -227,77 +220,78 @@ def request_refresh_token():
                                _scheme='https')
     except Exception as error:
         raise error
-
-    _headers = {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+    else:
+        _headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+                   }
+        data = {
+                'grant_type':'authorization_code', 
+                'client_id': client_id,
+                'client_secret': client_secret, 
+                'redirect_uri': redirect_uri,
+                'code': code
                }
-    data = {
-            'grant_type':'authorization_code', 
-            'client_id': client_id,
-            'client_secret': client_secret, 
-            'redirect_uri': redirect_uri,
-            'code': code
-           }
-
-    try:
         post_request = requests.post(
                                      'https://api.hubapi.com/oauth/v1/token',
                                      headers=_headers, 
                                      data=data
                                     )
-        refresh_token = post_request.json()['refresh_token']
-        access_token_expiry = post_request.json()['expires_in']
-        User.set_refresh_token(
-                               current_user.id, 
-                               refresh_token,
-                               access_token_expiry
-                              )
-            except Exception as error:
-        raise error
-    return redirect(url_for('refresh_access_token'))
+        try:
+            refresh_token = post_request.json()['refresh_token']
+            access_token_expiry = post_request.json()['expires_in']
+        except Exception as error:
+            raise error
+        else:
+            User.set_refresh_token(
+                                   current_user.id, 
+                                   refresh_token,
+                                   access_token_expiry
+                                  )
+            return redirect(url_for('refresh_access_token'))
 
 @application.route('/refresh_access_token', methods=['GET'])
 @login_required
 def refresh_access_token():
     try:
-        client_id = environ.get('hubspot_client_id')
-        client_secret = environ.get('hubspot_client_secret')
+        client_id = str(environ.get('hubspot_client_id'))
+        client_secret = str(environ.get('hubspot_client_secret'))
+    except Exception as error:
+        print('client_id or client_secret environment variables cannot be found')
+        raise error
+    else:
         try:
-            #Ensure no refresh token raises error
             refresh_token = current_user.refresh_token
         except Exception as error:
             return redirect(url_for('authenticate_hubspot'))
-        endpoint = "https://api.hubapi.com/oauth/v1/token"
-        headers = {
-                   "Content-Type": "application/x-www-form-urlencoded",
-                   "charset": "utf-8"
-                  }
-        data = {
-                "grant_type": "refresh_token",
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "refresh_token": refresh_token
-               }
-
-        post_request = requests.post(
-                                     endpoint,
-                                     headers=headers,
-                                     data=data
-                                    )
-        
-        access_token = json.loads(post_request.text)['access_token']
-
-        if('referer' in request.headers):
-            referer = request.headers['referer']
-            response = flask.make_response(redirect(referer))
-            response.set_cookie('hubspot_access_token', access_token)
-            return response
         else:
-            response = flask.make_response(redirect(url_for('home')))
-            response.set_cookie('hubspot_access_token', access_token)
-            return response
-    except Exception as error:
-        raise error
+            endpoint = "https://api.hubapi.com/oauth/v1/token"
+            headers = {
+                       "Content-Type": "application/x-www-form-urlencoded",
+                       "charset": "utf-8"
+                      }
+            data = {
+                    "grant_type": "refresh_token",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "refresh_token": refresh_token
+                   }
+
+            post_request = requests.post(
+                                         endpoint,
+                                         headers=headers,
+                                         data=data
+                                        )
+            try:
+                access_token = post_request.get_json()['access_token']
+            except ValueError as error:
+                print("Post request response did not contain an access token")
+            except Exception as error:
+                raise error
+            else:
+                next = get_redirect_target()
+                response = make_response(redirect_back('home'))
+                response.set_cookie('hubspot_access_token', access_token)
+                return response
 
 @application.route('/hubspot')
 @login_required
