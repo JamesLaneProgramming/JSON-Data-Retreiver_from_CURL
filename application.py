@@ -101,7 +101,7 @@ def login():
                 login_status = login_user(user)
                 flash('Logged in successfully.')
                 next = get_redirect_target()
-                return redirect_back('home')
+                return redirect_back('home', next=next)
                 # is_safe_url should check if the url is safe for redirects.
                 # See http://flask.pocoo.org/snippets/62/ for an example.
             else:
@@ -123,14 +123,10 @@ def get_redirect_target():
             return target
 
 def redirect_back(endpoint, **values):
-    try:
-        target = request.form['next']
-    except Exception as error:
-        print("No next target found in request")
-    else:
-        if not target or not is_safe_url(target):
-            target = url_for(endpoint, **values)
-        return redirect(target)
+    target = request.form['next']
+    if not target or not is_safe_url(target):
+        target = url_for(endpoint, **values)
+    return redirect(target)
 
 @application.route('/logout')
 @login_required
@@ -293,7 +289,7 @@ def refresh_access_token():
                 raise error
             else:
                 next = get_redirect_target()
-                response = make_response(redirect_back('home'))
+                response = make_response(redirect_back('home'), next=next)
                 response.set_cookie('hubspot_access_token', access_token)
                 return response
 
