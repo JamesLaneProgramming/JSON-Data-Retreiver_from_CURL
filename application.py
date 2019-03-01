@@ -123,10 +123,14 @@ def get_redirect_target():
             return target
 
 def redirect_back(endpoint, **values):
-    target = request.form['next']
-    if not target or not is_safe_url(target):
-        target = url_for(endpoint, **values)
-    return redirect(target)
+    try:
+        target = request.form['next']
+    except Exception as error:
+        print("No next target found in request")
+    else:
+        if not target or not is_safe_url(target):
+            target = url_for(endpoint, **values)
+        return redirect(target)
 
 @application.route('/logout')
 @login_required
