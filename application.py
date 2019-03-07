@@ -627,14 +627,14 @@ def create_canvas_account():
                     else:
                         return creation_response.text
                     #Endpoint will return 422 if student_id doesn't exist
-                    data = {
+                    _data = {
                             "student_id": user_ID,
                             "course_id": course_ID,
                             "section_id": section_ID
-                           }
+                            }
                     student_enrollment_request = requests.post(
-                                                              url_for('enroll_canvas_student'),
-                                                              data = data
+                                                              url_for('enroll_student_in_course'),
+                                                              data=_data
                                                              )
                     return str(enrollment_response.text)
 
@@ -644,7 +644,7 @@ def create_canvas_account():
 
 @application.route('/enroll_student', methods=['POST'])
 @login_required
-def enroll_canvas_student():
+def enroll_user_in_course():
     try:
         course_ID = str(request.args.get('course_id'))
         section_ID = str(request.args.get('section_id'))
