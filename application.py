@@ -632,7 +632,7 @@ def create_canvas_account():
                             "course_id": course_ID,
                             "section_id": section_ID
                            }
-                    student_enrollment_request = request.post(
+                    student_enrollment_request = requests.post(
                                                               url_for('enroll_canvas_student'),
                                                               data = data
                                                              )
