@@ -637,7 +637,7 @@ def create_canvas_account():
                                                               url,
                                                               data=_data
                                                              )
-                    return str(enrollment_response.text)
+                    return str(student_enrollment_request.text)
 
             else:
                 flash("Could not parse JSON, Bad Request")
