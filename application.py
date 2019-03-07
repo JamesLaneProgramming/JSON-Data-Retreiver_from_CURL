@@ -605,9 +605,10 @@ def create_canvas_account():
                         print("The user already exists")
                         students_found = search_students(student_email).json()
                         best_fit_student = students_found[0] or {}
-                        if isinstance(students_found, dict):
+                        print(type(best_fit_student))
+                        if isinstance(best_fit_student, dict):
                             try:
-                                user_ID = students_found['id']
+                                user_ID = best_fit_student['id']
                             except KeyError as error:
                                 print("Specified JSON fields are not present")
                                 return abort(422)
