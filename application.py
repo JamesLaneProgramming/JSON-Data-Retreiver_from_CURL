@@ -627,13 +627,14 @@ def create_canvas_account():
                     else:
                         return creation_response.text
                     #Endpoint will return 422 if student_id doesn't exist
+                    url = 'https://canvas-integration.herokuapp.com/enroll_student'
                     _data = {
                             "student_id": user_ID,
                             "course_id": course_ID,
                             "section_id": section_ID
                             }
                     student_enrollment_request = requests.post(
-                                                              url_for(enroll_user_in_course),
+                                                              url,
                                                               data=_data
                                                              )
                     return str(enrollment_response.text)
