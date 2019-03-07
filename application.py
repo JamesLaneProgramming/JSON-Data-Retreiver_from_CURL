@@ -604,6 +604,7 @@ def create_canvas_account():
                     if(creation_response.status_code == 400):
                         print("The user already exists")
                         students_found = search_students(student_email).json()
+                        best_fit_student = students_found[0] or {}
                         if isinstance(students_found, dict):
                             try:
                                 user_ID = students_found['id']
