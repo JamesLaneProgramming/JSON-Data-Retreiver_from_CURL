@@ -377,13 +377,13 @@ def workflow_history(workflow_id):
     
 @application.route('/rubric_data', methods=['GET', 'POST'])
 @login_required
-def rubric_data(course_ID, assessment_id):
+def rubric_data():
     if(request.method == 'GET'):
         return render_template('rubric_data.html')
     else:
         try:
-            course_ID = request.form['course_ID']
-            assessment_ID = request.form['assessment_ID']
+            course_ID = request.values.get('course_ID')
+            assessment_ID = request.values.get('assessment_ID')
             request = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
             map_rubric_data(request.json())
