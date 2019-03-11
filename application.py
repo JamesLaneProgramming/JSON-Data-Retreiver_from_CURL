@@ -382,14 +382,15 @@ def rubric_data():
         return render_template('rubric_data.html')
     else:
         try:
-            course_ID = request.values.get('course_ID')
-            assessment_ID = request.values.get('assessment_ID')
+            course_ID = request.values.get('course_id')
+            assessment_ID = request.values.get('assessment_id')
+        except Exception as error:
+            raise error
+        else:
             rubric_data = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
             #map_rubric_data(request.json())
             return rubric_data.text
-        except Exception as error:
-            raise error
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
