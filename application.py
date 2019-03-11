@@ -384,10 +384,10 @@ def rubric_data():
         try:
             course_ID = request.values.get('course_ID')
             assessment_ID = request.values.get('assessment_ID')
-            request = extract_rubric_data(course_ID, assessment_ID)
+            rubric_data = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
-            map_rubric_data(request.json())
-            return request.text
+            #map_rubric_data(request.json())
+            return rubric_data.text
         except Exception as error:
             raise error
 
