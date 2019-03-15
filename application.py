@@ -644,7 +644,12 @@ def create_canvas_account():
                                                               data=_data
                                                              )
                     '''
-                    return redirect(url_for('enroll_user_in_course', username='james', password='james', student_id=user_ID, course_id=course_ID, section_id=section_ID)
+                    return redirect(url_for('enroll_user_in_course', 
+                        username='james', 
+                        password='james', 
+                        student_id=user_ID, 
+                        course_id=course_ID, 
+                        section_id=section_ID))
                     #return str(student_enrollment_request.text)
             else:
                 flash("Could not parse JSON, Bad Request")
