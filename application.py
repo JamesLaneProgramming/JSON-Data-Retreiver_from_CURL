@@ -23,6 +23,7 @@ import requests
 import json
 import hashlib
 from werkzeug import secure_filename
+from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
 from functools import wraps
 from urllib.parse import urlparse, urljoin
@@ -91,12 +92,14 @@ def display_cookies():
 def login():
     if(request.method == 'POST'):
         try:
-            username = str(request.form['username'])
-            password = str(request.form['password'])
+            username = str(request.values.get('username'))
+            password = str(request.values.get('password'))
         except Exception as error:
             raise error
         else:
-            user = User.authenticate(username, password)
+            #Inform users of username/password constrains.
+            if(safe_str_cmp(user.password.encode('utf-8'), password.encode('utf-8'))):
+                user = User.authenticate(username, password)
             if user is not None and user.is_authenticated:
                 login_status = login_user(user)
                 flash('Logged in successfully.')
@@ -628,7 +631,9 @@ def create_canvas_account():
                     else:
                         return creation_response.text
                     #Endpoint will return 422 if student_id doesn't exist
+                    #return redirect(url_for('enroll_user_in_course', student_id=user_ID, course_id=course_ID, section_id=section_ID))
                     url = 'https://canvas-integration.herokuapp.com/enroll_student'
+                    '''
                     _data = {
                             "student_id": user_ID,
                             "course_id": course_ID,
@@ -638,8 +643,9 @@ def create_canvas_account():
                                                               url,
                                                               data=_data
                                                              )
-                    return str(student_enrollment_request.text)
-
+                    '''
+                    return redirect(url, username='james', password='james', student_id=user_ID, course_id=course_ID, section_id=section_ID)
+                    #return str(student_enrollment_request.text)
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
