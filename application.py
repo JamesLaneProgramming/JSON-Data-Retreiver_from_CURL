@@ -92,6 +92,7 @@ def display_cookies():
 def login():
     if(request.method == 'POST'):
         try:
+            print(request.args)
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
@@ -633,7 +634,6 @@ def create_canvas_account():
                     #Endpoint will return 422 if student_id doesn't exist
                     #return redirect(url_for('enroll_user_in_course', student_id=user_ID, course_id=course_ID, section_id=section_ID))
                     url = 'https://canvas-integration.herokuapp.com/enroll_student'
-                    '''
                     _data = {
                             "student_id": user_ID,
                             "course_id": course_ID,
@@ -645,18 +645,16 @@ def create_canvas_account():
                                                              )
                     '''
                     return redirect(url_for('enroll_user_in_course', 
-                        username='james', 
-                        password='james', 
                         student_id=user_ID, 
                         course_id=course_ID, 
                         section_id=section_ID))
-                    #return str(student_enrollment_request.text)
+                    '''
+                    return str(student_enrollment_request.text)
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
 
 @application.route('/enroll_student', methods=['POST'])
-@login_required
 def enroll_user_in_course():
     try:
         course_ID = str(request.args.get('course_id'))
