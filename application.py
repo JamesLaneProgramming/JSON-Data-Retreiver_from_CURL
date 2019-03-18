@@ -670,7 +670,7 @@ def create_canvas_account():
 def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
-        request_arguments = request.args
+        request_arguments = request.form.to_dict()
         print(request_arguments)
         course_ID = str(request_arguments['course_id'])
         section_ID = str(request_arguments['section_id'])
