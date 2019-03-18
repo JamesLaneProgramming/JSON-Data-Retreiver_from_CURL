@@ -593,8 +593,6 @@ def create_canvas_account():
                 pass
             #Check if JSON data was parsed correctly.
             #Validate JSON Object is dict not array.
-            if isinstance(json_data, list):
-                json_data = json_data[0]
             if json_data and isinstance(json_data, dict):
                 try:
                     first_name = json_data['properties']['firstname']['value']
@@ -612,9 +610,9 @@ def create_canvas_account():
                         print("The user already exists")
                         students_found = search_students(student_email).json()
                         best_fit_student = students_found[0] or {}
-                        print(type(best_fit_student))
                         if isinstance(best_fit_student, dict):
                             try:
+                                print(best_fit_student)
                                 user_ID = best_fit_student['id']
                             except KeyError as error:
                                 print("Specified JSON fields are not present")
