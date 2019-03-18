@@ -107,7 +107,7 @@ def enroll_canvas_student(student_ID, course_ID, section_ID=None):
         request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(str(course_ID))
         parameters = {'enrollment[user_id]': str(student_ID)}
         if(section_ID != None):
-            parameters.append({'enrollment[course_section_id]': str(section_ID)})
+            parameters['enrollment[course_section_id]'] = str(section_ID)
     except Exception as error:
         raise error
     else:
