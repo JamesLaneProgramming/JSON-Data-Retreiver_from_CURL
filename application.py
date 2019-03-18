@@ -656,10 +656,13 @@ def create_canvas_account():
 
 @application.route('/enroll_student', methods=['POST'])
 def enroll_user_in_course():
+    #Arguments passed through the data parameter will be form-encoded
     try:
-        course_ID = str(request.args.get('course_id'))
-        section_ID = str(request.args.get('section_id'))
-        student_ID = str(request.args.get('student_id'))
+        print(request.args)
+        request_arguments = request.args.get('form')
+        course_ID = str(request_arguments['course_id'])
+        section_ID = str(request_arguments['section_id'])
+        student_ID = str(request_arguments['student_id'])
     except Exception as error:
         raise error
     else:
