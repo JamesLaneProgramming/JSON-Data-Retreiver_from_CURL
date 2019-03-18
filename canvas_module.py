@@ -103,17 +103,15 @@ def enroll_canvas_student(student_ID, course_ID, section_ID=None):
     -----
     Need to assert that the arguments are positive integers and that they are valid canvas users, courses and sections.
     '''
-    assert isinstance(student_ID, int)
-    assert isinstance(course_ID, int)
-    
-    request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
-    if(section_ID != None):
-        assert isinstance(section_ID, int)
-        parameters = {'enrollment[user_id]': str(student_ID), 'enrollment[course_section_id]': str(section_ID)}
-    else:
+    try:
+        request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(str(course_ID))
         parameters = {'enrollment[user_id]': str(student_ID)}
-
-    response = canvas_API_request(request_url, request_parameters=parameters, request_method='POST')
+        if(section_ID != None:
+            parameters.append({'enrollment[course_section_id]': str(section_ID)})
+    except Exception as error:
+        raise error
+    else:
+        response = canvas_API_request(request_url, request_parameters=parameters, request_method='POST')
     return response
 
 def create_canvas_login(student_name, student_email):
