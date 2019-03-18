@@ -639,17 +639,29 @@ def create_canvas_account():
                             "course_id": course_ID,
                             "section_id": section_ID
                             }
-                    student_enrollment_request = requests.post(
-                                                              url,
-                                                              data=_data
-                                                             )
+                    try:
+                        student_enrollment_request = requests.post(
+                                                                  url,
+                                                                  data=_data
+                                                                 )
+                    except ConnectionError as error:
+                        print("DNS Failure, Refused Connection, etc.")
+                        return abort(500)
+                    except requests.exceptions.Timeout as error:
+                        print("Request timed out, please try again")
+                        return abort(500)
+                    except requests.exceptions.TooManyRedirects:
+                        print("Too many redirects.")
+                    except Exception as error:
+                        raise error
+                    else:
+                        return str(student_enrollment_request.text)
                     '''
                     return redirect(url_for('enroll_user_in_course', 
                         student_id=user_ID, 
                         course_id=course_ID, 
                         section_id=section_ID))
                     '''
-                    return str(student_enrollment_request.text)
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
@@ -658,8 +670,8 @@ def create_canvas_account():
 def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
-        print(request.args)
-        request_arguments = request.args.get('form')
+        request_arguments = request.args
+        print(request_arguments)
         course_ID = str(request_arguments['course_id'])
         section_ID = str(request_arguments['section_id'])
         student_ID = str(request_arguments['student_id'])
