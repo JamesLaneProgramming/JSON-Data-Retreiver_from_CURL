@@ -593,6 +593,8 @@ def create_canvas_account():
                 pass
             #Check if JSON data was parsed correctly.
             #Validate JSON Object is dict not array.
+            if isinstance(json_data, list):
+                json_data = json_data[0]
             if json_data and isinstance(json_data, dict):
                 try:
                     first_name = json_data['properties']['firstname']['value']
