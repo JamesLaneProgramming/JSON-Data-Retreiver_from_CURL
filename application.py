@@ -504,8 +504,7 @@ def map_rubric_data(submission_data):
             grade_total = 0
             for each, value in submission_rubric_assessment.items():
                 learning_outcome_count = learning_outcome_count + 1
-
-                grade_total = grade_total + value['u_points']
+                grade_total = grade_total + value['points']
                 if(grade_total == 14):
                     grades[student_name + ' CMP1043'] = grade_total
                     grade_total = 0
