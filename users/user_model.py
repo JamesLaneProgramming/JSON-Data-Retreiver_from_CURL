@@ -1,4 +1,3 @@
-import jwt
 from os import environ
 import datetime
 from flask_login import UserMixin
@@ -162,16 +161,16 @@ class User(UserMixin, Document):
         password_hash = generate_password_hash(password)
         created_user = User(username, password_hash).save()
         return created_user
-
+    '''
     def encode_auth_token(user_id):
-        '''
+        
         Docstring
         ---------
         Returns
         -------
         auth_token(String):
             Returns a User Auth Token.
-        '''
+        
         try:
             payload = {
                     'exp': datetime.datetime.utcnow() + datetime.timedelta(days=365, seconds=0),
@@ -185,3 +184,4 @@ class User(UserMixin, Document):
                     )
         except Exception as error:
             return e
+    '''
