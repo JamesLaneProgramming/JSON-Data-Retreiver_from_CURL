@@ -393,7 +393,8 @@ def rubric_data():
         else:
             rubric_data = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
-            return map_rubric_data(rubric_data.json())
+            print(map_rubric_data(rubric_data.json()))
+            return "Successfully extracted rubric data"
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
@@ -505,10 +506,10 @@ def map_rubric_data(submission_data):
             for each, value in submission_rubric_assessment.items():
                 learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + value['points']
-                if(grade_total == 14):
+                if(learning_outcome_count == 14):
                     grades[student_name + ' CMP1043'] = grade_total
                     grade_total = 0
-                if(grade_total == 35):
+                if(learning_outcome_count == 35):
                     grades[student_name + ' PRG1006'] = grade_total
                     grade_total = 0
     print(grades)
