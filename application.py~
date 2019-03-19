@@ -515,37 +515,37 @@ def map_rubric_data(submission_data):
                     grade_total = 0
     return grades
 
-    '''
-    submission = submission_object(
-            submission_ID, 
-            submission_assignment_ID,
-            submission_rubric_assessment
-            )
-    submission_grades = []
-    for each_criteria in submission.criteria:
-        try:
-            learning_outcome = Learning_Outcome(int(each_criteria.id),
-                                                float(each_criteria.points)).save()
-        except Exception as error:
-            #Some points are marked blank and cannot be converted. 
-            pass
-        else:
-            submission_grades.append(learning_outcome)
-            assessment = Rubric_Assessment.create(
-                    each_submission_item['user_id'],
-                    Assessment.objects(assessment_id=667),
-                    submission_grades
-                    ).save()
-    learning_outcome_count = 0
-    grade_total = 0
-    for each_learning_outcome in assessment.grades:
-        learning_outcome_count = learning_outcome_count + 1
-        grade_total = grade_total + 1
-        if(grade_total == 15):
-            print(grade_total)
-        if(grade_total == 36):
-            print(grade_total)
-    '''
+'''
+submission = submission_object(
+        submission_ID, 
+        submission_assignment_ID,
+        submission_rubric_assessment
+        )
+submission_grades = []
+for each_criteria in submission.criteria:
+    try:
+        learning_outcome = Learning_Outcome(int(each_criteria.id),
+                                            float(each_criteria.points)).save()
+    except Exception as error:
+        #Some points are marked blank and cannot be converted. 
+        pass
+    else:
+        submission_grades.append(learning_outcome)
+        assessment = Rubric_Assessment.create(
+                each_submission_item['user_id'],
+                Assessment.objects(assessment_id=667),
+                submission_grades
+                ).save()
+learning_outcome_count = 0
+grade_total = 0
+for each_learning_outcome in assessment.grades:
+    learning_outcome_count = learning_outcome_count + 1
+    grade_total = grade_total + 1
+    if(grade_total == 15):
+        print(grade_total)
+    if(grade_total == 36):
+        print(grade_total)
+'''
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
                  submission_rubric_assessment):
