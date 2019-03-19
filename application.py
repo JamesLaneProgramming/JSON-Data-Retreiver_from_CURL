@@ -494,7 +494,8 @@ def map_rubric_data(submission_data):
             student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
-            best_fit_student = requests.post('https://canvas-integration.herokuapp.com/students', data={'search_term': student_ID})
+            best_fit_student = search_students(student_ID)
+            print(best_fit_student.text)
             student_name = json.loads(best_fit_student.text)[0]['name']
         except Exception as error:
             raise error
