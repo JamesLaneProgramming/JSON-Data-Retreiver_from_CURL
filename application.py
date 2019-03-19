@@ -502,7 +502,6 @@ def map_rubric_data(submission_data):
         else:
             learning_outcome_count = 0
             grade_total = 0
-            grades.append({student_name: []})
             for each, value in submission_rubric_assessment.items():
                 print(each)
                 print(value)
