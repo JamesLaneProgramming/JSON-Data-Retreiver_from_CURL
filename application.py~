@@ -521,7 +521,7 @@ def map_rubric_data(submission_data):
             for each_learning_outcome in assessment.grades:
                 learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + 1
-                if(grade_total == 21):
+                if(grade_total == 15):
                     print(grade_total)
                 if(grade_total == 36):
                     print(grade_total)
