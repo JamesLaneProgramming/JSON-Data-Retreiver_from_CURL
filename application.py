@@ -578,7 +578,7 @@ def create_canvas_account():
         course_ID = str(request.args.get('course_id'))
         section_ID = str(request.args.get('section_id'))
     except Exception as error:
-        print("Could not convert course/section id's to strings")
+        print("Could not convert course/section id's to string")
     else:
         #Validate POST payload
         if not request.is_json:
@@ -656,12 +656,6 @@ def create_canvas_account():
                         raise error
                     else:
                         return str(student_enrollment_request.text)
-                    '''
-                    return redirect(url_for('enroll_user_in_course', 
-                        student_id=user_ID, 
-                        course_id=course_ID, 
-                        section_id=section_ID))
-                    '''
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
@@ -670,8 +664,8 @@ def create_canvas_account():
 def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
+        #Convert ImmutableMultiDict to Dict
         request_arguments = request.form.to_dict()
-        print(request_arguments)
         course_ID = str(request_arguments['course_id'])
         section_ID = str(request_arguments['section_id'])
         student_ID = str(request_arguments['student_id'])

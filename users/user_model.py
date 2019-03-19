@@ -1,3 +1,4 @@
+import jwt
 from os import environ
 import datetime
 from flask_login import UserMixin
@@ -147,7 +148,7 @@ class User(UserMixin, Document):
     def set_refresh_token(user_id, refresh_token):
         user = User.get(user_id).update(hubspot_refresh_token=refresh_token)
         return user
-
+   
     def set_access_token(user_id, access_token, access_token_expiry):
         user = User.get(user_id)
         user.update(hubspot_access_token=access_token)
@@ -161,3 +162,26 @@ class User(UserMixin, Document):
         password_hash = generate_password_hash(password)
         created_user = User(username, password_hash).save()
         return created_user
+
+    def encode_auth_token(user_id):
+        '''
+        Docstring
+        ---------
+        Returns
+        -------
+        auth_token(String):
+            Returns a User Auth Token.
+        '''
+        try:
+            payload = {
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=365, seconds=0),
+                    'iat': datetime.datetime.utcnow(),
+                    'sub': user_id
+                    }
+            return jwt.encode(
+                    payload,
+                    app.config.get('SECRET_KEY'),
+                    algorithm='HS256'
+                    )
+        except Exception as error:
+            return e
