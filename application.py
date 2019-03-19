@@ -512,7 +512,7 @@ def map_rubric_data(submission_data):
                 if(grade_total == 35):
                     grades[student_name].append({'PRG1006': grade_total})
                     print(grade_total)
-                    grade_total = 0a
+                    grade_total = 0
     return grades
 
             '''

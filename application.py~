@@ -506,11 +506,11 @@ def map_rubric_data(submission_data):
                 learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + each['points']
                 if(grade_total == 14):
-                    grades[student_name].append('CMP1043': grade_total})
+                    grades[student_name].append({'CMP1043': grade_total})
                     print(grade_total)
                     grade_total = 0
                 if(grade_total == 35):
-                    grades[student_name].append('PRG1006': grade_total})
+                    grades[student_name].append({'PRG1006': grade_total})
                     print(grade_total)
                     grade_total = 0a
     return grades
