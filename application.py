@@ -507,10 +507,10 @@ def map_rubric_data(submission_data):
                 learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + value['points']
                 if(learning_outcome_count == 14):
-                    grades[student_name + ' CMP1043'] = grade_total
+                    grades[student_ID][' CMP1043'] = grade_total
                     grade_total = 0
                 if(learning_outcome_count == 35):
-                    grades[student_name + ' PRG1006'] = grade_total
+                    grades[student_ID][' PRG1006'] = grade_total
                     grade_total = 0
     print(grades)
     return grades
@@ -599,7 +599,7 @@ def create_canvas_account():
         course_ID = str(request.args.get('course_id'))
         section_ID = str(request.args.get('section_id'))
     except Exception as error:
-        print("Could not convert course/section id's to strings")
+        print("Could not convert course/section id's to string")
     else:
         #Validate POST payload
         if not request.is_json:
@@ -677,12 +677,6 @@ def create_canvas_account():
                         raise error
                     else:
                         return str(student_enrollment_request.text)
-                    '''
-                    return redirect(url_for('enroll_user_in_course', 
-                        student_id=user_ID, 
-                        course_id=course_ID, 
-                        section_id=section_ID))
-                    '''
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
@@ -691,8 +685,8 @@ def create_canvas_account():
 def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
+        #Convert ImmutableMultiDict to Dict
         request_arguments = request.form.to_dict()
-        print(request_arguments)
         course_ID = str(request_arguments['course_id'])
         section_ID = str(request_arguments['section_id'])
         student_ID = str(request_arguments['student_id'])
