@@ -495,8 +495,9 @@ def map_rubric_data(submission_data):
             student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
-            best_fit_student = search_students(student_ID)
-            student_name = json.loads(best_fit_student.text)[0]['name']
+            best_fit_student = requests.get('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
+            print(best_fit_student.text)
+            student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
             print("This student does not have a rubric_assessment")
             pass
@@ -507,10 +508,10 @@ def map_rubric_data(submission_data):
                 learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + value['points']
                 if(learning_outcome_count == 14):
-                    grades[str(student_ID)]['CMP1043'] = grade_total
+                    grades[str(student_name)]['CMP1043'] = grade_total
                     grade_total = 0
                 if(learning_outcome_count == 35):
-                    grades[str(student_ID)]['PRG1006'] = grade_total
+                    grades[str(student_name)]['PRG1006'] = grade_total
                     grade_total = 0
     print(grades)
     return grades
