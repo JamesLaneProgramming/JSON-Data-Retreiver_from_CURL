@@ -495,7 +495,7 @@ def map_rubric_data(submission_data):
             student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
-            best_fit_student = requests.get('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
+            best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
             print(best_fit_student.text)
             student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
