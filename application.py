@@ -497,7 +497,8 @@ def map_rubric_data(submission_data):
             best_fit_student = search_students(student_ID)
             student_name = json.loads(best_fit_student.text)[0]['name']
         except Exception as error:
-            raise error
+            print("This student does not have a rubric_assessment")
+            pass
         else:
             learning_outcome_count = 0
             grade_total = 0
