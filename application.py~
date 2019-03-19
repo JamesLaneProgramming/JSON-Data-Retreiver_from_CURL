@@ -393,7 +393,7 @@ def rubric_data():
         else:
             rubric_data = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
-            map_rubric_data(request.json())
+            map_rubric_data(rubric_data.json())
             return rubric_data.text
 
 @application.route('/subjects', methods=['GET', 'POST'])
@@ -488,14 +488,35 @@ def assessments():
                                assessments = assessments)
 
 def map_rubric_data(submission_data):
+    grades = []
     for each_submission_item in submission_data:
         try:
             submission_ID = each_submission_item['id']
+            student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
+            best_fit_student = requests.post(url_for('student_search'), data={'search_term': student_ID})
+            student_name = json.loads(best_fit_student)[0]['name']
         except Exception as error:
             raise error
         else:
+            learning_outcome_count = 0
+            grade_total = 0
+            grades.append({student_name: []})
+            for each in submission_rubric_assessment:
+                learning_outcome_count = learning_outcome_count + 1
+                grade_total = grade_total + each['points']
+                if(grade_total == 14):
+                    grades[student_name].append('CMP1043': grade_total})
+                    print(grade_total)
+                    grade_total = 0
+                if(grade_total == 35):
+                    grades[student_name].append('PRG1006': grade_total})
+                    print(grade_total)
+                    grade_total = 0a
+    return grades
+
+            '''
             submission = submission_object(
                     submission_ID, 
                     submission_assignment_ID,
@@ -525,7 +546,7 @@ def map_rubric_data(submission_data):
                     print(grade_total)
                 if(grade_total == 36):
                     print(grade_total)
-
+            '''
 class submission_object():
     def __init__(self, submission_ID, submission_assessment_ID,
                  submission_rubric_assessment):
