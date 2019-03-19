@@ -508,10 +508,10 @@ def map_rubric_data(submission_data):
                 learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + value['points']
                 if(learning_outcome_count == 14):
-                    grades[str(student_name)]['CMP1043'] = grade_total
+                    grades[str(student_name) + ' CMP1043'] = grade_total
                     grade_total = 0
                 if(learning_outcome_count == 35):
-                    grades[str(student_name)]['PRG1006'] = grade_total
+                    grades[str(student_name) + ' PRG1006'] = grade_total
                     grade_total = 0
     print(grades)
     return grades
