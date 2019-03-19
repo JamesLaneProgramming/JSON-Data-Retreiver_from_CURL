@@ -487,7 +487,7 @@ def assessments():
                                assessments = assessments)
 
 def map_rubric_data(submission_data):
-    grades = []
+    grades = {}
     for each_submission_item in submission_data:
         try:
             submission_ID = each_submission_item['id']
