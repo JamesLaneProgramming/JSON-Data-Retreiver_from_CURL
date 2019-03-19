@@ -495,7 +495,6 @@ def map_rubric_data(submission_data):
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
             best_fit_student = search_students(student_ID)
-            print(best_fit_student.text)
             student_name = json.loads(best_fit_student.text)[0]['name']
         except Exception as error:
             raise error
@@ -503,19 +502,16 @@ def map_rubric_data(submission_data):
             learning_outcome_count = 0
             grade_total = 0
             for each, value in submission_rubric_assessment.items():
-                print(each)
-                print(value)
                 learning_outcome_count = learning_outcome_count + 1
 
                 grade_total = grade_total + value['points']
                 if(grade_total == 14):
                     grades[student_name + ' CMP1043'] = grade_total
-                    print(grade_total)
                     grade_total = 0
                 if(grade_total == 35):
                     grades[student_name + ' PRG1006'] = grade_total
-                    print(grade_total)
                     grade_total = 0
+    print(grades)
     return grades
 
 '''
