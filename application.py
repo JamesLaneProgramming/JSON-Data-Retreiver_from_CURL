@@ -393,7 +393,7 @@ def rubric_data():
         else:
             rubric_data = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
-            map_rubric_data(request.json())
+            map_rubric_data(rubric_data.json())
             return rubric_data.text
 
 @application.route('/subjects', methods=['GET', 'POST'])
