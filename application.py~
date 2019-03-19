@@ -393,7 +393,7 @@ def rubric_data():
         else:
             rubric_data = extract_rubric_data(course_ID, assessment_ID)
             #Save rubric data to the database.
-            #map_rubric_data(request.json())
+            map_rubric_data(request.json())
             return rubric_data.text
 
 @application.route('/subjects', methods=['GET', 'POST'])
@@ -492,15 +492,15 @@ def map_rubric_data(submission_data):
         try:
             submission_ID = each_submission_item['id']
             submission_assignment_ID = each_submission_item['assignment_id']
-        except Exception as error:
-            raise error
-        try:
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
         except Exception as error:
-            pass
-        if(submission_rubric_assessment):
-            submission = submission_object(submission_ID, submission_assignment_ID,
-                                          submission_rubric_assessment)
+            raise error
+        else:
+            submission = submission_object(
+                    submission_ID, 
+                    submission_assignment_ID,
+                    submission_rubric_assessment
+                    )
             submission_grades = []
             for each_criteria in submission.criteria:
                 try:
@@ -509,10 +509,13 @@ def map_rubric_data(submission_data):
                 except Exception as error:
                     #Some points are marked blank and cannot be converted. 
                     pass
-                submission_grades.append(learning_outcome)
-            assessment = Rubric_Assessment.create(each_submission_item['user_id'], 
-                                                  Assessment.objects(assessment_id=667),
-                                                  submission_grades)
+                else:
+                    submission_grades.append(learning_outcome)
+                    assessment = Rubric_Assessment.create(
+                            each_submission_item['user_id'],
+                            Assessment.objects(assessment_id=667),
+                            submission_grades
+                            ).save()
             learning_outcome_count = 0
             grade_total = 0
             for each_learning_outcome in assessment.grades:
@@ -530,8 +533,6 @@ class submission_object():
         self.id = submission_ID
         self.assessment_ID = submission_assessment_ID
         for key, value in submission_rubric_assessment.items():
-            points = None
-            comments = None
             try:
                 points = value['points']
                 comments = value['comments']
@@ -539,7 +540,7 @@ class submission_object():
                 pass
             except Exception as error:
                 raise error
-            if(points != None):
+            else:
                 criterion_object = criterion(key, points, comments)
                 self.criteria.append(criterion_object)
 
