@@ -506,7 +506,6 @@ def map_rubric_data(submission_data):
             grade_total = 0
             shared_outcome_total = 0
             for each, value in submission_rubric_assessment.items():
-                learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + value['points']
                 if(learning_outcome_count == 14):
                     grades[str(student_name) + ' CMP1043'] = grade_total
@@ -518,6 +517,7 @@ def map_rubric_data(submission_data):
                     print(each, value)
                     grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
                     grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
+                learning_outcome_count = learning_outcome_count + 1
     print(grades)
     return grades
 
