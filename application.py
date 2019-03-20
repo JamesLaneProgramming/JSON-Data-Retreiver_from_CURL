@@ -515,6 +515,7 @@ def map_rubric_data(submission_data):
                     grades[str(student_name) + ' PRG1006'] = grade_total
                     grade_total = 0
                 if(learning_outcome_count == 37):
+                    print(each, value)
                     grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
                     grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
     print(grades)
