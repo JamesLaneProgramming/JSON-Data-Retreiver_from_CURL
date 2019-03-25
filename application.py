@@ -724,11 +724,14 @@ def update_sis_id():
             data_stream = pandas.read_csv(uploaded_file.stream)
             for each_row in data_stream:
                 print(each_row)
+                print(data_stream[each_row])
+                print(data_stream[each_row])[0]
                 student_name = each_row[0] + " " + each_row[1]
                 student_email = each_row[2]
                 student_number = (student_email).split('@')[0]
                 
                 best_fit_student = json.loads(search_students(student_name).text)
+                print("Best Fit Student = {0}".format(best_fit_student))
                 user_id = best_fit_student[0]['id']
                 user_name = best_fit_student[0]['name']
                 print("Matched {0} with {1}".format(student_name, user_name))
