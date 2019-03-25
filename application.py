@@ -22,6 +22,7 @@ import sys
 import requests
 import json
 import hashlib
+import pandas
 from werkzeug import secure_filename
 from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
@@ -720,8 +721,8 @@ def update_sis_id():
             flask("No selected file")
             return redirect(url_for(update_sis_id))
         if uploaded_file:
-            filename = secure_filename(uploaded_file.filename)
-            uploaded_file.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
+            data_stream = pandas.read_csv(uploaded_file.stream)
+            print(data_stream)
 
             with open(uploaded_file) as f:
                 file_content = f.read()
