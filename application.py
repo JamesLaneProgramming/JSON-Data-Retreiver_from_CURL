@@ -733,7 +733,7 @@ def update_sis_id():
                     raise error
                 else:
                     best_fit_student = json.loads(search_students(student_name).text)
-                if(best_fit_student)
+                if(best_fit_student):
                     try:
                         user_id = best_fit_student[0]['id']
                         user_name = best_fit_student[0]['name']
