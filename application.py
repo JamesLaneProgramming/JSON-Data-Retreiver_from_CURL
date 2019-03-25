@@ -726,7 +726,7 @@ def update_sis_id():
                 first_name = data_stream['First Name [Required]'][i]
                 last_name = data_stream['Last Name [Required]'][i]
                 student_name = first_name + " " + last_name
-                student_email = data_stream['Email Address [Required'][i]
+                student_email = data_stream['Email Address [Required]'][i]
                 student_number = (student_email).split('@')[0]
                 print(student_name, student_email, student_number)
                 
