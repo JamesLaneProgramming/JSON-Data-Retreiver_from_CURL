@@ -722,7 +722,7 @@ def update_sis_id():
             return redirect(url_for(update_sis_id))
         if uploaded_file:
             data_stream = pandas.read_csv(uploaded_file.stream)
-            for i in len(data_stream.index):
+            for i in range(0, len(data_stream.index) - 1):
                 first_name = data_stream['First Name [Required]'][i]
                 last_name = data_stream['Last Name [Required]'][i]
                 student_name = first_name + " " + last_name
