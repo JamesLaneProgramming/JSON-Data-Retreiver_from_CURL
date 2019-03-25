@@ -724,7 +724,7 @@ def update_sis_id():
             data_stream = pandas.read_csv(uploaded_file.stream)
             for each_row in data_stream:
                 print(each_row)
-                student_name = each_row[0] + " " + each_for[1]
+                student_name = each_row[0] + " " + each_row[1]
                 student_email = each_row[2]
                 student_number = (student_email).split('@')[0]
                 
