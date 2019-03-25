@@ -751,10 +751,9 @@ def update_sis_id():
                                                             request_parameters={'login[sis_user_id]':sis_id},
                                                             request_method = 'PUT'
                                                            )
-                    return user_login_details.text
                 else:
                     print("Matched {0} with {1}".format(student_name, user_name))
-                return "success"
+        return "success"
 
 @application.route('/uploads/<file_name>')
 def uploaded_file(file_name):
