@@ -27,7 +27,7 @@ from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
 from functools import wraps
 from urllib.parse import urlparse, urljoin
-from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
+from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
@@ -463,7 +463,7 @@ def criterion():
                               learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
-            criterion_name = request.form['criterion_name_field']
+                        criterion_name = request.form['criterion_name_field']
             criterion_description = request.form['criterion_description_field']
             criterion_points = request.form['criterion_points_field']
             criterion_learning_outcomes = request.form.getlist('criterion_learning_outcomes_field[]')
@@ -723,15 +723,22 @@ def update_sis_id():
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
 
-        workbook = Workbook()
-        excel_document = load_workbook(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            with open(uploaded_file) as f:
+                file_content = f.read()
+                print(file_content)
+                try:
+                    workbook = Workbook()
+                    excel_document = load_workbook(filename)
 
-        sheet_names_available = excel_document.get_sheet_names()
-        print("Available sheets in given file: ", sheet_names_available)
+                    sheet_names_available = excel_document.get_sheet_names()
+                    print("Available sheets in given file: ", sheet_names_available)
 
-        selected_sheet = excel_document.get_sheet_by_name(sheet_names_available[0])
+                    selected_sheet = excel_document.get_sheet_by_name(sheet_names_available[0])
 
-        cell_range = selected_sheet['C2': 'C96']
+                    cell_range = selected_sheet['C2': 'C96']
+                    for each in cell_range:
+                        for cell in each:
+                            print(cell.value)
         '''
         for each_row in cell_range:
             for cell in each_row:
@@ -757,6 +764,11 @@ def update_sis_id():
                                                        )
                 return user_login_details.text
         '''
+
+@app.route('/uploads/<file_name>')
+def uploaded_file(file_name):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], file_name)
+
 #Opens the YAML file at the specified directory and returns the scriptable YAML object.
 def get_config(_dir):
     '''
