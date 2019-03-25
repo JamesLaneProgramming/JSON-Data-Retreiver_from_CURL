@@ -764,6 +764,8 @@ def update_sis_id():
                                                                            )
                                     return user_login_details.text
                             '''
+                except Exception as error:
+                    raise error
 
 @app.route('/uploads/<file_name>')
 def uploaded_file(file_name):
