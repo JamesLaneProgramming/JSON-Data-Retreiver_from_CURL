@@ -729,8 +729,8 @@ def update_sis_id():
                 student_number = (student_email).split('@')[0]
                 
                 best_fit_student = json.loads(search_students(student_name).text)
-                user_id = best_fit_student['id']
-                user_name = best_fit_student['name']
+                user_id = best_fit_student[0]['id']
+                user_name = best_fit_student[0]['name']
                 print("Matched {0} with {1}".format(student_name, user_name))
 
                 sis_id = student_number
