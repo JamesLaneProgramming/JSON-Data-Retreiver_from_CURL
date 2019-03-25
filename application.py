@@ -723,37 +723,43 @@ def update_sis_id():
         if uploaded_file:
             data_stream = pandas.read_csv(uploaded_file.stream)
             for i in range(0, len(data_stream.index) - 1):
-                first_name = data_stream['First Name [Required]'][i]
-                last_name = data_stream['Last Name [Required]'][i]
-                student_name = first_name + " " + last_name
-                student_email = data_stream['Email Address [Required]'][i]
-                student_number = (student_email).split('@')[0]
-                print(student_name, student_email, student_number)
-                
-                best_fit_student = json.loads(search_students(student_name).text)
-                print("Best Fit Student = {0}".format(best_fit_student))
-                user_id = best_fit_student[0]['id']
-                user_name = best_fit_student[0]['name']
-
-                sis_id = student_number
-                
-                if(student_name.upper() == user_name.upper()):
-                    domain = 'https://coderacademy.instructure.com'
-                    endpoint = '/api/v1/users/{0}/logins'.format(user_id)
-                    user_login = canvas_API_request(
-                                                    domain + endpoint,
-                                                    request_method = 'GET'
-                                                   )
-                    user_login_id = json.loads(user_login.text)[0]['id']
-                    endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
-                    user_login_details = canvas_API_request(
-                                                            domain + endpoint,
-                                                            request_parameters={'login[sis_user_id]':sis_id},
-                                                            request_method = 'PUT'
-                                                           )
+                try:
+                    first_name = data_stream['First Name [Required]'][i]
+                    last_name = data_stream['Last Name [Required]'][i]
+                    student_name = first_name + " " + last_name
+                    student_email = data_stream['Email Address [Required]'][i]
+                    student_number = (student_email).split('@')[0]
+                except Exception as error:
+                    raise error
                 else:
-                    print("Matched {0} with {1}".format(student_name, user_name))
-        return "success"
+                    best_fit_student = json.loads(search_students(student_name).text)
+                if(best_fit_student)
+                    try:
+                        user_id = best_fit_student[0]['id']
+                        user_name = best_fit_student[0]['name']
+                    except Exception as error:
+                        raise error
+                    else:
+                        if(student_name.upper() == user_name.upper()):
+                            domain = 'https://coderacademy.instructure.com'
+                            endpoint = '/api/v1/users/{0}/logins'.format(user_id)
+                            user_login = canvas_API_request(
+                                                            domain + endpoint,
+                                                            request_method = 'GET'
+                                                           )
+                            user_login_id = json.loads(user_login.text)[0]['id']
+                            endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
+                            user_login_details = canvas_API_request(
+                                                                    domain + endpoint,
+                                                                    request_parameters={'login[sis_user_id]':student_number},
+                                                                    request_method = 'PUT'
+                                                                   )
+                        else:
+                            print("Matched {0} with {1}".format(student_name, user_name))
+                            print("Could not link student to canvas user account")
+                else:
+                    print("Could not find student: " + student_name)
+            return "success"
 
 @application.route('/uploads/<file_name>')
 def uploaded_file(file_name):
