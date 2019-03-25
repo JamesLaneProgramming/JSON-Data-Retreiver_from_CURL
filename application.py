@@ -463,7 +463,7 @@ def criterion():
                               learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
-                        criterion_name = request.form['criterion_name_field']
+            criterion_name = request.form['criterion_name_field']
             criterion_description = request.form['criterion_description_field']
             criterion_points = request.form['criterion_points_field']
             criterion_learning_outcomes = request.form.getlist('criterion_learning_outcomes_field[]')
