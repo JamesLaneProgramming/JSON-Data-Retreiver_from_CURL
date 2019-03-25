@@ -734,27 +734,26 @@ def update_sis_id():
                 print("Best Fit Student = {0}".format(best_fit_student))
                 user_id = best_fit_student[0]['id']
                 user_name = best_fit_student[0]['name']
-                print("Matched {0} with {1}".format(student_name, user_name))
 
                 sis_id = student_number
                 
-                #GET USERS LOGIN ID.
-                '''
-                domain = 'https://coderacademy.instructure.com'
-                endpoint = '/api/v1/users/{0}/logins'.format(user_id)
-                user_login = canvas_API_request(
-                                                domain + endpoint,
-                                                request_method = 'GET'
-                                               )
-                user_login_id = json.loads(user_login.text)[0]['id']
-                endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
-                user_login_details = canvas_API_request(
-                                                        domain + endpoint,
-                                                        request_parameters={'login[sis_user_id]':sis_id},
-                                                        request_method = 'PUT'
-                                                       )
-                return user_login_details.text
-                '''
+                if(student_name.upper() == user_name.upper()):
+                    domain = 'https://coderacademy.instructure.com'
+                    endpoint = '/api/v1/users/{0}/logins'.format(user_id)
+                    user_login = canvas_API_request(
+                                                    domain + endpoint,
+                                                    request_method = 'GET'
+                                                   )
+                    user_login_id = json.loads(user_login.text)[0]['id']
+                    endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
+                    user_login_details = canvas_API_request(
+                                                            domain + endpoint,
+                                                            request_parameters={'login[sis_user_id]':sis_id},
+                                                            request_method = 'PUT'
+                                                           )
+                    return user_login_details.text
+                else:
+                    print("Matched {0} with {1}".format(student_name, user_name))
                 return "success"
 
 @application.route('/uploads/<file_name>')
