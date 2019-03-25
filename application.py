@@ -722,51 +722,37 @@ def update_sis_id():
             return redirect(url_for(update_sis_id))
         if uploaded_file:
             data_stream = pandas.read_csv(uploaded_file.stream)
-            print(data_stream)
+            for each_row in data_stream:
+                print(each_row)
+                student_name = each_row[0] + " " + each_for[1]
+                student_email = each_row[2]
+                student_number = (student_email).split('@')[0]
+                
+                best_fit_student = json.loads(search_students(student_name).text)
+                user_id = best_fit_student['id']
+                user_name = best_fit_student['name']
+                print("Matched {0} with {1}".format(student_name, user_name))
 
-            with open(uploaded_file) as f:
-                file_content = f.read()
-                print(file_content)
-                try:
-                    workbook = Workbook()
-                    excel_document = load_workbook(filename)
-
-                    sheet_names_available = excel_document.get_sheet_names()
-                    print("Available sheets in given file: ", sheet_names_available)
-
-                    selected_sheet = excel_document.get_sheet_by_name(sheet_names_available[0])
-
-                    cell_range = selected_sheet['C2': 'C96']
-                    for each in cell_range:
-                        for cell in each:
-                            print(cell.value)
-                            '''
-                            for each_row in cell_range:
-                                for cell in each_row:
-                                    student_email = cell.value
-                                    student_number = (student_email).split('@')[0]
-                                    
-                                    user_id = json.loads(search_students(student_email).text)['id'] 
-                                    sis_id = student_number
-                                    
-                                    #GET USERS LOGIN ID.
-                                    domain = 'https://coderacademy.instructure.com'
-                                    endpoint = '/api/v1/users/{0}/logins'.format(user_id)
-                                    user_login = canvas_API_request(
-                                                                    domain + endpoint,
-                                                                    request_method = 'GET'
-                                                                   )
-                                    user_login_id = json.loads(user_login.text)[0]['id']
-                                    endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
-                                    user_login_details = canvas_API_request(
-                                                                            domain + endpoint,
-                                                                            request_parameters={'login[sis_user_id]':sis_id},
-                                                                            request_method = 'PUT'
-                                                                           )
-                                    return user_login_details.text
-                            '''
-                except Exception as error:
-                    raise error
+                sis_id = student_number
+                
+                #GET USERS LOGIN ID.
+                '''
+                domain = 'https://coderacademy.instructure.com'
+                endpoint = '/api/v1/users/{0}/logins'.format(user_id)
+                user_login = canvas_API_request(
+                                                domain + endpoint,
+                                                request_method = 'GET'
+                                               )
+                user_login_id = json.loads(user_login.text)[0]['id']
+                endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
+                user_login_details = canvas_API_request(
+                                                        domain + endpoint,
+                                                        request_parameters={'login[sis_user_id]':sis_id},
+                                                        request_method = 'PUT'
+                                                       )
+                return user_login_details.text
+                '''
+                return "success"
 
 @application.route('/uploads/<file_name>')
 def uploaded_file(file_name):
