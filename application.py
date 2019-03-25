@@ -722,13 +722,13 @@ def update_sis_id():
             return redirect(url_for(update_sis_id))
         if uploaded_file:
             data_stream = pandas.read_csv(uploaded_file.stream)
-            for each_row in data_stream:
-                print(each_row)
-                print(data_stream[each_row])
-                print(data_stream[each_row])[0]
-                student_name = each_row[0] + " " + each_row[1]
-                student_email = each_row[2]
+            for i in len(data_stream.index):
+                first_name = data_stream['First Name [Required]'][i]
+                last_name = data_stream['Last Name [Required]'][i]
+                student_name = first_name + " " + last_name
+                student_email = data_stream['Email Address [Required'][i]
                 student_number = (student_email).split('@')[0]
+                print(student_name, student_email, student_number)
                 
                 best_fit_student = json.loads(search_students(student_name).text)
                 print("Best Fit Student = {0}".format(best_fit_student))
