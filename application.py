@@ -767,7 +767,7 @@ def update_sis_id():
                 except Exception as error:
                     raise error
 
-@app.route('/uploads/<file_name>')
+@application.route('/uploads/<file_name>')
 def uploaded_file(file_name):
     return send_from_directory(app.config['UPLOAD_FOLDER'], file_name)
 
