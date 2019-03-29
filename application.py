@@ -472,7 +472,7 @@ def criterion():
         except Exception as error:
             raise error
 
-@application.route('/rubrics', methods=['GET'])
+@application.route('/rubrics', methods=['GET', 'POST'])
 @login_required
 def rubrics():
     if(request.method == 'GET'):
