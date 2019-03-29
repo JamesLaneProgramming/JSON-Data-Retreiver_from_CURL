@@ -11,7 +11,7 @@
 	    	<li>
 		    <p> {{rubric['title']}} </p>
 		    <p> {{rubric['points_possible']}} </p>
-		    <input class="btn btn-default" type="submit" value="Map Learning Outcomes" onclick="window.location.href='{{url_for('map_rubric', rubric_id=rubric['id'])}}'">
+		    <input class="btn btn-default" type="submit" value="Map Learning Outcomes" onclick="window.location.href='{{url_for('map_rubric', course_id=course_id, rubric_id=rubric['id'])}}'">
 		</li>
 		{% endfor %}
       </ul>
