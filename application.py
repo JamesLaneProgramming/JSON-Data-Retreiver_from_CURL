@@ -496,6 +496,7 @@ def map_rubric(rubric_id):
         except Exception as error:
             raise error
         else:
+            print(rubric_id)
             rubric_data = canvas_API_request("https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id))
             learning_outcomes = json.loads(Learning_Outcome.read())
             print(rubric_data.text)

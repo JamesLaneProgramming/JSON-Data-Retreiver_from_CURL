@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>Map Rubric</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+	    <ul>
+		{% for each_learning_outcome in learning_outcomes %}
+	    	<li>
+			<p> {{each_learning_outcome['learning_outcome_name']}} </p>
+			<p> {{each_learning_outcome['learning_outcome_description']}} </p>
+		</li>
+		{% endfor %}
+      </ul>
+      <input class="btn btn-default" type="submit" value="Create">
+    </div>
+  </body>
+</html>
