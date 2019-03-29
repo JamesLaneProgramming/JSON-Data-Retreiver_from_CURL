@@ -82,18 +82,10 @@ def main():
 def home():
     return render_template('home.html')
 
-@application.route('/display_cookies', methods=['GET'])
-@login_required
-def display_cookies():
-    for each in request.cookies:
-        print(each)
-    return redirect(url_for('home'))
-
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
         try:
-            print(request.args)
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
@@ -107,13 +99,12 @@ def login():
                 flash('Logged in successfully.')
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
-                # is_safe_url should check if the url is safe for redirects.
-                # See http://flask.pocoo.org/snippets/62/ for an example.
             else:
                 return redirect(url_for('signup'), code=302)
     else:
         return render_template('login.html')
 
+#See http://flask.pocoo.org/snippets/62
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     target_url = urlparse(urljoin(request.host_url, target))
@@ -148,7 +139,8 @@ def signup():
         except Exception as error:
             raise error
         else:
-            if username is not "" or password is not "":
+            if username is not "" or password is not "" and \
+                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
                 new_user = User.create(username, password)
                 return redirect(url_for('login'))
             else:
@@ -480,6 +472,46 @@ def criterion():
         except Exception as error:
             raise error
 
+@application.route('/rubrics', methods=['GET'])
+@login_required()
+def rubrics():
+    if(request.method == 'GET'):
+        return render_template('rubrics.html')
+        #Request and return rubrics. Render template with button that links to map_rubric and passes rubric_id
+    else:
+        try:
+            course_id = request.values.get('course_id')
+        except Exception as error:
+            raise error
+        else:
+            rubrics = canvas_API_request("https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics".format(course_id), parameters={'course_id':course_id})
+            return render_template('rubrics.html', rubrics=json.loads(rubrics))
+
+@application.route('/map_rubric/<rubric_id>', methods=['GET', 'POST'])
+@login_required()
+def map_rubric(rubric_id):
+    if(request.method == 'GET'):
+        try:
+            course_id = request.values.get('course_id')
+        except Exception as error:
+            raise error
+        else:
+            rubric_data = canvas_API_request("https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id))
+            learning_outcomes = json.loads(Learning_Outcome.read())
+            print(rubric_data.text)
+            return render_template(
+                    'map_rubric',
+                    criterion=criterion,
+                    learning_outcomes=learning_outcomes
+                    )
+@application.route('/map_criterion', methods=['POST'])
+@login_required()
+def map_criterion():
+    criterion_id = request.args.get('criterion_id')
+    learning_outcome = request.args.get('learning_outcome')
+    if(request.method == 'POST'):
+        Criterion(id=criterion_id, mapped_learning_outcome=learning_outcome)
+
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
 def assessments():
@@ -506,8 +538,11 @@ def map_rubric_data(submission_data):
             learning_outcome_count = 0
             grade_total = 0
             shared_outcome_total = 0
+            learning_outcomes_data
+            learning_outcome_data[str(student_name)] = {}
             for each, value in submission_rubric_assessment.items():
                 grade_total = grade_total + value['points']
+                learning_outcome_data[str(student_name)][each] = value['points']
                 if(learning_outcome_count == 14):
                     grades[str(student_name) + ' CMP1043'] = grade_total
                     grade_total = 0
@@ -519,6 +554,7 @@ def map_rubric_data(submission_data):
                     grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
                     grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
                 learning_outcome_count = learning_outcome_count + 1
+            print(learning_outcome_data)
     print(grades)
     return grades
 

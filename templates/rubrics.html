@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>Rubrics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+	    <ul>
+		{% for rubric in rubrics %}
+	    	<li>
+		    <p> {{rubric['title']}} </p>
+		    <p> {{rubric['points_possible']}} </p>
+		    <input class="btn btn-default" type="submit" value="Map Learning Outcomes">
+		</li>
+		{% endfor %}
+      </ul>
+      <form action="" method="post">
+        <input type="text" placeholder="Course ID" name="course_id" value="{{
+          request.form.course_id }}">
+        <input class="btn btn-default" type="submit" value="Load Rubrics">
+      </form>
+    </div>
+  </body>
+</html>
