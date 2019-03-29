@@ -477,14 +477,17 @@ def criterion():
 def rubrics():
     if(request.method == 'GET'):
         return render_template('rubrics.html')
-        #Request and return rubrics. Render template with button that links to map_rubric and passes rubric_id
     else:
         try:
-            course_id = request.values.get('course_id')
+            #Is it safer to convert to int first to validate?
+            course_id = str(int(request.values.get('course_id')))
         except Exception as error:
             raise error
         else:
             rubrics = canvas_API_request("https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics".format(course_id), request_parameters={'course_id':course_id})
+            #How should you handle canvas_API_request returning error?
+            #json.loads(rubrics)
+            #if error not in json_data?
             return render_template('rubrics.html', rubrics=json.loads(rubrics.text))
 
 @application.route('/map_rubric/<rubric_id>', methods=['GET', 'POST'])
@@ -492,11 +495,11 @@ def rubrics():
 def map_rubric(rubric_id):
     if(request.method == 'GET'):
         try:
-            course_id = request.values.get('course_id')
+            course_id = str(int(request.values.get('course_id')))
+            rubric_id = str(int(rubric_id))
         except Exception as error:
             raise error
         else:
-            print(rubric_id)
             """
             
             cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash. 
@@ -506,25 +509,24 @@ def map_rubric(rubric_id):
             #         }
             """
             request_url = "https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id)
-            print(request_url)
             request_parameters = {
-                        'include[]': 'assessments'
+                        'include[]': 'assessments',
+                        'style': 'full'
                     }
-            rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
-            learning_outcomes = json.loads(Learning_Outcome.read())
-            print(rubric_data.text)
-            return render_template(
-                    'map_rubric',
-                    criterion=criterion,
-                    learning_outcomes=learning_outcomes
-                    )
-@application.route('/map_criterion', methods=['POST'])
-@login_required
-def map_criterion():
-    criterion_id = request.args.get('criterion_id')
-    learning_outcome = request.args.get('learning_outcome')
-    if(request.method == 'POST'):
-        Criterion(id=criterion_id, mapped_learning_outcome=learning_outcome)
+            try:
+                rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
+            except Exception as error:
+                raise error
+            else:
+                #Generate dictionary of rubric_data criterion. ID and Name.
+                learning_outcomes = json.loads(Learning_Outcome.read())
+                return render_template(
+                        'map_rubric.html',
+                        criteria=criteria,
+                        learning_outcomes=learning_outcomes
+                        )
+    else:
+        #Handle the mappings and safe to db as mapping document.
 
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
@@ -533,7 +535,10 @@ def assessments():
         assessments = json.loads(Assessment.read())
         return render_template('assessments.html', 
                                assessments = assessments)
+    else:
+        #Create new assessment.
 
+#TODO: Refactor with new rubric mapping workflow.
 def map_rubric_data(submission_data):
     grades = {}
     for each_submission_item in submission_data:
