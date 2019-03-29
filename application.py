@@ -497,7 +497,20 @@ def map_rubric(rubric_id):
             raise error
         else:
             print(rubric_id)
-            rubric_data = canvas_API_request("https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id))
+            """
+            
+            cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash. 
+            If the user does not request a style, this key will be absent.",
+            #           "type": "array",
+            #           "items": { "type": "object" }
+            #         }
+            """
+            request_url = "https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id)
+            print(request_url)
+            request_parameters = {
+                        'include[]': 'assessments'
+                    }
+            rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
             learning_outcomes = json.loads(Learning_Outcome.read())
             print(rubric_data.text)
             return render_template(
