@@ -473,7 +473,7 @@ def criterion():
             raise error
 
 @application.route('/rubrics', methods=['GET'])
-@login_required()
+@login_required
 def rubrics():
     if(request.method == 'GET'):
         return render_template('rubrics.html')
@@ -488,7 +488,7 @@ def rubrics():
             return render_template('rubrics.html', rubrics=json.loads(rubrics))
 
 @application.route('/map_rubric/<rubric_id>', methods=['GET', 'POST'])
-@login_required()
+@login_required
 def map_rubric(rubric_id):
     if(request.method == 'GET'):
         try:
@@ -505,7 +505,7 @@ def map_rubric(rubric_id):
                     learning_outcomes=learning_outcomes
                     )
 @application.route('/map_criterion', methods=['POST'])
-@login_required()
+@login_required
 def map_criterion():
     criterion_id = request.args.get('criterion_id')
     learning_outcome = request.args.get('learning_outcome')
