@@ -538,6 +538,7 @@ def assessments():
                                assessments = assessments)
     else:
         #Create new assessment.
+        pass
 
 #TODO: Refactor with new rubric mapping workflow.
 def map_rubric_data(submission_data):
