@@ -527,6 +527,7 @@ def map_rubric(rubric_id):
                         )
     else:
         #Handle the mappings and safe to db as mapping document.
+        pass
 
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
