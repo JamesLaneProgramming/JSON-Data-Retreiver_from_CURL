@@ -7,10 +7,16 @@
   <body>
     <div class="container">
 	    <ul>
-		{% for each_learning_outcome in learning_outcomes %}
+		{% for criterion in criteria %}
 	    	<li>
-			<p> {{each_learning_outcome['learning_outcome_name']}} </p>
-			<p> {{each_learning_outcome['learning_outcome_description']}} </p>
+			<p> {{criterion['criterion_name']}} </p>
+			<select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
+			<!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
+			<!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
+			{% for each_learning_outcome in learning_outcomes %}
+				<option value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
+			{% endfor %}
+			</select>
 		</li>
 		{% endfor %}
       </ul>
