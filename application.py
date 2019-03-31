@@ -518,7 +518,7 @@ def map_rubric(rubric_id):
             except Exception as error:
                 raise error
             else:
-                #Generate dictionary of rubric_data criterion. ID and Name.
+                #Generate dictionary of rubric_data criterion. ID and Name
                 learning_outcomes = json.loads(Learning_Outcome.read())
                 return render_template(
                         'map_rubric.html',
