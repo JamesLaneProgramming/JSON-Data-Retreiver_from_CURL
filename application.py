@@ -495,6 +495,7 @@ def rubrics():
 def map_rubric(rubric_id):
     if(request.method == 'GET'):
         try:
+            print(rubric_id)
             course_id = str(int(request.values.get('course_id')))
             rubric_id = str(int(rubric_id))
         except Exception as error:
@@ -508,6 +509,7 @@ def map_rubric(rubric_id):
             #           "items": { "type": "object" }
             #         }
             """
+            #https://coderacademy.instructure.com/api/v1/courses/144/rubrics/45?include[]=assessments
             request_url = "https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id)
             request_parameters = {
                         'include[]': 'assessments',
@@ -760,7 +762,12 @@ def enroll_user_in_course():
         student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
         return student_enrollment_request.text
 
-#TODO: File upload uri with student
+@application.route('/test', methods=['GET'])
+def testing():
+    test_request = canvas_API_request('https://coderacademy.instructure.com/api/v1/sections/sis_section_id:GenTech-19-01-Brisbane/enrollments')
+    return test_request.text
+
+#TODO: File upload uri widef enroll_canvas_student_via_sis_section(canvas_user_id, sis_section_id)ath student
 #url https://coderacademy/
 #uri /users/:id
 @application.route('/sis_id_update', methods=['GET', 'POST'])
