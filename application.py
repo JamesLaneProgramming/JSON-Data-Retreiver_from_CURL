@@ -496,8 +496,8 @@ def map_rubric(rubric_id):
     if(request.method == 'GET'):
         try:
             print(rubric_id)
-            course_id = str(int(request.values.get('course_id')))
-            rubric_id = str(int(rubric_id))
+            course_id = str(request.values.get('course_id'))
+            rubric_id = str(rubric_id)
         except Exception as error:
             raise error
         else:
