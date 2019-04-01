@@ -517,11 +517,13 @@ def map_rubric(rubric_id):
                     }
             try:
                 rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
+                criteria = json.loads(rubric_data.text)['data']
             except Exception as error:
                 raise error
             else:
                 #Generate dictionary of rubric_data criterion. ID and Name
                 learning_outcomes = json.loads(Learning_Outcome.read())
+
                 return render_template(
                         'map_rubric.html',
                         criteria=criteria,
