@@ -480,7 +480,7 @@ def rubrics():
     else:
         try:
             #Is it safer to convert to int first to validate?
-            course_id = str(int(request.values.get('course_id')))
+            course_id = str(request.values.get('course_id'))
         except Exception as error:
             raise error
         else:
