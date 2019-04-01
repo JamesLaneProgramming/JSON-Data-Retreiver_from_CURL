@@ -372,22 +372,49 @@ def workflow_history(workflow_id):
     except Exception as error:
         return redirect(url_for('home'))
     
-@application.route('/rubric_data', methods=['GET', 'POST'])
+@application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
 @login_required
-def rubric_data():
+def retreive_rubric_assessment():
+    '''
+    Docstring
+    ---------
+        GET
+        ---
+            Returns
+            -------
+            rubric_data.html(Template):
+                Returns a HTML form to handle user input and post specified course_id and assessment_id.
+        POST
+        ----
+            Arguments
+            ---------
+            course_id:
+                Requires a valid Canvas course_id.
+            assessment_id:
+                Requires a valid assessment_id.
+    '''
     if(request.method == 'GET'):
         return render_template('rubric_data.html')
-    else:
+    elif(request.method == 'POST'):
         try:
-            course_ID = request.values.get('course_id')
-            assessment_ID = request.values.get('assessment_id')
+            course_ID = str(request.values.get('course_id'))
+            assessment_ID = str(request.values.get('assessment_id'))
+        #Handle Conversion error.
         except Exception as error:
             raise error
         else:
-            rubric_data = extract_rubric_data(course_ID, assessment_ID)
-            #Save rubric data to the database.
-            print(map_rubric_data(rubric_data.json()))
-            return "Successfully extracted rubric data"
+            if(course_ID is not None and assessment_ID is not None):
+                try:
+                    rubric_data = extract_rubric_data(course_ID, assessment_ID)
+                except Exception as error:
+                    print("Unexpected error in extract_rubric_data method")
+                else:
+                    if(rubric_data is not None):
+                        print(map_rubric_data(rubric_data.json()))
+                        return(rubric_data.json())
+            else:
+                print('Invalid or missing arguments parsed')
+                return render_template('rubric_data.html')
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
