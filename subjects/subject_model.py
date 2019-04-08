@@ -13,7 +13,6 @@ class Subject(Document):
     
     def index(id):
         o_id = mongo_methods.generate_objectid_from_string(id)
-        print(o_id)
         return Subject.objects(pk=o_id)
 
     def delete(id):
