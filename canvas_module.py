@@ -197,6 +197,7 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
     #Attempt to load canvas_secret from environment
     try:
         canvas_bearer_token = str(environ.get('canvas_secret'))
+        canvas_URI = str(canvas_URI)
     except KeyError as error:
         '''
         If canvas_secret token cannot be loaded from the server, return a 500
@@ -223,15 +224,18 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
                     print("Could not convert key/value to string")
                 else:
                     #can dict value be None?
+                    '''
+                    If each_key/each_value is the first element in requests_parameters, generate formatting accordingly. Else append to existing query_string.
+                    '''
                     if query_string is None:
-                        query_string = '?{0}={1}'.format(each_key, each_value)
+                        query_string = '?{0}={1}'.format(string_formatted_key, string_formatted_value)
                     else:
-                        query_string = '{0}&{1}={2}'.format(query_string, each_key, each_value)
+                        query_string = '{0}&{1}={2}'.format(query_string, string_formatted_key, string_formatted_value)
             #Concatenate URI and query string
             canvas_URI = canvas_URI + query_string
         else:
             print("Incorrect argument type parsed, request_parameters must be a dictionary")
-        #Request resource
+        #TODO: Convert to switch statement.
         if(request_method.upper() == 'POST'):
             response = requests.post(canvas_URI, headers=_headers)
         elif(request_method.upper() == 'GET'):
