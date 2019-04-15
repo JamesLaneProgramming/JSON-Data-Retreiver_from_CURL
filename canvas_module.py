@@ -4,7 +4,7 @@ from functools import reduce
 
 #TODO: Setup routes and function for retrieving rubric data
 
-def extract_rubric_data(course_ID, assessment_ID, *per_page=100):
+def extract_rubric_data(course_ID, assessment_ID, per_page=100):
     '''
     Docstring
     ---------
