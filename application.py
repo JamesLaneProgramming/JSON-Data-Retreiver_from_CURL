@@ -410,7 +410,7 @@ def retreive_rubric_assessment():
                     print("Unexpected error in extract_rubric_data method")
                 else:
                     if(rubric_data is not None):
-                        print(map_rubric_data(rubric_data.json()))
+                        #print(map_rubric_data(rubric_data.json()))
                         return(rubric_data.json())
             else:
                 print('Invalid or missing arguments parsed')
