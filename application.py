@@ -411,7 +411,7 @@ def retreive_rubric_assessment():
                 else:
                     if(rubric_data is not None):
                         #print(map_rubric_data(rubric_data.json()))
-                        return(rubric_data.json())
+                        return(rubric_data.text)
             else:
                 print('Invalid or missing arguments parsed')
                 return render_template('rubric_data.html')
