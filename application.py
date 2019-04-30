@@ -544,8 +544,7 @@ def map_rubric(rubric_id):
                     }
             try:
                 rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
-                criteria = json.loads(rubric_data.text)
-                print(criteria)
+                print(rubric_data.text)
             except Exception as error:
                 raise error
             else:
@@ -582,16 +581,17 @@ def map_rubric_data(submission_data):
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
             best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
-            print(best_fit_student.text)
+            print(best_fit_student.json())
             student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
             print("This student does not have a rubric_assessment")
             pass
         else:
+            '''
             learning_outcome_count = 0
             grade_total = 0
             shared_outcome_total = 0
-            learning_outcomes_data
+            learning_outcomes_data = {}
             learning_outcome_data[str(student_name)] = {}
             for each, value in submission_rubric_assessment.items():
                 grade_total = grade_total + value['points']
@@ -608,6 +608,7 @@ def map_rubric_data(submission_data):
                     grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
                 learning_outcome_count = learning_outcome_count + 1
             print(learning_outcome_data)
+            '''
     print(grades)
     return grades
 
@@ -796,8 +797,7 @@ def enroll_user_in_course():
 def testing():
     test_request = canvas_API_request('https://coderacademy.instructure.com/api/v1/sections/sis_section_id:GenTech-19-01-Brisbane/enrollments')
     return test_request.text
-
-#TODO: File upload uri widef enroll_canvas_student_via_sis_section(canvas_user_id, sis_section_id)ath student
+#TODO: File upload uri with student
 #url https://coderacademy/
 #uri /users/:id
 @application.route('/sis_id_update', methods=['GET', 'POST'])
