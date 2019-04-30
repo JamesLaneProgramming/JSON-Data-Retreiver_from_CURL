@@ -556,7 +556,7 @@ def map_rubric(rubric_id):
             else:
                 #Generate dictionary of rubric_data criterion. ID and Name
                 learning_outcomes = json.loads(Learning_Outcome.read())
-
+                print("Criteria", criteria)
                 return render_template(
                         'map_rubric.html',
                         criteria=criteria,
