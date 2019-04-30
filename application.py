@@ -522,9 +522,9 @@ def rubrics():
 def map_rubric(rubric_id):
     if(request.method == 'GET'):
         try:
-            print(rubric_id)
             course_id = str(request.values.get('course_id'))
             rubric_id = str(rubric_id)
+            print("Course_ID: " + course_id + ", Rubric_ID: " + rubric_id)
         except Exception as error:
             raise error
         else:
@@ -542,6 +542,7 @@ def map_rubric(rubric_id):
                         'include[]': 'assessments',
                         'style': 'full'
                     }
+            print(request_url)
             try:
                 rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
                 print(rubric_data.text)
