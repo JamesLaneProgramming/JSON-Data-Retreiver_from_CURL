@@ -515,7 +515,11 @@ def rubrics():
             #How should you handle canvas_API_request returning error?
             #json.loads(rubrics)
             #if error not in json_data?
-            return render_template('rubrics.html', rubrics=json.loads(rubrics.text))
+            return render_template(
+                'rubrics.html',
+                rubrics=json.loads(rubrics.text), 
+                course_id=course_id
+            )
 
 @application.route('/map_rubric/<rubric_id>', methods=['GET', 'POST'])
 @login_required
@@ -537,7 +541,7 @@ def map_rubric(rubric_id):
             #         }
             """
             #https://coderacademy.instructure.com/api/v1/courses/144/rubrics/45?include[]=assessments
-            request_url = "https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}".format(course_id, rubric_id)
+            request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}'.format(course_id, rubric_id)
             request_parameters = {
                         'include[]': 'assessments',
                         'style': 'full'
