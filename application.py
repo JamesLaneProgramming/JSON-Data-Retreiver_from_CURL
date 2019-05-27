@@ -18,6 +18,7 @@ except Exception as error:
 import os, sys
 from os import environ
 import datetime
+import dateutil.parser
 import sys
 import requests
 import json
@@ -387,43 +388,57 @@ def list_student_extensions():
         except Exception as error:
             raise error
         else:
+            #Get assignment details
+            domain = 'https://coderacademy.instructure.com'
+            endpoint = '/api/v1/courses/{0}/assignments/{1}'
+            assignment_request = canvas_API_request(domain + endpoint)
+            assignment_due_at = dateutil.parser.parse(assignment_request['due_at'])
+            
+            #Get assignment overrides
             domain = 'https://coderacademy.instructure.com'
             endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
             endpoint = endpoint.format(course_id, assessment_id)
             request_parameters = {}
             overrides_request = canvas_API_request(domain + endpoint)
-            return get_student_id_list_from_assignment_override_object(overrides_request,
-                                                                        course_id)
+            assignment_extension_ids = []
+            for override_object in overrides_request:
+                override_due_at = dateutil.parser.parse(override_object['due_at'])
+                if override_due_at > assignment_due_at:
+                    override_student_list = get_student_id_list_from_assignment_override_object(override_object,
+                                                                                                course_id)
+                    assignment_extension_ids.extend(override_student_list)
+                else:
+                    print("Assignment override was not due after assignment, no extentsion was given")
+            return ''.join(i for i in assignment_extension_ids if not assignment_extensions_ids.index(i) == 0)
 
-def get_student_id_list_from_assignment_override_object(assignment_overrides,
+def get_student_id_list_from_assignment_override_object(override_object,
                                                         course_id):
-    overrides = json.loads(assignment_overrides.text)
     if not isinstance(course_id, str):
         print("Course ID not a string instance")
     list_of_student_ids = []
-    for override_object in overrides:
-        if 'student_ids' in override_object:
-            for student_id in override_object['student_ids']:
-                list_of_student_ids.append(str(student_id))
-        elif 'group_id' in override_object:
-            group_id = override_object['group_id']
-            domain = 'https://coderacademy.instructure.com'
-            endpoint = '/api/v1/groups/{0}/users'.format(group_id)
-            group_request = canvas_API_request(domain + endpoint)
-            for student in group_request:
-                list_of_student_ids.append(student['id'])
-        elif 'course_section_id' in override_object:
-            section_id = override_object['course_section_id']
-            domain = 'https://coderacademy.instructure.com'
-            endpoint = '/api/v1/courses/{0}/sections/{1}'.format(course_id,
-                                                                    section_id)
-            request_parameters = {'include[]': 'students'}
-            course_section_request = canvas_API_request(domain + endpoint,
-                                                        request_parameters=request_parameters)
-            print(course_section_request.text)
-        else:
-            print('No id in override object')
-            print(override_object)
+    if 'student_ids' in override_object:
+        for student_id in override_object['student_ids']:
+            list_of_student_ids.append(str(student_id))
+    elif 'group_id' in override_object:
+        group_id = override_object['group_id']
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/groups/{0}/users'.format(group_id)
+        group_request = canvas_API_request(domain + endpoint)
+        for student in group_request:
+            list_of_student_ids.append(student['id'])
+    elif 'course_section_id' in override_object:
+        section_id = override_object['course_section_id']
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/courses/{0}/sections/{1}'.format(course_id,
+                                                                section_id)
+        request_parameters = {'include[]': 'students'}
+        course_section_request = canvas_API_request(domain + endpoint,
+                                                    request_parameters=request_parameters)
+        for student in course_section_request:
+            list_of_student_ids.append(student['id'])
+    else:
+        print('No id in override object')
+        print(override_object)
     return ''.join(str(i) + ', ' for i in list_of_student_ids)
 
 @application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
