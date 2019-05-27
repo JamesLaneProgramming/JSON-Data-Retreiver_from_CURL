@@ -392,7 +392,8 @@ def list_student_extensions():
             domain = 'https://coderacademy.instructure.com'
             endpoint = '/api/v1/courses/{0}/assignments/{1}'
             assignment_request = canvas_API_request(domain + endpoint)
-            assignment_due_at = dateutil.parser.parse(assignment_request['due_at'])
+            assignment_object = json.loads(assignment_request.text)
+            assignment_due_at = dateutil.parser.parse(assignment_object['due_at'])
             
             #Get assignment overrides
             domain = 'https://coderacademy.instructure.com'
