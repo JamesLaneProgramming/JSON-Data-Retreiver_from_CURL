@@ -397,7 +397,7 @@ def list_student_extensions():
 
 def get_student_id_list_from_assignment_override_object(assignment_overrides,
                                                         course_id):
-    overrides = json.loads(assignment_overrides)
+    overrides = json.loads(assignment_overrides.text)
     if not isinstance(course_id, str):
         print("Course ID not a string instance")
     list_of_student_ids = []
