@@ -392,7 +392,8 @@ def list_student_extensions():
             domain = 'https://coderacademy.instructure.com'
             endpoint = '/api/v1/courses/{0}/assignments/{1}'
             endpoint = endpoint.format(course_id, assessment_id) 
-            assignment_request = canvas_API_request(domain + endpoint)
+            assignment_request = canvas_API_request(domain + endpoint,
+                                                    request_parameters = {})
             assignment_object = json.loads(assignment_request.text)
             assignment_due_at = dateutil.parser.parse(assignment_object['due_at'])
             
@@ -401,7 +402,8 @@ def list_student_extensions():
             endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
             endpoint = endpoint.format(course_id, assessment_id)
             request_parameters = {}
-            overrides_request = canvas_API_request(domain + endpoint)
+            overrides_request = canvas_API_request(domain + endpoint,
+                                                    request_parameters = {})
             overrides_object = json.loads(overrides_request.text)
             assignment_extension_ids = []
             for override_object in overrides_object:
@@ -426,7 +428,8 @@ def get_student_id_list_from_assignment_override_object(override_object,
         group_id = override_object['group_id']
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/groups/{0}/users'.format(group_id)
-        group_request = canvas_API_request(domain + endpoint)
+        group_request = canvas_API_request(domain + endpoint,
+                                            request_parameters = {})
         for student in group_request:
             list_of_student_ids.append(student['id'])
     elif 'course_section_id' in override_object:
