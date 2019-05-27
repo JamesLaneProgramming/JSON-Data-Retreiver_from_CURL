@@ -405,6 +405,7 @@ def list_student_extensions():
             overrides_request = canvas_API_request(domain + endpoint)
             assignment_extension_ids = []
             for override_object in overrides_request:
+                print("Override Object: ", override_object)
                 override_due_at = dateutil.parser.parse(override_object['due_at'])
                 if override_due_at > assignment_due_at:
                     override_student_list = get_student_id_list_from_assignment_override_object(override_object,
