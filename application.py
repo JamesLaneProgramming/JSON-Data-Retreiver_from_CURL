@@ -403,7 +403,7 @@ def get_student_id_list_from_assignment_override_object(assignment_overrides,
     list_of_student_ids = []
     for override_object in overrides:
         if 'student_ids' in override_object:
-            for student_id in student_ids:
+            for student_id in override_object:
                 list_of_student_ids.append(str(student_id))
         elif 'group_id' in override_object:
             group_id = override_object['id']
