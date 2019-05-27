@@ -423,6 +423,7 @@ def get_student_id_list_from_assignment_override_object(assignment_overrides,
             print(course_section_request.text)
         else:
             print('No id in override object')
+            print(override_object)
     return ''.join(str(i) + ', ' for i in list_of_student_ids)
 
 @application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
