@@ -395,26 +395,35 @@ def list_student_extensions():
             assignment_request = canvas_API_request(domain + endpoint,
                                                     request_parameters = {})
             assignment_object = json.loads(assignment_request.text)
-            assignment_due_at = dateutil.parser.parse(assignment_object['due_at'])
-            
-            #Get assignment overrides
-            domain = 'https://coderacademy.instructure.com'
-            endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
-            endpoint = endpoint.format(course_id, assessment_id)
-            request_parameters = {}
-            overrides_request = canvas_API_request(domain + endpoint,
-                                                    request_parameters = {})
-            overrides_object = json.loads(overrides_request.text)
-            assignment_extension_ids = []
-            for override_object in overrides_object:
-                override_due_at = dateutil.parser.parse(override_object['due_at'])
-                if override_due_at > assignment_due_at:
-                    override_student_list = get_student_id_list_from_assignment_override_object(override_object,
-                                                                                                course_id)
-                    assignment_extension_ids.extend(override_student_list)
+            print(assignment_object)
+            try:
+                assignment_object_due_date = assignment_object['due_at']
+            except Exception as error:
+                raise error
+            else:
+                if(assignment_object_due_date is None or is ""):
+                    print("No due date could be extracted from json data")
                 else:
-                    print("Assignment override was not due after assignment, no extentsion was given")
-            return ''.join(i for i in assignment_extension_ids if not assignment_extensions_ids.index(i) == 0)
+                    assignment_due_at = dateutil.parser.parse()
+                    
+                    #Get assignment overrides
+                    domain = 'https://coderacademy.instructure.com'
+                    endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
+                    endpoint = endpoint.format(course_id, assessment_id)
+                    request_parameters = {}
+                    overrides_request = canvas_API_request(domain + endpoint,
+                                                            request_parameters = {})
+                    overrides_object = json.loads(overrides_request.text)
+                    assignment_extension_ids = []
+                    for override_object in overrides_object:
+                        override_due_at = dateutil.parser.parse(override_object['due_at'])
+                        if override_due_at > assignment_due_at:
+                            override_student_list = get_student_id_list_from_assignment_override_object(override_object,
+                                                                                                        course_id)
+                            assignment_extension_ids.extend(override_student_list)
+                        else:
+                            print("Assignment override was not due after assignment, no extentsion was given")
+                    return ''.join(i for i in assignment_extension_ids if not assignment_extensions_ids.index(i) == 0)
 
 def get_student_id_list_from_assignment_override_object(override_object,
                                                         course_id):
