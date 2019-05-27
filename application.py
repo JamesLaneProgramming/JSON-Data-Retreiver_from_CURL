@@ -94,6 +94,7 @@ def login():
             #Inform users of username/password constrains.
             if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
                 user = User.authenticate(username, password)
+                
             if user is not None and user.is_authenticated:
                 login_status = login_user(user)
                 flash('Logged in successfully.')
@@ -371,7 +372,28 @@ def workflow_history(workflow_id):
             return put_request.text
     except Exception as error:
         return redirect(url_for('home'))
-    
+
+@application.route('/list-student-extensions', methods=['GET', 'POST'])
+@login_required
+def list_student_extensions():
+    '''
+    '''
+    if(request.method == 'GET'):
+        return render_template('list_student_extensions.html')
+    else(request.method == 'POST'):
+        try:
+            course_id = str(request.values.get('course_id'))
+            assessment_id = str(request.values.get('assessment_id'))
+        except Exception as error:
+            raise error
+        else:
+            domain = 'https://coderacademy.instructure.com'
+            endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
+            endpoint = endpoint.format(course_id, assessment_id)
+            request_parameters = {}
+            overrides_request = canvas_API_request(domain + endpoint)
+            return overrides_request.text
+
 @application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
 @login_required
 def retreive_rubric_assessment():
