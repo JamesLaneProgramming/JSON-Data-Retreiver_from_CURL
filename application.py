@@ -392,7 +392,38 @@ def list_student_extensions():
             endpoint = endpoint.format(course_id, assessment_id)
             request_parameters = {}
             overrides_request = canvas_API_request(domain + endpoint)
-            return overrides_request.text
+            get_student_id_list_from_assignment_override_object(overrides_request,
+                                                                course_id)
+
+def get_student_id_list_from_assignment_override_object(assignment_overrides,
+                                                        course_id):
+    overrides = json.loads(assignment_overrides)
+    if not isinstance(course_id, str):
+        print("Course ID not a string instance")
+    list_of_student_ids = []
+    for override_object in overrides:
+        if 'student_ids' in override_object:
+            for student_id in student_ids:
+                list_of_student_ids.append(str(student_id))
+        elif 'group_id' in override_object:
+            group_id = override_object['id']
+            domain = 'https://coderacademy.instructure.com'
+            endpoint = '/api/v1/groups/{0}/users'.format(group_id)
+            group_request = canvas_API_request(domain + endpoint)
+            for student in group_request:
+                list_of_student_ids.append(student['id'])
+        elif 'course_section_id' in override_object:
+            section_id = override_object['id']
+            domain = 'https://coderacademy.instructure.com'
+            endpoint = '/api/v1/courses/{0}/sections/{1}'.format(course_id,
+                                                                    section_id)
+            request_parameters = {'include[]': 'students'}
+            course_section_request = canvas_API_request(domain + endpoint,
+                                                        request_parameters=request_parameters)
+            print(course_section_request.text)
+        else:
+            print('No id in override object')
+    return ''.join(str(i) + ', ' for i in list_of_student_ids)
 
 @application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
 @login_required
