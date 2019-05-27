@@ -392,8 +392,8 @@ def list_student_extensions():
             endpoint = endpoint.format(course_id, assessment_id)
             request_parameters = {}
             overrides_request = canvas_API_request(domain + endpoint)
-            get_student_id_list_from_assignment_override_object(overrides_request,
-                                                                course_id)
+            return get_student_id_list_from_assignment_override_object(overrides_request,
+                                                                        course_id)
 
 def get_student_id_list_from_assignment_override_object(assignment_overrides,
                                                         course_id):
