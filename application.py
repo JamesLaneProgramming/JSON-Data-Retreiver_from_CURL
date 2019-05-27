@@ -393,6 +393,7 @@ def list_student_extensions():
             endpoint = '/api/v1/courses/{0}/assignments/{1}'
             assignment_request = canvas_API_request(domain + endpoint)
             assignment_object = json.loads(assignment_request.text)
+            print(assignment_object)
             assignment_due_at = dateutil.parser.parse(assignment_object['due_at'])
             
             #Get assignment overrides
