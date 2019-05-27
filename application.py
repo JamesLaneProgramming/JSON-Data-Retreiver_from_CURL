@@ -391,6 +391,7 @@ def list_student_extensions():
             #Get assignment details
             domain = 'https://coderacademy.instructure.com'
             endpoint = '/api/v1/courses/{0}/assignments/{1}'
+            endpoint = endpoint.format(course_id, assessment_id) 
             assignment_request = canvas_API_request(domain + endpoint)
             assignment_object = json.loads(assignment_request.text)
             print(assignment_object)
