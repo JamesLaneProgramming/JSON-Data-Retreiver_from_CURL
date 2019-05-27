@@ -380,7 +380,7 @@ def list_student_extensions():
     '''
     if(request.method == 'GET'):
         return render_template('list_student_extensions.html')
-    else(request.method == 'POST'):
+    elif(request.method == 'POST'):
         try:
             course_id = str(request.values.get('course_id'))
             assessment_id = str(request.values.get('assessment_id'))
