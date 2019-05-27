@@ -401,10 +401,10 @@ def list_student_extensions():
             except Exception as error:
                 raise error
             else:
-                if(assignment_object_due_date is None or is ""):
+                if(assignment_object_due_date is None):
                     print("No due date could be extracted from json data")
                 else:
-                    assignment_due_at = dateutil.parser.parse()
+                    assignment_due_at = dateutil.parser.parse(object_assignment_due_date)
                     
                     #Get assignment overrides
                     domain = 'https://coderacademy.instructure.com'
