@@ -416,6 +416,7 @@ def list_student_extensions():
                         assignment_extension_ids = []
                         for override_object in overrides_object:
                             override_due_at = dateutil.parser.parse(override_object['due_at'])
+                            print("Original due date: ", assignment_due_at, ". Override due date: ", override_due_at)
                             if override_due_at > assignment_due_at:
                                 override_student_list = get_student_id_list_from_assignment_override_object(override_object,
                                                                                                             course_id)
