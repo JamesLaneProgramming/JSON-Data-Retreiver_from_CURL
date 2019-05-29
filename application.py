@@ -395,7 +395,7 @@ def user_assignment_data():
             user_non_submissions = []
             for user_assignment in user_assignment_data:
                 print(user_assignment)
-                if(user_assignment['submission']['submitted_at'] == 'None'):
+                if(user_assignment['submission']['submitted_at'] == None):
                     due_date = dateutil.parser.parse(user_assignment['due_at'])
                     date_now = datetime.datetime.utcnow()
                     if(date_now - due_date > 14):
