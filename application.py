@@ -376,7 +376,7 @@ def workflow_history(workflow_id):
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
-def user-assignment_data():
+def user_assignment_data():
     if(request.method == 'GET'):
         return render_template('user-assignment-data.html')
     elif(request.method == 'POST'):
