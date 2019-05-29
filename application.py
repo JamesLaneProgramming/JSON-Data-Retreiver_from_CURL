@@ -394,6 +394,7 @@ def user_assignment_data():
             user_assignment_data = json.loads(assignment_request.text)
             user_non_submissions = []
             for user_assignment in user_assignment_data:
+                print(user_assignment)
                 if(user_assignment['submission']['submitted_at']):
                     if(user_assignment['submission']['submitted_at'] == 'null'):
                         due_date = dateutil.parser.parse(user_assignment_data['due_at'])
