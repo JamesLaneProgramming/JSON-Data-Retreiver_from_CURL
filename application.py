@@ -398,7 +398,8 @@ def user_assignment_data():
                 print(user_assignment)
                 if(user_assignment['submission']['submitted_at'] == None):
                     due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                    date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().isoformat())
+                    date_now =
+                    dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
                     if(date_now - due_date > 14):
                         user_non_submission.append(user_assignment['assignment_id'])
                     else:
