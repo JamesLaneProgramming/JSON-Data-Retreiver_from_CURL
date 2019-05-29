@@ -391,7 +391,16 @@ def user_assignment_data():
             endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
             endpoint = endpoint.format(course_id, user_id)
             assignment_request = canvas_API_request(domain + endpoint)
-            return assignment_request.text
+            user_assignment_data = json.loads(assignment_request)
+            user_non_submissions = []
+            for user_assignment in user_assignment_data:
+                if(user_assignment['submitted_at'] == 'null'):
+                    due_date = dateutil.parser.parse(user_assignment_data['due_at'])
+                    date_now = datetime.datetime.utcnow()
+                    if(date_now - due_date > 14):
+                        user_non_submission.append(user_assignment['assignment_id'])
+            return str(user_non_submissions)
+
 
 @application.route('/list-student-extensions', methods=['GET', 'POST'])
 @login_required
