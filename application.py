@@ -19,6 +19,7 @@ import os, sys
 from os import environ
 import datetime
 import dateutil.parser
+import pytz
 import sys
 import requests
 import json
@@ -397,7 +398,7 @@ def user_assignment_data():
                 print(user_assignment)
                 if(user_assignment['submission']['submitted_at'] == None):
                     due_date = dateutil.parser.parse(user_assignment['due_at'])
-                    date_now = datetime.datetime.utcnow()
+                    date_now = pytz.utc.localize(datetime.datetime.utcnow())
                     if(date_now - due_date > 14):
                         user_non_submission.append(user_assignment['assignment_id'])
                     else:
