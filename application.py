@@ -391,7 +391,7 @@ def user_assignment_data():
             endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
             endpoint = endpoint.format(course_id, user_id)
             assignment_request = canvas_API_request(domain + endpoint)
-            user_assignment_data = json.loads(assignment_request)
+            user_assignment_data = json.loads(assignment_request.text)
             user_non_submissions = []
             for user_assignment in user_assignment_data:
                 if(user_assignment['submitted_at'] == 'null'):
