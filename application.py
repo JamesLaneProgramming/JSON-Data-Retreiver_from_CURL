@@ -127,6 +127,22 @@ def redirect_back(endpoint, **values):
         target = url_for(endpoint, **values)
     return redirect(target)
 
+def check_if_parameter_in_request_data(request, parameter_to_check, allow_empty_value=True, allow_none_value=True):
+    if parameter_to_check not in request.files:
+        return False
+    elif(request.files[parameter_to_check] == ""):
+        if(allow_empty_values):
+            return True
+        else:
+            return False
+    elif(request.files[parameter_to_check] == None):
+        if(allow_none_values):
+            return True
+        else:
+            return False
+    else:
+        return True
+
 @application.route('/logout')
 @login_required
 def logout():
@@ -397,18 +413,25 @@ def user_assignment_data():
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
                     if(user_assignment['submission']['submitted_at'] == None):
-                        due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                        date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
-                        if(date_now - due_date > datetime.timedelta(days=14)):
-                            user_non_submissions.append(user_assignment['assignment_id'])
+                        try:
+                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                            date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+                        except Exception as error:
+                            raise error
                         else:
-                            print(date_now - due_date)
+                            if(date_now - due_date > datetime.timedelta(days=14)):
+                                user_non_submissions.append(user_assignment['assignment_id'])
+                            else:
+                                print("Date since assessment due: ", date_now - due_date)
                     else:
                         print('Student has submitted for {0}'.format(user_assignment['title']))
                 return str(user_non_submissions)
             else:
                 return abort(status_code)
 
+def list_user_extensions(user_id):
+    pass
+    
 @application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
 def list_assignment_extensions():
