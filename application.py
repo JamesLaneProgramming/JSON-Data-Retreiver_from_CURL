@@ -395,12 +395,13 @@ def user_assignment_data():
             user_non_submissions = []
             for user_assignment in user_assignment_data:
                 print(user_assignment)
-                if(user_assignment['submission']['submitted_at']):
-                    if(user_assignment['submission']['submitted_at'] == 'null'):
-                        due_date = dateutil.parser.parse(user_assignment_data['due_at'])
-                        date_now = datetime.datetime.utcnow()
-                        if(date_now - due_date > 14):
-                            user_non_submission.append(user_assignment['assignment_id'])
+                if(user_assignment['submission']['submitted_at'] == 'null'):
+                    due_date = dateutil.parser.parse(user_assignment['due_at'])
+                    date_now = datetime.datetime.utcnow()
+                    if(date_now - due_date > 14):
+                        user_non_submission.append(user_assignment['assignment_id'])
+                    else:
+                        print(date_now - due_date)
             return str(user_non_submissions)
 
 
