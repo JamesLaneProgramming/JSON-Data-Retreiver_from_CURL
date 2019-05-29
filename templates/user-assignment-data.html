@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>User Assignment Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Assignment Data</h1>
+      <br>
+      <form action="" method="post">
+         <input type="text" placeholder="Course ID" name="course_id" value="{{
+          request.form.course_id }}">
+	 <input type="text" placeholder="User ID" name="user_id" value="{{
+          request.form.user_id }}">
+        <input class="btn btn-default" type="submit" value="Retrieve">
+      </form>
+      {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}
+      {% endif %}
+    </div>
+  </body>
+</html>

@@ -374,6 +374,25 @@ def workflow_history(workflow_id):
     except Exception as error:
         return redirect(url_for('home'))
 
+@application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
+@login_required
+def user-assignment_data():
+    if(request.method == 'GET'):
+        return render_template('user-assignment-data.html')
+    elif(request.method == 'POST'):
+        try:
+            course_id = str(request.values.get('course_id'))
+            user_id = str(request.values.get('user_id'))
+        except Exception as error:
+            raise error
+        else:
+            #Get assignment details
+            domain = 'https://coderacademy.instructure.com'
+            endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
+            endpoint = endpoint.format(course_id, user_id)
+            assignment_request = canvas_API_request(domain + endpoint)
+            return assignment_request.text
+
 @application.route('/list-student-extensions', methods=['GET', 'POST'])
 @login_required
 def list_student_extensions():
