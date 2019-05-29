@@ -391,11 +391,17 @@ def list_student_extensions():
             #Get assignment details
             domain = 'https://coderacademy.instructure.com'
             endpoint = '/api/v1/courses/{0}/assignments/{1}'
-            endpoint = endpoint.format(course_id, assessment_id) 
-            assignment_request = canvas_API_request(domain + endpoint)
+            endpoint = endpoint.format(course_id, assessment_id)
+            request_parameters = {
+                'all_dates':1
+            }
+            assignment_request = canvas_API_request(domain + endpoint,
+                                                    request_parameters=request_parameters)
             if(assignment_request.status_code == 200):
                 assignment_object = json.loads(assignment_request.text)
                 print(assignment_object)
+                if(assignment_object['all_dates']):
+                    print(assignment_object['all_dates'])
                 try:
                     assignment_object_due_date = assignment_object['due_at']
                 except Exception as error:
