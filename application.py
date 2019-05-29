@@ -392,27 +392,31 @@ def user_assignment_data():
             endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
             endpoint = endpoint.format(course_id, user_id)
             assignment_request = canvas_API_request(domain + endpoint)
-            user_assignment_data = json.loads(assignment_request.text)
-            user_non_submissions = []
-            for user_assignment in user_assignment_data:
-                print(user_assignment)
-                if(user_assignment['submission']['submitted_at'] == None):
-                    due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                    date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-                    if(date_now - due_date > datetime.timedelta(days=14)):
-                        user_non_submissions.append(user_assignment['assignment_id'])
+            if(assignment_request.status_code == 200):
+                user_assignment_data = json.loads(assignment_request.text)
+                user_non_submissions = []
+                for user_assignment in user_assignment_data:
+                    if(user_assignment['submission']['submitted_at'] == None):
+                        due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                        date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+                        if(date_now - due_date > datetime.timedelta(days=14)):
+                            user_non_submissions.append(user_assignment['assignment_id'])
+                        else:
+                            print(date_now - due_date)
                     else:
-                        print(date_now - due_date)
-            return str(user_non_submissions)
+                        print('Student has submitted for {0}'.format(user_assignment['title']))
+                return str(user_non_submissions)
+            else:
+                return abort(status_code)
 
-
-@application.route('/list-student-extensions', methods=['GET', 'POST'])
+@application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
-def list_student_extensions():
+def list_assignment_extensions():
     '''
+    https://community.canvaslms.com/thread/34922-why-is-the-assignment-dueat-value-that-of-the-last-override
     '''
     if(request.method == 'GET'):
-        return render_template('list_student_extensions.html')
+        return render_template('list_assignment_extensions.html')
     elif(request.method == 'POST'):
         try:
             course_id = str(request.values.get('course_id'))
@@ -925,6 +929,7 @@ def enroll_user_in_course():
 def testing():
     test_request = canvas_API_request('https://coderacademy.instructure.com/api/v1/sections/sis_section_id:GenTech-19-01-Brisbane/enrollments')
     return test_request.text
+
 #TODO: File upload uri with student
 #url https://coderacademy/
 #uri /users/:id
