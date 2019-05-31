@@ -422,23 +422,20 @@ def user_assignment_data():
                 user_assignment_data = json.loads(assignment_request.text)
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    if(user_assignment['submission']['submitted_at']):
-                        if(user_assignment['submission']['submitted_at'] == None):
-                            try:
-                                due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                                date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
-                            except Exception as error:
-                                raise error
-                            else:
-                                if(date_now - due_date > datetime.timedelta(days=0)):
-                                    overdue_assignment = Overdue_Assignment(user_assignment_data['assignment_id'], user_id, due_date)
-                                    overdue_assignment.save()
-                                else:
-                                    print("Date since assessment due: ", date_now - due_date)
+                    if(user_assignment['submission']['submitted_at'] == None):
+                        try:
+                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                            date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+                        except Exception as error:
+                            raise error
                         else:
-                            print('Student has submitted for {0}'.format(user_assignment['title']))
+                            if(date_now - due_date > datetime.timedelta(days=0)):
+                                overdue_assignment = Overdue_Assignment(user_assignment_data['assignment_id'], user_id, due_date)
+                                overdue_assignment.save()
+                            else:
+                                print("Date since assessment due: ", date_now - due_date)
                     else:
-                        print("Could not find due_at in submission object")
+                        print('Student has submitted for {0}'.format(user_assignment['title']))
                 return str(user_non_submissions)
             else:
                 return abort(status_code)
