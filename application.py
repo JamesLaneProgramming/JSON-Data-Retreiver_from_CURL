@@ -32,6 +32,7 @@ from functools import wraps
 from urllib.parse import urlparse, urljoin
 from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
 from canvas_module import update_canvas_email, create_canvas_login, canvas_API_request
@@ -44,6 +45,14 @@ from subjects.subject_model import Subject
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
+
+#Set up Flask Scheduler.
+scheduler = BackgroundScheduler()
+scheduler.add_job(test_background_scheduler, 'interval', minutes=1)
+scheduler.start()
+
+def test_background_scheduler():
+    print("Running new task")
 
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
@@ -412,19 +421,22 @@ def user_assignment_data():
                 user_assignment_data = json.loads(assignment_request.text)
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    if(user_assignment['submission']['submitted_at'] == None):
-                        try:
-                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                            date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
-                        except Exception as error:
-                            raise error
-                        else:
-                            if(date_now - due_date > datetime.timedelta(days=14)):
-                                user_non_submissions.append(user_assignment['assignment_id'])
+                    if(user_assignment['submission']['submitted_at']):
+                        if(user_assignment['submission']['submitted_at'] == None):
+                            try:
+                                due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                                date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+                            except Exception as error:
+                                raise error
                             else:
-                                print("Date since assessment due: ", date_now - due_date)
+                                if(date_now - due_date > datetime.timedelta(days=14)):
+                                    user_non_submissions.append(user_assignment['assignment_id'])
+                                else:
+                                    print("Date since assessment due: ", date_now - due_date)
+                        else:
+                            print('Student has submitted for {0}'.format(user_assignment['title']))
                     else:
-                        print('Student has submitted for {0}'.format(user_assignment['title']))
+                        print("Could not find due_at in submission object")
                 return str(user_non_submissions)
             else:
                 return abort(status_code)
