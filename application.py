@@ -42,6 +42,7 @@ from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
+from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
@@ -429,8 +430,9 @@ def user_assignment_data():
                             except Exception as error:
                                 raise error
                             else:
-                                if(date_now - due_date > datetime.timedelta(days=14)):
-                                    user_non_submissions.append(user_assignment['assignment_id'])
+                                if(date_now - due_date > datetime.timedelta(days=0)):
+                                    overdue_assignment = Overdue_Assignment(user_assignment_data['assignment_id'], user_id, due_date)
+                                    overdue_assignment.save()
                                 else:
                                     print("Date since assessment due: ", date_now - due_date)
                         else:
