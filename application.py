@@ -46,13 +46,13 @@ from subjects.subject_model import Subject
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
 
+def test_background_scheduler():
+    print("Running new task")
+
 #Set up Flask Scheduler.
 scheduler = BackgroundScheduler()
 scheduler.add_job(test_background_scheduler, 'interval', minutes=1)
 scheduler.start()
-
-def test_background_scheduler():
-    print("Running new task")
 
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
