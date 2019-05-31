@@ -430,7 +430,7 @@ def user_assignment_data():
                             raise error
                         else:
                             if(date_now - due_date > datetime.timedelta(days=0)):
-                                overdue_assignment = Overdue_Assignment(user_assignment_data['assignment_id'], user_id, due_date)
+                                overdue_assignment = Overdue_Assignment(int(user_assignment_data['assignment_id']), int(user_id), due_date)
                                 overdue_assignment.save()
                             else:
                                 print("Date since assessment due: ", date_now - due_date)
