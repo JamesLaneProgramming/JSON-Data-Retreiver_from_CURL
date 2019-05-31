@@ -425,7 +425,7 @@ def user_assignment_data():
                     if(user_assignment['submission']['submitted_at'] == None):
                         try:
                             due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                            date_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+                            date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
                         except Exception as error:
                             raise error
                         else:
