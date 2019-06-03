@@ -78,7 +78,7 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def check_overdue_assignments():
-    overdue_assignment_request = request.get(url_for('user_assignment_data', course_id=109, user_id=1354))
+    overdue_assignment_request = requests.get(url_for('user_assignment_data', course_id=109, user_id=1354))
 
 def main():
     #Set up Flask Scheduler.
@@ -871,7 +871,7 @@ def create_canvas_account():
         section_ID = str(request.args.get('section_id'))
     except Exception as error:
         print("Invalid course_id or section_id")
-        return "Invalid course_id or section_id")
+        return "Invalid course_id or section_id"
     else:
         #Validate POST payload
         try:
