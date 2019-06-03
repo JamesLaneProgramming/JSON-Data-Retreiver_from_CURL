@@ -865,6 +865,7 @@ def create_canvas_account():
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
     '''
+    print(request.text)
     try:
         course_ID = str(request.args.get('course_id'))
         section_ID = str(request.args.get('section_id'))
