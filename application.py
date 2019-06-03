@@ -408,8 +408,8 @@ def user_assignment_data():
         return render_template('user-assignment-data.html')
     elif(request.method == 'POST'):
         try:
-            course_id = str(request.values.get('course_id'))
-            user_id = str(request.values.get('user_id'))
+            course_id = str(int(request.values.get('course_id')))
+            user_id = str(int(request.values.get('user_id')))
         except Exception as error:
             raise error
         else:
@@ -430,6 +430,8 @@ def user_assignment_data():
                             raise error
                         else:
                             if(date_now - due_date > datetime.timedelta(days=0)):
+                                #Check if database entry for this users
+                                #assignment has already been created
                                 overdue_assignment = Overdue_Assignment(int(user_assignment['assignment_id']), int(user_id), due_date)
                                 overdue_assignment.save()
                             else:
@@ -856,95 +858,95 @@ def create_canvas_account():
     -------
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
-    Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
     try:
-        course_ID = str(request.args.get('course_id'))
-        section_ID = str(request.args.get('section_id'))
+        course_ID = str(int(request.args.get('course_id')))
+        section_ID = str(int(request.args.get('section_id')))
     except Exception as error:
-        print("Could not convert course/section id's to string")
+        print("Invalid course_id or section_id")
     else:
         #Validate POST payload
-        if not request.is_json:
+        try:
+            json_data = request.get_json()
+        except Exception as error:
             return abort(415)
         else:
             #http://flask.pocoo.org/docs/1.0/api/#response-objects
             #Returns None if JSON could not be parsed.
-            json_data = request.get_json()
-            try:
-                Hubspot_Webhook.create(json_data)
-            except Exception as error:
-                pass
-            #Check if JSON data was parsed correctly.
-            #Validate JSON Object is dict not array.
-            if json_data and isinstance(json_data, dict):
+            if(json_data not None):
                 try:
-                    first_name = json_data['properties']['firstname']['value']
-                    last_name = json_data['properties']['lastname']['value'] 
-                    student_email = json_data['properties']['email']['value']
-                    student_name = first_name + " " + last_name
-                except KeyError as error:
-                    print("Specified JSON fields are not present")
-                    return abort(422)
+                    Hubspot_Webhook.create(json_data)
                 except Exception as error:
-                    print(error)
-                else:
-                    creation_response = create_canvas_login(student_name, student_email)
-                    if(creation_response.status_code == 400):
-                        print("The user already exists")
-                        students_found = search_students(student_email).json()
-                        best_fit_student = students_found[0] or {}
-                        if isinstance(best_fit_student, dict):
+                    pass
+                #Check if JSON data was parsed correctly.
+                #Validate JSON Object is dict not array.
+                if json_data and isinstance(json_data, dict):
+                    try:
+                        first_name = json_data['properties']['firstname']['value']
+                        last_name = json_data['properties']['lastname']['value'] 
+                        user_email = json_data['properties']['email']['value']
+                        user_name = first_name + " " + last_name
+                    except KeyError as error:
+                        print("Specified JSON fields are not present")
+                        return abort(422)
+                    except Exception as error:
+                        print(error)
+                    else:
+                        creation_response = create_canvas_login(user_name, user_email)
+                        if(creation_response.status_code == 400):
+                            print("The user already exists", creation_response)
+                            users_found = search_students(user_email).json()
+                            best_fit_user = users_found[0] or {}
+                            if isinstance(best_fit_user, dict):
+                                try:
+                                    user_ID = best_fit_user['id']
+                                except KeyError as error:
+                                    print("Specified JSON fields are not present")
+                                    return abort(422)
+                            else:
+                                print('users_found is not a json object')
+                                return abort(422)
+                        elif(creation_response.status_code == 200):
                             try:
-                                print(best_fit_student)
-                                user_ID = best_fit_student['id']
-                            except KeyError as error:
+                                user_details = creation_response.json()
+                                user_ID = user_details['id']
+                            except TypeError as error:
                                 print("Specified JSON fields are not present")
                                 return abort(422)
-                        else:
-                            print('students_found is not a json object')
-                            return abort(422)
-                    elif(creation_response.status_code == 200):
-                        user_details = creation_response.json()
+                            except Exception as error:
+                                raise error
+                            else:
+                                return creation_response.text
+                        #Endpoint will return 422 if student_id doesn't exist
+                        #return redirect(url_for('enroll_user_in_course', user_id=user_ID, course_id=course_ID, section_id=section_ID))
+                        url = 'https://canvas-integration.herokuapp.com/enroll_user'
+                        _data = {
+                                "user_id": user_ID,
+                                "course_id": course_ID,
+                                "section_id": section_ID
+                                }
                         try:
-                            user_ID = user_details['id']
-                        except TypeError as error:
-                            print("Specified JSON fields are not present")
-                            return abort(422)
+                            user_enrollment_request = requests.post(
+                                                                      url,
+                                                                      data=_data
+                                                                     )
+                        except ConnectionError as error:
+                            print("DNS Failure, Refused Connection, etc.")
+                            return abort(500)
+                        except requests.exceptions.Timeout as error:
+                            print("Request timed out, please try again")
+                            return abort(500)
+                        except requests.exceptions.TooManyRedirects:
+                            print("Too many redirects.")
                         except Exception as error:
                             raise error
-                    else:
-                        return creation_response.text
-                    #Endpoint will return 422 if student_id doesn't exist
-                    #return redirect(url_for('enroll_user_in_course', student_id=user_ID, course_id=course_ID, section_id=section_ID))
-                    url = 'https://canvas-integration.herokuapp.com/enroll_student'
-                    _data = {
-                            "student_id": user_ID,
-                            "course_id": course_ID,
-                            "section_id": section_ID
-                            }
-                    try:
-                        student_enrollment_request = requests.post(
-                                                                  url,
-                                                                  data=_data
-                                                                 )
-                    except ConnectionError as error:
-                        print("DNS Failure, Refused Connection, etc.")
-                        return abort(500)
-                    except requests.exceptions.Timeout as error:
-                        print("Request timed out, please try again")
-                        return abort(500)
-                    except requests.exceptions.TooManyRedirects:
-                        print("Too many redirects.")
-                    except Exception as error:
-                        raise error
-                    else:
-                        return str(student_enrollment_request.text)
-            else:
-                flash("Could not parse JSON, Bad Request")
-                return abort(400)
+                        else:
+                            return str(user_enrollment_request.text)
+                else:
+                    flash("Could not parse JSON, Bad Request")
+                    return abort(400)
 
-@application.route('/enroll_student', methods=['POST'])
+@application.route('/enroll_user', methods=['POST'])
 def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
@@ -952,12 +954,12 @@ def enroll_user_in_course():
         request_arguments = request.form.to_dict()
         course_ID = str(request_arguments['course_id'])
         section_ID = str(request_arguments['section_id'])
-        student_ID = str(request_arguments['student_id'])
+        user_ID = str(request_arguments['user_id'])
     except Exception as error:
         raise error
     else:
-        student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
-        return student_enrollment_request.text
+        user_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
+        return user_enrollment_request.text
 
 @application.route('/test', methods=['GET'])
 def testing():
