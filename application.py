@@ -924,9 +924,12 @@ def create_canvas_account():
                                 raise error
                             else:
                                 return creation_response.text
+                        else:
+                            return str(creation_response.text)
+
                         #Endpoint will return 422 if student_id doesn't exist
                         #return redirect(url_for('enroll_user_in_course', user_id=user_ID, course_id=course_ID, section_id=section_ID))
-                        url = 'https://canvas-integration.herokuapp.com/enroll_user'
+                        url = url_for('enroll_user_in_course')
                         _data = {
                                 "user_id": user_ID,
                                 "course_id": course_ID,
@@ -947,11 +950,12 @@ def create_canvas_account():
                             print("Too many redirects.")
                         except Exception as error:
                             raise error
-                        else:
-                            return str(user_enrollment_request.text)
-                else:
-                    flash("Could not parse JSON, Bad Request")
-                    return abort(400)
+               else:
+                    flash("JSON data not a dictionary")
+                    abort(400)
+            else:
+                flash("Could not parse JSON, Bad Request")
+                return abort(400)
 
 @application.route('/enroll_user', methods=['POST'])
 def enroll_user_in_course():
