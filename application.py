@@ -81,13 +81,13 @@ def check_overdue_assignments():
     overdue_assignment_request = requests.get(url_for('user_assignment_data', course_id=109, user_id=1354))
 
 def main():
+    application.debug = True
+    port = int(os.environ.get('PORT', 5000))
+    application.run(host='0.0.0.0', port=port)
     #Set up Flask Scheduler.
     scheduler = BackgroundScheduler()
     scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
     scheduler.start()
-    application.debug = True
-    port = int(os.environ.get('PORT', 5000))
-    application.run(host='0.0.0.0', port=port)
 
 @application.route('/')
 def home():
