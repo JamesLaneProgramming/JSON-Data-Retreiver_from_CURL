@@ -432,7 +432,7 @@ def user_assignment_data(course_id, user_id):
                             if(date_now - due_date > datetime.timedelta(days=0)):
                                 #Check if database entry for this users
                                 #assignment has already been created
-                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id):
+                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
                                     print("Overdue Assignment already in database")
                                 else:
                                     overdue_assignment = \
