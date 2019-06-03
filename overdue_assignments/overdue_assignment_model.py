@@ -2,9 +2,11 @@ from mongoengine import Document, IntField, StringField, DateTimeField, BooleanF
 import mongo_methods
 
 class Overdue_Assignment(Document):
+    couse_id = IntField(required=True)
     assignment_id = IntField(required=True)
     user_id = IntField(required=True)
     due_date = DateTimeField()
+    date_added = DateTimeField()
     extension = BooleanField()
     extension_date = DateTimeField()
     
