@@ -950,7 +950,7 @@ def create_canvas_account():
                             print("Too many redirects.")
                         except Exception as error:
                             raise error
-               else:
+                else:
                     flash("JSON data not a dictionary")
                     abort(400)
             else:
