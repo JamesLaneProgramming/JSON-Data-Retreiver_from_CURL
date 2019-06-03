@@ -47,14 +47,6 @@ from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
 
-def test_background_scheduler():
-    print("Running new task")
-
-#Set up Flask Scheduler.
-scheduler = BackgroundScheduler()
-scheduler.add_job(user_assignment_data(103, 1354), 'interval', minutes=5)
-scheduler.start()
-
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
 application.config['SESSION_TYPE'] = 'filesystem'
@@ -86,6 +78,10 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def main():
+    #Set up Flask Scheduler.
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(user_assignment_data(103, 1354), 'interval', minutes=5)
+    scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
