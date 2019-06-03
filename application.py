@@ -851,7 +851,6 @@ def student_search():
         return render_template('student_search.html')
 
 @application.route('/create-account', methods=['POST'])
-#@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
