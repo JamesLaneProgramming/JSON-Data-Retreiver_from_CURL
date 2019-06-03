@@ -867,10 +867,11 @@ def create_canvas_account():
         Returns a template to be rendered by Flask on successful request.
     '''
     try:
-        course_ID = str(int(request.args.get('course_id')))
-        section_ID = str(int(request.args.get('section_id')))
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
     except Exception as error:
         print("Invalid course_id or section_id")
+        return "Invalid course_id or section_id")
     else:
         #Validate POST payload
         try:
