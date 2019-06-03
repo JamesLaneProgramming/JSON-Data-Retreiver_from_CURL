@@ -77,10 +77,13 @@ login_manager.init_app(application)
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
+def check_overdue_assignments():
+    overdue_assignment_request = request.get(url_for('user_assignment_data', course_id=109, user_id=1354))
+
 def main():
     #Set up Flask Scheduler.
     scheduler = BackgroundScheduler()
-    scheduler.add_job(user_assignment_data(103, 1354), 'interval', minutes=5)
+    scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
@@ -399,13 +402,13 @@ def workflow_history(workflow_id):
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
-def user_assignment_data(course_id, user_id):
+def user_assignment_data():
     if(request.method == 'GET'):
         return render_template('user-assignment-data.html')
     elif(request.method == 'POST'):
         try:
-            course_id = str(int(request.values.get('course_id'))) or str(int(course_id))
-            user_id = str(int(request.values.get('user_id'))) or str(int(user_id))
+            course_id = str(int(request.values.get('course_id')))
+            user_id = str(int(request.values.get('user_id')))
         except Exception as error:
             raise error
         else:
