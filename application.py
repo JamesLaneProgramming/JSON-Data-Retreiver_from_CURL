@@ -881,7 +881,7 @@ def create_canvas_account():
         else:
             #http://flask.pocoo.org/docs/1.0/api/#response-objects
             #Returns None if JSON could not be parsed.
-            if(json_data not None):
+            if(json_data is not None):
                 try:
                     Hubspot_Webhook.create(json_data)
                 except Exception as error:
