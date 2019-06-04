@@ -431,17 +431,25 @@ def upload_provisioning_csv():
                     else:
                         new_enrollment = Enrollment(int(canvas_course_id), int(canvas_user_id))
                         new_enrollment.save()
-#Needs development
-@application.route('/update_database', methods=['GET', 'POST'])
+            return "Success"
+
+@application.route('/check_overdue_assignments', methods=['GET'])
 @login_required
-def update_database():
+def check_overdue_assignments():
+    for enrollment in Enrollments.objects():
+        data = requests.get(url_for('user_assignment_data'), course_id=enrollment.canvas_course_id, user_id=enrollment.canvas_user_id)
+    return "Success"
+#Needs development
+@application.route('/create_provisioning_report', methods=['GET', 'POST'])
+@login_required
+def create_provisioning_report():
     if(request.method == 'GET'):
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/accounts/1/reports/users/provisioning_csv'
         request_parameters = {
             'parameters[enrollments]': 'true'
         }
-        provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters)
+        provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
         return provisioning_report.text
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
@@ -492,10 +500,7 @@ def user_assignment_data():
                 return str(user_non_submissions)
             else:
                 return abort(status_code)
-
-def list_user_extensions(user_id):
-    pass
-    
+   
 @application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
 def list_assignment_extensions():
