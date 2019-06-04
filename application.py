@@ -410,7 +410,7 @@ def update_database():
             'parameters[enrollments]': 'true'
         }
         provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters)
-        return provisioning_report
+        return provisioning_report.text
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
