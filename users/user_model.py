@@ -6,7 +6,8 @@ import bson
 from bson.objectid import ObjectId
 from flask_mongoengine import *
 #http://zetcode.com/python/pymongo/
-from mongoengine import Document, StringField, IntField, BooleanField, DateTimeField
+from mongoengine import Document, StringField, IntField, BooleanField, \
+DateTimeField, ListField, ReferenceField
 
 class User(UserMixin, Document):
     '''
@@ -23,6 +24,7 @@ class User(UserMixin, Document):
     hubspot_refresh_token = StringField()
     hubspot_access_token_expiry = IntField()
     last_hubspot_access_token_request = DateTimeField()
+    canvas_instances = ListField(
 
     def is_authenticated(self):
         '''
