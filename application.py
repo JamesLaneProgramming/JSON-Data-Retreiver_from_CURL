@@ -437,7 +437,11 @@ def upload_provisioning_csv():
 @login_required
 def check_overdue_assignments():
     for enrollment in Enrollment.objects():
-        data = requests.get(url_for('user_assignment_data'), course_id=enrollment.canvas_course_id, user_id=enrollment.canvas_user_id)
+        params = {
+            'course_id': enrollment.canvas_course_id
+            'user_id': enrollment.canvas_user_id
+        }
+        data = requests.get(url_for('user_assignment_data'), params=params)
     return "Success"
 #Needs development
 @application.route('/create_provisioning_report', methods=['GET', 'POST'])
