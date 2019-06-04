@@ -436,7 +436,7 @@ def upload_provisioning_csv():
 @application.route('/check_overdue_assignments', methods=['GET'])
 @login_required
 def check_overdue_assignments():
-    for enrollment in Enrollments.objects():
+    for enrollment in Enrollment.objects():
         data = requests.get(url_for('user_assignment_data'), course_id=enrollment.canvas_course_id, user_id=enrollment.canvas_user_id)
     return "Success"
 #Needs development
