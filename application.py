@@ -438,7 +438,7 @@ def upload_provisioning_csv():
 def check_overdue_assignments():
     for enrollment in Enrollment.objects():
         params = {
-            'course_id': enrollment.canvas_course_id
+            'course_id': enrollment.canvas_course_id,
             'user_id': enrollment.canvas_user_id
         }
         data = requests.get(url_for('user_assignment_data'), params=params)
