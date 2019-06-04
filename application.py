@@ -400,6 +400,37 @@ def workflow_history(workflow_id):
     except Exception as error:
         return redirect(url_for('home'))
 
+@application.route('/upload_provisioning_csv', methods=['GET', 'POST'])
+@login_required
+def upload_provisioning_csv():
+    if(request.method == 'GET'):
+        return render_template('enrollment_csv_uploader.html')
+    if(request.method == 'POST'):
+        # https://openpyxl.readthedocs.io/en/stable/
+        if 'File' not in request.files:
+            flash("No file uploaded")
+            return redirect(url_for(update_sis_id))
+        uploaded_file = request.files['File']
+        if(uploaded_file.filename == ""):
+            flask("No selected file")
+            return redirect(url_for(update_sis_id))
+        if uploaded_file:
+            data_stream = pandas.read_csv(uploaded_file.stream)
+            for i in range(0, len(data_stream.index) - 1):
+                try:
+                    canvas_course_id = data_stream['canvas_course_id'][i]
+                    canvas_user_id = data_stream['canvas_user_id'][i]
+                    #Add base_role_type to distinguish between student and
+                    #teacher
+                except Exception as error:
+                    raise error
+                else:
+                    if(Enrollment.objects(canvas_course_id=canvas_course_id, canvas_user_id=canvas_user_id)):
+                        pass
+                    else:
+                        new_enrollment = Enrollment(int(canvas_course_id), int(canvas_user_id))
+                        new_enrollment.save()
+#Needs development
 @application.route('/update_database', methods=['GET', 'POST'])
 @login_required
 def update_database():
