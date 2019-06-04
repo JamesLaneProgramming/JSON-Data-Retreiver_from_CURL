@@ -43,6 +43,7 @@ from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
 from overdue_assignments.overdue_assignment_model import Overdue_Assignment
+from enrollments.enrollment_model import Enrollment
 
 #Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
