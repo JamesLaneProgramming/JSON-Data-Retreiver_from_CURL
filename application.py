@@ -442,7 +442,7 @@ def check_overdue_assignments():
             'user_id': enrollment.canvas_user_id
         }
         try:
-            data = requests.get(url_for('user_assignment_data'), _scheme='https', params=params)
+            data = requests.get(url_for('user_assignment_data', _scheme='https'), params=params)
         except Exception as error:
             print(error)
     return "Success"
