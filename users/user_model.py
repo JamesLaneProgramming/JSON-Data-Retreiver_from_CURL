@@ -24,7 +24,6 @@ class User(UserMixin, Document):
     hubspot_refresh_token = StringField()
     hubspot_access_token_expiry = IntField()
     last_hubspot_access_token_request = DateTimeField()
-    canvas_instances = ListField(
 
     def is_authenticated(self):
         '''
