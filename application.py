@@ -100,7 +100,7 @@ def login():
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
-            raise error
+            return redirect(url_for('login'))
         else:
             #Inform users of username/password constrains.
             if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
@@ -108,6 +108,7 @@ def login():
                 
             if user is not None and user.is_authenticated:
                 login_status = login_user(user)
+                #http://flask.pocoo.org/docs/1.0/patterns/flashing/
                 flash('Logged in successfully.')
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
@@ -267,10 +268,9 @@ def request_refresh_token():
         except Exception as error:
             raise error
         else:
-            User.set_refresh_token(
+            current_user.set_refresh_token(
                                    current_user.id, 
-                                   refresh_token,
-                                   access_token_expiry
+                                   refresh_token
                                   )
             return redirect(url_for('refresh_access_token'))
 
@@ -399,6 +399,18 @@ def workflow_history(workflow_id):
             return put_request.text
     except Exception as error:
         return redirect(url_for('home'))
+
+@application.route('/update_database', methods=['GET', 'POST'])
+@login_required
+def update_database():
+    if(request.method == 'GET'):
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/accounts/1/reports/users/provisioning_csv'
+        request_parameters = {
+            'parameters[enrollments]': 'true'
+        }
+        provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters)
+        return provisioning_report
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
