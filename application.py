@@ -79,16 +79,16 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def check_overdue_assignments():
-    overdue_assignment_request = requests.get(url_for('user_assignment_data', course_id=109, user_id=1354))
+    overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
 
 def main():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
+    scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
     #Set up Flask Scheduler.
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
-    scheduler.start()
 
 @application.route('/')
 def home():
@@ -203,6 +203,7 @@ def require_hubspot_signature_validation(func):
                 return "Could not create signature"
             else:
                 if(hubspot_request_signature == request_signature):
+                    print("Hubspot Signature Verified")
                     return func(*args, **kwargs)
                 else:
                     print('Unauthenticated')
@@ -462,9 +463,46 @@ def create_provisioning_report():
         provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
         return provisioning_report.text
 
+def user_assignment_data(course_id, user_id):
+    domain = 'https://coderacademy.instructure.com'
+    endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
+    endpoint = endpoint.format(course_id, user_id)
+    assignment_request = canvas_API_request(domain + endpoint)
+    if(assignment_request.status_code == 200):
+        user_assignment_data = json.loads(assignment_request.text)
+        user_non_submissions = []
+        for user_assignment in user_assignment_data:
+            if(user_assignment['submission']['submitted_at'] == None):
+                try:
+                    due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                    date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+                except Exception as error:
+                    raise error
+                else:
+                    if(date_now - due_date > datetime.timedelta(days=0)):
+                        #Check if database entry for this users
+                        #assignment has already been created
+                        if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
+                            print("Overdue Assignment already in database")
+                        else:
+                            overdue_assignment = \
+                                Overdue_Assignment(int(course_id),
+                                int(user_assignment['assignment_id']),
+                                int(user_id), 
+                                due_date, 
+                                date_now)
+                            overdue_assignment.save()
+                    else:
+                        print("Date since assessment due: ", date_now - due_date)
+            else:
+                print('Student has submitted for {0}'.format(user_assignment['title']))
+        return str(user_non_submissions)
+    else:
+        return abort(status_code)
+
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
-def user_assignment_data():
+def user_assignment_data_endpoint():
     if(request.method == 'GET'):
         return render_template('user-assignment-data.html')
     elif(request.method == 'POST'):
@@ -474,42 +512,9 @@ def user_assignment_data():
         except Exception as error:
             raise error
         else:
+            return user_assignment_data(course_id, user_id)
             #Get assignment details
-            domain = 'https://coderacademy.instructure.com'
-            endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
-            endpoint = endpoint.format(course_id, user_id)
-            assignment_request = canvas_API_request(domain + endpoint)
-            if(assignment_request.status_code == 200):
-                user_assignment_data = json.loads(assignment_request.text)
-                user_non_submissions = []
-                for user_assignment in user_assignment_data:
-                    if(user_assignment['submission']['submitted_at'] == None):
-                        try:
-                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                            date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-                        except Exception as error:
-                            raise error
-                        else:
-                            if(date_now - due_date > datetime.timedelta(days=0)):
-                                #Check if database entry for this users
-                                #assignment has already been created
-                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
-                                    print("Overdue Assignment already in database")
-                                else:
-                                    overdue_assignment = \
-                                        Overdue_Assignment(int(course_id),
-                                        int(user_assignment['assignment_id']),
-                                        int(user_id), 
-                                        due_date, 
-                                        date_now)
-                                    overdue_assignment.save()
-                            else:
-                                print("Date since assessment due: ", date_now - due_date)
-                    else:
-                        print('Student has submitted for {0}'.format(user_assignment['title']))
-                return str(user_non_submissions)
-            else:
-                return abort(status_code)
+            
    
 @application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
