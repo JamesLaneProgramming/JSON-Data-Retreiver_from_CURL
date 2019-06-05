@@ -188,7 +188,9 @@ def require_hubspot_signature_validation(func):
             hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
             request_method = request.method
             request_uri = request.base_url
+            print("Request URI: ", request_uri)
             request_body = request.get_data(as_text=True)
+            print("Request Body: ", request_body)
         except Exception as error:
             raise error
         else:
@@ -906,6 +908,7 @@ def student_search():
     else:
         return render_template('student_search.html')
 
+@require_hubspot_signature_validation
 @application.route('/create-account', methods=['POST'])
 def create_canvas_account():
     '''
