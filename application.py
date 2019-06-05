@@ -924,7 +924,6 @@ def create_canvas_account():
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
     '''
-    print(str(request.data))
     try:
         course_ID = str(request.args.get('course_id'))
         section_ID = str(request.args.get('section_id'))
@@ -989,17 +988,14 @@ def create_canvas_account():
 
                         #Endpoint will return 422 if student_id doesn't exist
                         #return redirect(url_for('enroll_user_in_course', user_id=user_ID, course_id=course_ID, section_id=section_ID))
-                        url = url_for('enroll_user_in_course')
+                        url = url_for('enroll_user_in_course', _external=True, _schema='https')
                         _data = {
                                 "user_id": user_ID,
                                 "course_id": course_ID,
                                 "section_id": section_ID
                                 }
                         try:
-                            user_enrollment_request = requests.post(
-                                                                      url,
-                                                                      data=_data
-                                                                     )
+                            user_enrollment_request = requests.post(url, data=_data)
                         except ConnectionError as error:
                             print("DNS Failure, Refused Connection, etc.")
                             return abort(500)
