@@ -194,13 +194,13 @@ def require_hubspot_signature_validation(func):
         except Exception as error:
             raise error
         else:
-            hash_string = hubspot_client_secret + request_method + request_uri
-            # + request_body
             try:
+                hash_string = hubspot_client_secret + request_method + request_uri + request_body
                 encoded_hash_string = hash_string.encode('utf-8')
                 request_signature = hashlib.sha256(encoded_hash_string).hexdigest()
             except Exception as error:
-                raise error
+                print(error)
+                return "Could not 
             else:
                 if(hubspot_request_signature == request_signature):
                     return func(*args, **kwargs)
