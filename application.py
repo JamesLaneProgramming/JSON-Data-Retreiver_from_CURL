@@ -1028,7 +1028,8 @@ def enroll_user_in_course():
         section_ID = str(request_arguments['section_id'])
         user_ID = str(request_arguments['user_id'])
     except Exception as error:
-        raise error
+        print(error)
+        return abort(500)
     else:
         user_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
         return user_enrollment_request.text
