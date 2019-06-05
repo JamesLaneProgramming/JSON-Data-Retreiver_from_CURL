@@ -1011,6 +1011,8 @@ def create_canvas_account():
                         except Exception as error:
                             print(error)
                             return abort(500)
+                        else:
+                            return user_enrollment_request.text
                 else:
                     flash("JSON data not a dictionary")
                     return abort(400)
