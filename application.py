@@ -45,7 +45,6 @@ from subjects.subject_model import Subject
 from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
 
-#Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
 
 #Set application secret key to secure against CSRF
@@ -79,7 +78,8 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def check_overdue_assignments():
-    overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
+    with application.app_context():
+        overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
 
 def main():
     scheduler = BackgroundScheduler()
