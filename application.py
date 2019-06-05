@@ -1002,13 +1002,15 @@ def create_canvas_account():
                         except requests.exceptions.Timeout as error:
                             print("Request timed out, please try again")
                             return abort(500)
-                        except requests.exceptions.TooManyRedirects:
-                            print("Too many redirects.")
+                        except requests.exceptions.TooManyRedirects as error:
+                            print("Too many redirects.", error)
+                            return abort(500)
                         except Exception as error:
-                            raise error
+                            print(error)
+                            return abort(500)
                 else:
                     flash("JSON data not a dictionary")
-                    abort(400)
+                    return abort(400)
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
