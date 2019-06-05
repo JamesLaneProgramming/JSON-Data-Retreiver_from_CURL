@@ -194,14 +194,15 @@ def require_hubspot_signature_validation(func):
         except Exception as error:
             raise error
         else:
-            hash_string = hubspot_client_secret + request_method + request_uri + request_body
+            hash_string = hubspot_client_secret + request_method + request_uri
+            # + request_body
             try:
                 encoded_hash_string = hash_string.encode('utf-8')
-                request_signature = hashlib.sha256(encoded_hash_string)
+                request_signature = hashlib.sha256(encoded_hash_string).hexdigest()
             except Exception as error:
                 raise error
             else:
-                if(hubspot_request_signature == request_signature.hexdigest()):
+                if(hubspot_request_signature == request_signature):
                     return func(*args, **kwargs)
                 else:
                     print('Unauthenticated')
@@ -957,6 +958,7 @@ def create_canvas_account():
                         return abort(422)
                     except Exception as error:
                         print(error)
+                        return abort(500)
                     else:
                         creation_response = create_canvas_login(user_name, user_email)
                         if(creation_response.status_code == 400):
@@ -980,7 +982,8 @@ def create_canvas_account():
                                 print("Specified JSON fields are not present")
                                 return abort(422)
                             except Exception as error:
-                                raise error
+                                print(error)
+                                return abort(500)
                             else:
                                 return creation_response.text
                         else:
