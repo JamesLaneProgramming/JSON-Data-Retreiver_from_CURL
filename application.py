@@ -200,7 +200,7 @@ def require_hubspot_signature_validation(func):
                 request_signature = hashlib.sha256(encoded_hash_string).hexdigest()
             except Exception as error:
                 print(error)
-                return "Could not 
+                return "Could not create signature"
             else:
                 if(hubspot_request_signature == request_signature):
                     return func(*args, **kwargs)
