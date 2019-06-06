@@ -23,7 +23,7 @@ class User(UserMixin, Document):
     active = BooleanField(default = True)
     hubspot_refresh_token = StringField()
     hubspot_access_token_expiry = IntField()
-    last_hubspot_access_token_request = DateTimeField()
+    last_hubspot_access_token_refresh = DateTimeField()
 
     def is_authenticated(self):
         '''
@@ -151,11 +151,10 @@ class User(UserMixin, Document):
         user.save()
         return user
    
-    def set_access_token(user_id, access_token, access_token_expiry):
+    def set_access_token_expiry(user_id, access_token_expiry):
         user = User.get(user_id)
-        user.update(hubspot_access_token=access_token)
         user.update(hubspot_access_token_expiry=access_token_expiry)
-        user.update(last_hubspot_access_token_request=datetime.now())
+        user.update(last_hubspot_access_token_refresh=datetime.now())
         user.save()
         return user
 
