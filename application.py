@@ -318,7 +318,7 @@ def refresh_access_token():
                 raise error
             else:
                 next = get_redirect_target()
-                response = make_response(redirect_back('home'), next=next)
+                response = make_response(redirect_back('home', next=next))
                 response.set_cookie('hubspot_access_token', access_token)
                 return response
 
