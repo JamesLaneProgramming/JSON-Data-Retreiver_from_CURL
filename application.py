@@ -172,7 +172,7 @@ def signup():
                     safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
                 new_user = User.create(username, password)
                 new_user.autenticate(username, password)
-                return redirect(redirect_back('home', next=next)
+                return redirect(redirect_back('home', next=next))
             else:
                 return redirect(url_for('signup'))
     else:
