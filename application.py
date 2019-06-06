@@ -78,7 +78,7 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def check_overdue_assignments():
-        overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
+    overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
 
 def main():
     scheduler = BackgroundScheduler()
@@ -171,7 +171,8 @@ def signup():
             if username is not "" or password is not "" and \
                     safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
                 new_user = User.create(username, password)
-                return redirect(url_for('login'))
+                new_user.autenticate(username, password)
+                return redirect(redirect_back('home', next=next)
             else:
                 return redirect(url_for('signup'))
     else:
@@ -440,12 +441,7 @@ def upload_provisioning_csv():
 @login_required
 def check_overdue_assignments():
     for enrollment in Enrollment.objects():
-        params = {
-            'course_id': enrollment.canvas_course_id,
-            'user_id': enrollment.canvas_user_id
-        }
-        try:
-            data = requests.get(url_for('user_assignment_data', _external=True, _scheme='https'), params=params)
+
         except Exception as error:
             print(error)
     return "Success"
@@ -462,43 +458,54 @@ def create_provisioning_report():
         provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
         return provisioning_report.text
 
+@copy_current_request_context()
 def user_assignment_data(course_id, user_id):
-    with application.app_context():
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
         endpoint = endpoint.format(course_id, user_id)
         assignment_request = canvas_API_request(domain + endpoint)
         if(assignment_request.status_code == 200):
-            user_assignment_data = json.loads(assignment_request.text)
-            user_non_submissions = []
-            for user_assignment in user_assignment_data:
-                if(user_assignment['submission']['submitted_at'] == None):
-                    try:
-                        due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                        date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-                    except Exception as error:
-                        raise error
-                    else:
-                        if(date_now - due_date > datetime.timedelta(days=0)):
-                            #Check if database entry for this users
-                            #assignment has already been created
-                            if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
-                                print("Overdue Assignment already in database")
-                            else:
-                                overdue_assignment = \
-                                    Overdue_Assignment(int(course_id),
-                                    int(user_assignment['assignment_id']),
-                                    int(user_id), 
-                                    due_date, 
-                                    date_now)
-                                overdue_assignment.save()
+            try:
+                user_assignment_data = json.loads(assignment_request.text)
+            except JSONDecodeError as error:
+                raise error
+            except Exception as error:
+                raise error
+            else:
+                user_non_submissions = []
+                for user_assignment in user_assignment_data:
+                    if(user_assignment['submission']['submitted_at'] == None):
+                        try:
+                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                            date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+                        except Exception as error:
+                            raise error
                         else:
-                            print("Date since assessment due: ", date_now - due_date)
-                else:
-                    print('Student has submitted for {0}'.format(user_assignment['title']))
-            return str(user_non_submissions)
-        else:
+                            if(date_now - due_date > datetime.timedelta(days=0)):
+                                #Check if database entry for this users
+                                #assignment has already been created
+                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
+                                    print("Overdue Assignment already in database")
+                                else:
+                                    try:
+                                        overdue_assignment = \
+                                            Overdue_Assignment(int(course_id),
+                                            int(user_assignment['assignment_id']),
+                                            int(user_id), 
+                                            due_date, 
+                                            date_now)
+                                        overdue_assignment.save()
+                                    except Exception as error:
+                                        raise error
+                            else:
+                                print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
+                    else:
+                        print('Student has submitted for {0}'.format(user_assignment['title']))
+                return str(user_non_submissions)
+        elif has_request_context():
             return abort(status_code)
+        else:
+            return status_code
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
@@ -514,7 +521,6 @@ def user_assignment_data_endpoint():
         else:
             return user_assignment_data(course_id, user_id)
             #Get assignment details
-            
    
 @application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
