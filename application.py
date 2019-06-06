@@ -289,7 +289,7 @@ def refresh_access_token():
         raise error
     else:
         try:
-            refresh_token = current_user.refresh_token
+            refresh_token = current_user.hubspot_refresh_token
         except Exception as error:
             return redirect(url_for('authenticate_hubspot'))
         else:
