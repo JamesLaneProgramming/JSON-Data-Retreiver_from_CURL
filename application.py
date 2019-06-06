@@ -79,9 +79,6 @@ login_manager.init_app(application)
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
-def check_overdue_assignments():
-    overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
-
 def main():
     #scheduler = BackgroundScheduler()
     #scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
