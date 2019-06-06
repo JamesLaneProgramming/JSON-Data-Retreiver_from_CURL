@@ -312,6 +312,7 @@ def refresh_access_token():
                                         )
             try:
                 access_token = post_request.json()['access_token']
+                access_token_expiry = post_request.json()['expires_in']
             except ValueError as error:
                 print("Post request response did not contain an access token")
             except Exception as error:
@@ -320,6 +321,7 @@ def refresh_access_token():
                 next = get_redirect_target()
                 response = make_response(redirect_back('home', next=next))
                 response.set_cookie('hubspot_access_token', access_token)
+                User.set_access_token_expiry(current_user.id, access_token_expiry)
                 return response
 
 @application.route('/hubspot')
