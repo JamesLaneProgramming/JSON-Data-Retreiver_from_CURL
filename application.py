@@ -376,7 +376,7 @@ def workflows():
                            "Authorization": "Bearer " + str(access_token)
                           }
         workflow_request = requests.get(endpoint, headers=request_headers)
-        return workflow_request.get_json()
+        return workflow_request.text
 
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @require_hubspot_access_token
