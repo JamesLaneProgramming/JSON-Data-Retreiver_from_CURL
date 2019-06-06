@@ -221,14 +221,14 @@ def require_hubspot_access_token(func):
         else:
             try:
                 token_expiry = current_user.hubspot_access_token_expiry
-                last_token_refresh = current_user.last_hubspot_access_token_request
+                last_token_refresh = current_user.last_hubspot_access_token_refresh
                 '''TODO: Implement logic if access token revolked but expiry is
                 still valid
                 '''
             except Exception as error:
                 print('Could not update cookie with user access token, refreshing access token')
             else:
-                if(last_hubspot_access_token_request + hubspot_access_expiry > datetime.now()):
+                if(last_hubspot_access_token_refresh + hubspot_access_expiry > datetime.now()):
                     return redirect(url_for('refresh_access_token'))
                 else:
                     return func(*args, **kwargs)
