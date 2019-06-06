@@ -311,7 +311,7 @@ def refresh_access_token():
                                          data=data
                                         )
             try:
-                access_token = post_request.get_json()['access_token']
+                access_token = post_request.json()['access_token']
             except ValueError as error:
                 print("Post request response did not contain an access token")
             except Exception as error:
