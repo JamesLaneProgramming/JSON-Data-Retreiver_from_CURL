@@ -154,7 +154,7 @@ class User(UserMixin, Document):
     def set_access_token_expiry(user_id, access_token_expiry):
         user = User.get(user_id)
         user.update(hubspot_access_token_expiry=access_token_expiry)
-        user.update(last_hubspot_access_token_refresh=datetime.utcnow())
+        user.update(last_hubspot_access_token_refresh=datetime.datetime.utcnow())
         user.save()
         return user
 
