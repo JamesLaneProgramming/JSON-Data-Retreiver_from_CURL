@@ -441,10 +441,8 @@ def upload_provisioning_csv():
 @login_required
 def check_overdue_assignments():
     for enrollment in Enrollment.objects():
+        user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
 
-        except Exception as error:
-            print(error)
-    return "Success"
 #Needs development
 @application.route('/create_provisioning_report', methods=['GET', 'POST'])
 @login_required
