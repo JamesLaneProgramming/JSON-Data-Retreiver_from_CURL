@@ -503,9 +503,9 @@ def user_assignment_data(course_id, user_id):
                         print('Student has submitted for {0}'.format(user_assignment['title']))
                 return str(user_non_submissions)
         elif has_request_context():
-            return abort(status_code)
+            return abort(assignment_request.status_code)
         else:
-            return status_code
+            return assignment_request.status_code
 
 @application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
 @login_required
