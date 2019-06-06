@@ -81,9 +81,9 @@ def check_overdue_assignments():
     overdue_assignment_request = user_assignment_data(course_id=109, user_id=1354)
 
 def main():
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
-    scheduler.start()
+    #scheduler = BackgroundScheduler()
+    #scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
+    #scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
@@ -456,7 +456,7 @@ def create_provisioning_report():
         provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
         return provisioning_report.text
 
-@copy_current_request_context()
+#@copy_current_request_context()
 def user_assignment_data(course_id, user_id):
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
