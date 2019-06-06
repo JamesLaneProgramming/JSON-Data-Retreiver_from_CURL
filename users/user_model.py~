@@ -6,7 +6,7 @@ import bson
 from bson.objectid import ObjectId
 from flask_mongoengine import *
 #http://zetcode.com/python/pymongo/
-from mongoengine import Document, StringField, IntField, BooleanField \ 
+from mongoengine import Document, StringField, IntField, BooleanField, \
 DateTimeField, ListField, ReferenceField
 
 class User(UserMixin, Document):
