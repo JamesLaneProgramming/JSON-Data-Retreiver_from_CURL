@@ -145,8 +145,9 @@ class User(UserMixin, Document):
         except Exception as error:
             raise error
 
-    def set_refresh_token(self, user_id, refresh_token):
-        user = self.update(hubspot_refresh_token=refresh_token)
+    def set_refresh_token(user_id, refresh_token):
+        user = User.get(user_id)
+        user.update(hubspot_refresh_token=refresh_token)
         user.save()
         return user
    

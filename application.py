@@ -272,7 +272,7 @@ def request_refresh_token():
         except Exception as error:
             raise error
         else:
-            current_user.set_refresh_token(
+            User.set_refresh_token(
                                    current_user.id, 
                                    refresh_token
                                   )
