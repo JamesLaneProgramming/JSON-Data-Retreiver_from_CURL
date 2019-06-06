@@ -30,7 +30,9 @@ from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
 from functools import wraps
 from urllib.parse import urlparse, urljoin
-from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response, send_from_directory, copy_current_request_context
+from flask import Flask, flash, render_template, request, abort, redirect, \
+    url_for, make_response, send_from_directory, copy_current_request_context, \
+    has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
