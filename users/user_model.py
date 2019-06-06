@@ -147,6 +147,7 @@ class User(UserMixin, Document):
 
     def set_refresh_token(self, user_id, refresh_token):
         user = self.update(hubspot_refresh_token=refresh_token)
+        user.save()
         return user
    
     def set_access_token(user_id, access_token, access_token_expiry):
@@ -154,6 +155,7 @@ class User(UserMixin, Document):
         user.update(hubspot_access_token=access_token)
         user.update(hubspot_access_token_expiry=access_token_expiry)
         user.update(last_hubspot_access_token_request=datetime.now())
+        user.save()
         return user
 
     def create(username, password):
