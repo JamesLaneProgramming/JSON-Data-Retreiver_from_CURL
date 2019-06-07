@@ -214,6 +214,7 @@ def require_hubspot_access_token(func):
     @wraps(func)
     def update_hubspot_access_token(*args, **kwargs):
         print(request.cookies)
+        print(request.cookies.get('hubspot_access_token'))
         if request.cookies.get('hubspot_access_token') is not None:
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
