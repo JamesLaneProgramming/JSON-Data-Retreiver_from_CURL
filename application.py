@@ -217,6 +217,7 @@ def require_hubspot_access_token(func):
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
             '''
+            print("Hubspot access token not in cookies")
             return redirect(url_for('refresh_access_token'))
         else:
             try:
