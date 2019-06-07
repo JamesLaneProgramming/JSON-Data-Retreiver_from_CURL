@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 '''
-#Google OATH imports
+#Google OATH imports 
 try:
     from googleapiclient.discovery import build
     from httplib2 import Http
@@ -18,17 +18,23 @@ except Exception as error:
 import os, sys
 from os import environ
 import datetime
+import dateutil.parser
+import pytz
 import sys
 import requests
 import json
 import hashlib
+import pandas
 from werkzeug import secure_filename
 from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
 from functools import wraps
 from urllib.parse import urlparse, urljoin
-from flask import Flask, flash, render_template, request, abort, redirect, url_for, make_response
+from flask import Flask, flash, render_template, request, abort, redirect, \
+    url_for, make_response, send_from_directory, copy_current_request_context, \
+    has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
 from canvas_module import update_canvas_email, create_canvas_login, canvas_API_request
@@ -38,8 +44,9 @@ from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
+from overdue_assignments.overdue_assignment_model import Overdue_Assignment
+from enrollments.enrollment_model import Enrollment
 
-#Set the default folder for templates
 application = Flask(__name__, template_folder='templates')
 
 #Set application secret key to secure against CSRF
@@ -73,46 +80,43 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def main():
+    #scheduler = BackgroundScheduler()
+    #scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
+    #scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
+    #Set up Flask Scheduler.
 
 @application.route('/')
 def home():
     return render_template('home.html')
 
-@application.route('/display_cookies', methods=['GET'])
-@login_required
-def display_cookies():
-    for each in request.cookies:
-        print(each)
-    return redirect(url_for('home'))
-
 @application.route('/login', methods=['GET','POST'])
 def login():
     if(request.method == 'POST'):
         try:
-            print(request.args)
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
-            raise error
+            return redirect(url_for('login'))
         else:
             #Inform users of username/password constrains.
             if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
                 user = User.authenticate(username, password)
+                
             if user is not None and user.is_authenticated:
                 login_status = login_user(user)
+                #http://flask.pocoo.org/docs/1.0/patterns/flashing/
                 flash('Logged in successfully.')
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
-                # is_safe_url should check if the url is safe for redirects.
-                # See http://flask.pocoo.org/snippets/62/ for an example.
             else:
                 return redirect(url_for('signup'), code=302)
     else:
         return render_template('login.html')
 
+#See http://flask.pocoo.org/snippets/62
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     target_url = urlparse(urljoin(request.host_url, target))
@@ -132,6 +136,22 @@ def redirect_back(endpoint, **values):
         target = url_for(endpoint, **values)
     return redirect(target)
 
+def check_if_parameter_in_request_data(request, parameter_to_check, allow_empty_value=True, allow_none_value=True):
+    if parameter_to_check not in request.files:
+        return False
+    elif(request.files[parameter_to_check] == ""):
+        if(allow_empty_values):
+            return True
+        else:
+            return False
+    elif(request.files[parameter_to_check] == None):
+        if(allow_none_values):
+            return True
+        else:
+            return False
+    else:
+        return True
+
 @application.route('/logout')
 @login_required
 def logout():
@@ -147,9 +167,11 @@ def signup():
         except Exception as error:
             raise error
         else:
-            if username is not "" or password is not "":
+            if username is not "" or password is not "" and \
+                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
                 new_user = User.create(username, password)
-                return redirect(url_for('login'))
+                User.authenticate(username, password)
+                return redirect(redirect_back('home', next=next))
             else:
                 return redirect(url_for('signup'))
     else:
@@ -165,18 +187,22 @@ def require_hubspot_signature_validation(func):
             hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
             request_method = request.method
             request_uri = request.base_url
+            print("Request URI: ", request_uri)
             request_body = request.get_data(as_text=True)
+            print("Request Body: ", request_body)
         except Exception as error:
             raise error
         else:
-            hash_string = hubspot_client_secret + request_method + request_uri + request_body
             try:
+                hash_string = hubspot_client_secret + request_method + request_uri + request_body
                 encoded_hash_string = hash_string.encode('utf-8')
-                request_signature = hashlib.sha256(encoded_hash_string)
+                request_signature = hashlib.sha256(encoded_hash_string).hexdigest()
             except Exception as error:
-                raise error
+                print(error)
+                return "Could not create signature"
             else:
-                if(hubspot_request_signature == request_signature.hexdigest()):
+                if(hubspot_request_signature == request_signature):
+                    print("Hubspot Signature Verified")
                     return func(*args, **kwargs)
                 else:
                     print('Unauthenticated')
@@ -195,14 +221,14 @@ def require_hubspot_access_token(func):
         else:
             try:
                 token_expiry = current_user.hubspot_access_token_expiry
-                last_token_refresh = current_user.last_hubspot_access_token_request
+                last_token_refresh = current_user.last_hubspot_access_token_refresh
                 '''TODO: Implement logic if access token revolked but expiry is
                 still valid
                 '''
             except Exception as error:
                 print('Could not update cookie with user access token, refreshing access token')
             else:
-                if(last_hubspot_access_token_request + hubspot_access_expiry > datetime.now()):
+                if(current_user.last_hubspot_access_token_refresh + current_user.hubspot_access_expiry > datetime.datetime.utcnow()):
                     return redirect(url_for('refresh_access_token'))
                 else:
                     return func(*args, **kwargs)
@@ -248,8 +274,7 @@ def request_refresh_token():
         else:
             User.set_refresh_token(
                                    current_user.id, 
-                                   refresh_token,
-                                   access_token_expiry
+                                   refresh_token
                                   )
             return redirect(url_for('refresh_access_token'))
 
@@ -264,7 +289,7 @@ def refresh_access_token():
         raise error
     else:
         try:
-            refresh_token = current_user.refresh_token
+            refresh_token = current_user.hubspot_refresh_token
         except Exception as error:
             return redirect(url_for('authenticate_hubspot'))
         else:
@@ -286,15 +311,17 @@ def refresh_access_token():
                                          data=data
                                         )
             try:
-                access_token = post_request.get_json()['access_token']
+                access_token = post_request.json()['access_token']
+                access_token_expiry = post_request.json()['expires_in']
             except ValueError as error:
                 print("Post request response did not contain an access token")
             except Exception as error:
                 raise error
             else:
                 next = get_redirect_target()
-                response = make_response(redirect_back('home'), next=next)
+                response = make_response(redirect_back('home', next=next))
                 response.set_cookie('hubspot_access_token', access_token)
+                User.set_access_token_expiry(current_user.id, access_token_expiry)
                 return response
 
 @application.route('/hubspot')
@@ -349,7 +376,7 @@ def workflows():
                            "Authorization": "Bearer " + str(access_token)
                           }
         workflow_request = requests.get(endpoint, headers=request_headers)
-        return workflow_request.get_json()
+        return workflow_request.text
 
 @application.route('/hubspot/workflow_history/<workflow_id>')
 @require_hubspot_access_token
@@ -378,23 +405,254 @@ def workflow_history(workflow_id):
             return put_request.text
     except Exception as error:
         return redirect(url_for('home'))
-    
-@application.route('/rubric_data', methods=['GET', 'POST'])
+
+@application.route('/upload_provisioning_csv', methods=['GET', 'POST'])
 @login_required
-def rubric_data():
+def upload_provisioning_csv():
     if(request.method == 'GET'):
-        return render_template('rubric_data.html')
-    else:
+        return render_template('enrollment_csv_uploader.html')
+    if(request.method == 'POST'):
+        # https://openpyxl.readthedocs.io/en/stable/
+        if 'File' not in request.files:
+            flash("No file uploaded")
+            return redirect(url_for(update_sis_id))
+        uploaded_file = request.files['File']
+        if(uploaded_file.filename == ""):
+            flask("No selected file")
+            return redirect(url_for(update_sis_id))
+        if uploaded_file:
+            data_stream = pandas.read_csv(uploaded_file.stream)
+            for i in range(0, len(data_stream.index) - 1):
+                try:
+                    canvas_course_id = data_stream['canvas_course_id'][i]
+                    canvas_user_id = data_stream['canvas_user_id'][i]
+                    #Add base_role_type to distinguish between student and
+                    #teacher
+                except Exception as error:
+                    raise error
+                else:
+                    if(Enrollment.objects(canvas_course_id=canvas_course_id, canvas_user_id=canvas_user_id)):
+                        pass
+                    else:
+                        new_enrollment = Enrollment(int(canvas_course_id), int(canvas_user_id))
+                        new_enrollment.save()
+            return "Success"
+
+@application.route('/check_overdue', methods=['GET'])
+@login_required
+def check_overdue_assignments():
+    for enrollment in Enrollment.objects():
+        user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
+
+#Needs development
+@application.route('/create_provisioning_report', methods=['GET', 'POST'])
+@login_required
+def create_provisioning_report():
+    if(request.method == 'GET'):
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/accounts/1/reports/users/provisioning_csv'
+        request_parameters = {
+            'parameters[enrollments]': 'true'
+        }
+        provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
+        return provisioning_report.text
+
+#@copy_current_request_context()
+def user_assignment_data(course_id, user_id):
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
+        endpoint = endpoint.format(course_id, user_id)
+        assignment_request = canvas_API_request(domain + endpoint)
+        if(assignment_request.status_code == 200):
+            try:
+                user_assignment_data = json.loads(assignment_request.text)
+            except JSONDecodeError as error:
+                raise error
+            except Exception as error:
+                raise error
+            else:
+                user_non_submissions = []
+                for user_assignment in user_assignment_data:
+                    if(user_assignment['submission']['submitted_at'] == None):
+                        try:
+                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                            date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+                        except Exception as error:
+                            raise error
+                        else:
+                            if(date_now - due_date > datetime.timedelta(days=0)):
+                                #Check if database entry for this users
+                                #assignment has already been created
+                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
+                                    print("Overdue Assignment already in database")
+                                else:
+                                    try:
+                                        overdue_assignment = \
+                                            Overdue_Assignment(int(course_id),
+                                            int(user_assignment['assignment_id']),
+                                            int(user_id), 
+                                            due_date, 
+                                            date_now)
+                                        overdue_assignment.save()
+                                    except Exception as error:
+                                        raise error
+                            else:
+                                print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
+                    else:
+                        print('Student has submitted for {0}'.format(user_assignment['title']))
+                return str(user_non_submissions)
+        elif has_request_context():
+            return abort(assignment_request.status_code)
+        else:
+            return assignment_request.status_code
+
+@application.route('/user-in-a-course-level-assignment-data', methods=['GET', 'POST'])
+@login_required
+def user_assignment_data_endpoint():
+    if(request.method == 'GET'):
+        return render_template('user-assignment-data.html')
+    elif(request.method == 'POST'):
         try:
-            course_ID = request.values.get('course_id')
-            assessment_ID = request.values.get('assessment_id')
+            course_id = str(int(request.values.get('course_id')))
+            user_id = str(int(request.values.get('user_id')))
         except Exception as error:
             raise error
         else:
-            rubric_data = extract_rubric_data(course_ID, assessment_ID)
-            #Save rubric data to the database.
-            print(map_rubric_data(rubric_data.json()))
-            return "Successfully extracted rubric data"
+            return user_assignment_data(course_id, user_id)
+            #Get assignment details
+   
+@application.route('/list-assignment-extensions', methods=['GET', 'POST'])
+@login_required
+def list_assignment_extensions():
+    '''
+    https://community.canvaslms.com/thread/34922-why-is-the-assignment-dueat-value-that-of-the-last-override
+    '''
+    if(request.method == 'GET'):
+        return render_template('list_assignment_extensions.html')
+    elif(request.method == 'POST'):
+        try:
+            course_id = str(request.values.get('course_id'))
+            assessment_id = str(request.values.get('assessment_id'))
+        except Exception as error:
+            raise error
+        else:
+            #Get assignment details
+            domain = 'https://coderacademy.instructure.com'
+            endpoint = '/api/v1/courses/{0}/assignments/{1}'
+            endpoint = endpoint.format(course_id, assessment_id)
+            request_parameters = {
+                'all_dates':1
+            }
+            assignment_request = canvas_API_request(domain + endpoint,
+                                                    request_parameters=request_parameters)
+            if(assignment_request.status_code == 200):
+                assignment_object = json.loads(assignment_request.text)
+                print(assignment_object)
+                if(assignment_object['all_dates']):
+                    print(assignment_object['all_dates'])
+                try:
+                    assignment_object_due_date = assignment_object['due_at']
+                except Exception as error:
+                    raise error
+                else:
+                    if(assignment_object_due_date is None):
+                        print("No due date could be extracted from json data")
+                    else:
+                        assignment_due_at = dateutil.parser.parse(assignment_object_due_date)
+                        
+                        #Get assignment overrides
+                        domain = 'https://coderacademy.instructure.com'
+                        endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
+                        endpoint = endpoint.format(course_id, assessment_id)
+                        request_parameters = {}
+                        overrides_request = canvas_API_request(domain + endpoint)
+                        overrides_object = json.loads(overrides_request.text)
+                        assignment_extension_ids = []
+                        for override_object in overrides_object:
+                            override_due_at = dateutil.parser.parse(override_object['due_at'])
+                            print("Original due date: ", assignment_due_at, ". Override due date: ", override_due_at)
+                            if override_due_at > assignment_due_at:
+                                override_student_list = get_student_id_list_from_assignment_override_object(override_object,
+                                                                                                            course_id)
+                                assignment_extension_ids.extend(override_student_list)
+                            else:
+                                print("Assignment override was not due after assignment, no extentsion was given")
+                        return ''.join(i for i in assignment_extension_ids if not assignment_extensions_ids.index(i) == 0)
+            else:
+                return abort(status_code)
+def get_student_id_list_from_assignment_override_object(override_object,
+                                                        course_id):
+    if not isinstance(course_id, str):
+        print("Course ID not a string instance")
+    list_of_student_ids = []
+    if 'student_ids' in override_object:
+        for student_id in override_object['student_ids']:
+            list_of_student_ids.append(str(student_id))
+    elif 'group_id' in override_object:
+        group_id = override_object['group_id']
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/groups/{0}/users'.format(group_id)
+        group_request = canvas_API_request(domain + endpoint)
+        for student in group_request:
+            list_of_student_ids.append(student['id'])
+    elif 'course_section_id' in override_object:
+        section_id = override_object['course_section_id']
+        domain = 'https://coderacademy.instructure.com'
+        endpoint = '/api/v1/courses/{0}/sections/{1}'.format(course_id,
+                                                                section_id)
+        request_parameters = {'include[]': 'students'}
+        course_section_request = canvas_API_request(domain + endpoint,
+                                                    request_parameters=request_parameters)
+        for student in course_section_request:
+            list_of_student_ids.append(student['id'])
+    else:
+        print('No id in override object')
+        print(override_object)
+    return ''.join(str(i) + ', ' for i in list_of_student_ids)
+
+@application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
+@login_required
+def retreive_rubric_assessment():
+    '''
+    Docstring
+    ---------
+        GET
+        ---
+            Returns
+            -------
+            rubric_data.html(Template):
+                Returns a HTML form to handle user input and post specified course_id and assessment_id.
+        POST
+        ----
+            Arguments
+            ---------
+            course_id:
+                Requires a valid Canvas course_id.
+            assessment_id:
+                Requires a valid assessment_id.
+    '''
+    if(request.method == 'GET'):
+        return render_template('rubric_data.html')
+    elif(request.method == 'POST'):
+        try:
+            course_ID = str(request.values.get('course_id'))
+            assessment_ID = str(request.values.get('assessment_id'))
+        #Handle Conversion error.
+        except Exception as error:
+            raise error
+        else:
+            if(course_ID is not None and assessment_ID is not None):
+                try:
+                    rubric_data = extract_rubric_data(course_ID, assessment_ID)
+                except Exception as error:
+                    print("Unexpected error in extract_rubric_data method")
+                else:
+                    if(rubric_data is not None):
+                        #print(map_rubric_data(rubric_data.json()))
+                        return(rubric_data.text)
+            else:
+                print('Invalid or missing arguments parsed')
+                return render_template('rubric_data.html')
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
@@ -479,6 +737,73 @@ def criterion():
         except Exception as error:
             raise error
 
+@application.route('/rubrics', methods=['GET', 'POST'])
+@login_required
+def rubrics():
+    if(request.method == 'GET'):
+        return render_template('rubrics.html')
+    else:
+        try:
+            #Is it safer to convert to int first to validate?
+            course_id = str(request.values.get('course_id'))
+        except Exception as error:
+            raise error
+        else:
+            rubrics = canvas_API_request("https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics".format(course_id), request_parameters={'course_id':course_id})
+            #How should you handle canvas_API_request returning error?
+            #json.loads(rubrics)
+            #if error not in json_data?
+            return render_template(
+                'rubrics.html',
+                rubrics=json.loads(rubrics.text), 
+                course_id=course_id
+            )
+
+@application.route('/map_rubric/<rubric_id>', methods=['GET', 'POST'])
+@login_required
+def map_rubric(rubric_id):
+    if(request.method == 'GET'):
+        try:
+            course_id = str(request.values.get('course_id'))
+            rubric_id = str(rubric_id)
+            print("Course_ID: " + course_id + ", Rubric_ID: " + rubric_id)
+        except Exception as error:
+            raise error
+        else:
+            """
+            
+            cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash. 
+            If the user does not request a style, this key will be absent.",
+            #           "type": "array",
+            #           "items": { "type": "object" }
+            #         }
+            """
+            #https://coderacademy.instructure.com/api/v1/courses/144/rubrics/45?include[]=assessments
+            request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/rubrics/{1}'.format(course_id, rubric_id)
+            request_parameters = {
+                        'include[]': 'assessments',
+                        'style': 'full'
+                    }
+            print(request_url)
+            try:
+                rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
+                print(rubric_data.text)
+                criteria = rubric_data.json()
+            except Exception as error:
+                raise error
+            else:
+                #Generate dictionary of rubric_data criterion. ID and Name
+                learning_outcomes = json.loads(Learning_Outcome.read())
+                print("Criteria", criteria)
+                return render_template(
+                        'map_rubric.html',
+                        criteria=criteria,
+                        learning_outcomes=learning_outcomes
+                        )
+    else:
+        #Handle the mappings and safe to db as mapping document.
+        pass
+
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
 def assessments():
@@ -486,7 +811,11 @@ def assessments():
         assessments = json.loads(Assessment.read())
         return render_template('assessments.html', 
                                assessments = assessments)
+    else:
+        #Create new assessment.
+        pass
 
+#TODO: Refactor with new rubric mapping workflow.
 def map_rubric_data(submission_data):
     grades = {}
     for each_submission_item in submission_data:
@@ -495,23 +824,35 @@ def map_rubric_data(submission_data):
             student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
-            best_fit_student = search_students(student_ID)
-            student_name = json.loads(best_fit_student.text)[0]['name']
+            best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
+            print(best_fit_student.json())
+            student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
             print("This student does not have a rubric_assessment")
             pass
         else:
+            '''
             learning_outcome_count = 0
             grade_total = 0
+            shared_outcome_total = 0
+            learning_outcomes_data = {}
+            learning_outcome_data[str(student_name)] = {}
             for each, value in submission_rubric_assessment.items():
-                learning_outcome_count = learning_outcome_count + 1
                 grade_total = grade_total + value['points']
+                learning_outcome_data[str(student_name)][each] = value['points']
                 if(learning_outcome_count == 14):
-                    grades[student_name + ' CMP1043'] = grade_total
+                    grades[str(student_name) + ' CMP1043'] = grade_total
                     grade_total = 0
                 if(learning_outcome_count == 35):
-                    grades[student_name + ' PRG1006'] = grade_total
+                    grades[str(student_name) + ' PRG1006'] = grade_total
                     grade_total = 0
+                if(learning_outcome_count == 37):
+                    print(each, value)
+                    grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
+                    grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
+                learning_outcome_count = learning_outcome_count + 1
+            print(learning_outcome_data)
+            '''
     print(grades)
     return grades
 
@@ -578,8 +919,8 @@ def student_search():
     else:
         return render_template('student_search.html')
 
+@require_hubspot_signature_validation
 @application.route('/create-account', methods=['POST'])
-#@require_hubspot_signature_validation
 def create_canvas_account():
     '''
     Docstring
@@ -593,114 +934,122 @@ def create_canvas_account():
     -------
     Account_Creation_Successful(template):
         Returns a template to be rendered by Flask on successful request.
-    Note: A course ID will be sent from the webhook as a query paramter. Is this safe?
     '''
     try:
         course_ID = str(request.args.get('course_id'))
         section_ID = str(request.args.get('section_id'))
     except Exception as error:
-        print("Could not convert course/section id's to strings")
+        print("Invalid course_id or section_id")
+        return "Invalid course_id or section_id"
     else:
         #Validate POST payload
-        if not request.is_json:
+        try:
+            json_data = request.get_json()
+        except Exception as error:
             return abort(415)
         else:
             #http://flask.pocoo.org/docs/1.0/api/#response-objects
             #Returns None if JSON could not be parsed.
-            json_data = request.get_json()
-            try:
-                Hubspot_Webhook.create(json_data)
-            except Exception as error:
-                pass
-            #Check if JSON data was parsed correctly.
-            #Validate JSON Object is dict not array.
-            if json_data and isinstance(json_data, dict):
+            if(json_data is not None):
                 try:
-                    first_name = json_data['properties']['firstname']['value']
-                    last_name = json_data['properties']['lastname']['value'] 
-                    student_email = json_data['properties']['email']['value']
-                    student_name = first_name + " " + last_name
-                except KeyError as error:
-                    print("Specified JSON fields are not present")
-                    return abort(422)
+                    Hubspot_Webhook.create(json_data)
                 except Exception as error:
-                    print(error)
-                else:
-                    creation_response = create_canvas_login(student_name, student_email)
-                    if(creation_response.status_code == 400):
-                        print("The user already exists")
-                        students_found = search_students(student_email).json()
-                        best_fit_student = students_found[0] or {}
-                        if isinstance(best_fit_student, dict):
+                    pass
+                #Check if JSON data was parsed correctly.
+                #Validate JSON Object is dict not array.
+                if json_data and isinstance(json_data, dict):
+                    try:
+                        first_name = json_data['properties']['firstname']['value']
+                        last_name = json_data['properties']['lastname']['value'] 
+                        user_email = json_data['properties']['email']['value']
+                        user_name = first_name + " " + last_name
+                    except KeyError as error:
+                        print("Specified JSON fields are not present")
+                        return abort(422)
+                    except Exception as error:
+                        print(error)
+                        return abort(500)
+                    else:
+                        creation_response = create_canvas_login(user_name, user_email)
+                        if(creation_response.status_code == 400):
+                            print("The user already exists", creation_response)
+                            users_found = search_students(user_email).json()
+                            best_fit_user = users_found[0] or {}
+                            if isinstance(best_fit_user, dict):
+                                try:
+                                    user_ID = best_fit_user['id']
+                                except KeyError as error:
+                                    print("Specified JSON fields are not present")
+                                    return abort(422)
+                            else:
+                                print('users_found is not a json object')
+                                return abort(422)
+                        elif(creation_response.status_code == 200):
                             try:
-                                print(best_fit_student)
-                                user_ID = best_fit_student['id']
-                            except KeyError as error:
+                                user_details = creation_response.json()
+                                user_ID = user_details['id']
+                            except TypeError as error:
                                 print("Specified JSON fields are not present")
                                 return abort(422)
+                            except Exception as error:
+                                print(error)
+                                return abort(500)
+                            else:
+                                return creation_response.text
                         else:
-                            print('students_found is not a json object')
-                            return abort(422)
-                    elif(creation_response.status_code == 200):
-                        user_details = creation_response.json()
+                            return str(creation_response.text)
+
+                        #Endpoint will return 422 if student_id doesn't exist
+                        #return redirect(url_for('enroll_user_in_course', user_id=user_ID, course_id=course_ID, section_id=section_ID))
+                        url = url_for('enroll_user_in_course', _external=True, _schema='https')
+                        _data = {
+                                "user_id": user_ID,
+                                "course_id": course_ID,
+                                "section_id": section_ID
+                                }
                         try:
-                            user_ID = user_details['id']
-                        except TypeError as error:
-                            print("Specified JSON fields are not present")
-                            return abort(422)
+                            user_enrollment_request = requests.post(url, data=_data)
+                        except ConnectionError as error:
+                            print("DNS Failure, Refused Connection, etc.")
+                            return abort(500)
+                        except requests.exceptions.Timeout as error:
+                            print("Request timed out, please try again")
+                            return abort(500)
+                        except requests.exceptions.TooManyRedirects as error:
+                            print("Too many redirects.", error)
+                            return abort(500)
                         except Exception as error:
-                            raise error
-                    else:
-                        return creation_response.text
-                    #Endpoint will return 422 if student_id doesn't exist
-                    #return redirect(url_for('enroll_user_in_course', student_id=user_ID, course_id=course_ID, section_id=section_ID))
-                    url = 'https://canvas-integration.herokuapp.com/enroll_student'
-                    _data = {
-                            "student_id": user_ID,
-                            "course_id": course_ID,
-                            "section_id": section_ID
-                            }
-                    try:
-                        student_enrollment_request = requests.post(
-                                                                  url,
-                                                                  data=_data
-                                                                 )
-                    except ConnectionError as error:
-                        print("DNS Failure, Refused Connection, etc.")
-                        return abort(500)
-                    except requests.exceptions.Timeout as error:
-                        print("Request timed out, please try again")
-                        return abort(500)
-                    except requests.exceptions.TooManyRedirects:
-                        print("Too many redirects.")
-                    except Exception as error:
-                        raise error
-                    else:
-                        return str(student_enrollment_request.text)
-                    '''
-                    return redirect(url_for('enroll_user_in_course', 
-                        student_id=user_ID, 
-                        course_id=course_ID, 
-                        section_id=section_ID))
-                    '''
+                            print(error)
+                            return abort(500)
+                        else:
+                            return user_enrollment_request.text
+                else:
+                    flash("JSON data not a dictionary")
+                    return abort(400)
             else:
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
 
-@application.route('/enroll_student', methods=['POST'])
+@application.route('/enroll_user', methods=['POST'])
 def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
+        #Convert ImmutableMultiDict to Dict
         request_arguments = request.form.to_dict()
-        print(request_arguments)
         course_ID = str(request_arguments['course_id'])
         section_ID = str(request_arguments['section_id'])
-        student_ID = str(request_arguments['student_id'])
+        user_ID = str(request_arguments['user_id'])
     except Exception as error:
-        raise error
+        print(error)
+        return abort(500)
     else:
-        student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
-        return student_enrollment_request.text
+        user_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
+        return user_enrollment_request.text
+
+@application.route('/test', methods=['GET'])
+def testing():
+    test_request = canvas_API_request('https://coderacademy.instructure.com/api/v1/sections/sis_section_id:GenTech-19-01-Brisbane/enrollments')
+    return test_request.text
 
 #TODO: File upload uri with student
 #url https://coderacademy/
@@ -720,43 +1069,50 @@ def update_sis_id():
             flask("No selected file")
             return redirect(url_for(update_sis_id))
         if uploaded_file:
-            filename = secure_filename(uploaded_file.filename)
-            uploaded_file.save(os.path.join(application.config['UPLOAD_FOLDER'], filename))
+            data_stream = pandas.read_csv(uploaded_file.stream)
+            for i in range(0, len(data_stream.index) - 1):
+                try:
+                    first_name = data_stream['First Name [Required]'][i]
+                    last_name = data_stream['Last Name [Required]'][i]
+                    student_name = first_name + " " + last_name
+                    student_email = data_stream['Email Address [Required]'][i]
+                    student_number = (student_email).split('@')[0]
+                except Exception as error:
+                    raise error
+                else:
+                    best_fit_student = json.loads(search_students(student_name).text)
+                if(best_fit_student):
+                    try:
+                        user_id = best_fit_student[0]['id']
+                        user_name = best_fit_student[0]['name']
+                    except Exception as error:
+                        raise error
+                    else:
+                        if(student_name.upper() == user_name.upper()):
+                            domain = 'https://coderacademy.instructure.com'
+                            endpoint = '/api/v1/users/{0}/logins'.format(user_id)
+                            user_login = canvas_API_request(
+                                                            domain + endpoint,
+                                                            request_method = 'GET'
+                                                           )
+                            user_login_id = json.loads(user_login.text)[0]['id']
+                            endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
+                            user_login_details = canvas_API_request(
+                                                                    domain + endpoint,
+                                                                    request_parameters={'login[sis_user_id]':student_number},
+                                                                    request_method = 'PUT'
+                                                                   )
+                        else:
+                            print("Matched {0} with {1}".format(student_name, user_name))
+                            print("Could not link student to canvas user account")
+                else:
+                    print("Could not find student: " + student_name)
+            return "success"
 
-        workbook = Workbook()
-        excel_document = load_workbook(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+@application.route('/uploads/<file_name>')
+def uploaded_file(file_name):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], file_name)
 
-        sheet_names_available = excel_document.get_sheet_names()
-        print("Available sheets in given file: ", sheet_names_available)
-
-        selected_sheet = excel_document.get_sheet_by_name(sheet_names_available[0])
-
-        cell_range = selected_sheet['C2': 'C96']
-        '''
-        for each_row in cell_range:
-            for cell in each_row:
-                student_email = cell.value
-                student_number = (student_email).split('@')[0]
-                
-                user_id = json.loads(search_students(student_email).text)['id'] 
-                sis_id = student_number
-                
-                #GET USERS LOGIN ID.
-                domain = 'https://coderacademy.instructure.com'
-                endpoint = '/api/v1/users/{0}/logins'.format(user_id)
-                user_login = canvas_API_request(
-                                                domain + endpoint,
-                                                request_method = 'GET'
-                                               )
-                user_login_id = json.loads(user_login.text)[0]['id']
-                endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
-                user_login_details = canvas_API_request(
-                                                        domain + endpoint,
-                                                        request_parameters={'login[sis_user_id]':sis_id},
-                                                        request_method = 'PUT'
-                                                       )
-                return user_login_details.text
-        '''
 #Opens the YAML file at the specified directory and returns the scriptable YAML object.
 def get_config(_dir):
     '''
