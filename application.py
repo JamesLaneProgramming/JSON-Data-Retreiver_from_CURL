@@ -228,7 +228,8 @@ def require_hubspot_access_token(func):
             except Exception as error:
                 print('Could not update cookie with user access token, refreshing access token')
             else:
-                if(last_hubspot_access_token_refresh + hubspot_access_expiry > datetime.now()):
+                hubspot_expiry_datetime = datetime.datetime(0,0,0,0,hubspot_access_expiry,0)
+                if(last_hubspot_access_token_refresh + hubspot_expiry_datetime > datetime.now()):
                     return redirect(url_for('refresh_access_token'))
                 else:
                     return func(*args, **kwargs)
