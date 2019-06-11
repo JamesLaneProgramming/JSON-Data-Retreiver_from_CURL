@@ -502,8 +502,6 @@ def user_assignment_data(course_id, user_id):
                     else:
                         print('Student has submitted for {0}'.format(user_assignment['title']))
                 return str(user_non_submissions)
-        elif has_request_context():
-            return abort(assignment_request.status_code)
         else:
             return assignment_request.status_code
 
