@@ -80,9 +80,9 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 def main():
-    #scheduler = BackgroundScheduler()
-    #scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
-    #scheduler.start()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
+    scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port)
@@ -439,11 +439,11 @@ def upload_provisioning_csv():
                         new_enrollment.save()
             return "Success"
 
-@application.route('/check_overdue', methods=['GET'])
 @login_required
 def check_overdue_assignments():
-    for enrollment in Enrollment.objects():
-        user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
+    with application.app_context():
+        for enrollment in Enrollment.objects():
+            user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
 
 #Needs development
 @application.route('/create_provisioning_report', methods=['GET', 'POST'])
