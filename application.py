@@ -441,9 +441,9 @@ def upload_provisioning_csv():
 
 @login_required
 def check_overdue_assignments():
-    with application.app_context():
-        for enrollment in Enrollment.objects():
-            user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
+    print("Background Scheduler Working")
+    #for enrollment in Enrollment.objects():
+    #user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
 
 #Needs development
 @application.route('/create_provisioning_report', methods=['GET', 'POST'])
