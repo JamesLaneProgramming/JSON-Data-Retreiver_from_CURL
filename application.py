@@ -524,7 +524,7 @@ def user_assignment_data(course_id, user_id):
                                 response = 'Student has submitted for {0} but has not been graded'.format(user_assignment['title'])
                                 print(response)
                 return str(user_non_submissions)
-        elif(assignment_request.status_code = 404):
+        elif(assignment_request.status_code == 404):
             print("This resource does not exist")
         else:
             return assignment_request.status_code
