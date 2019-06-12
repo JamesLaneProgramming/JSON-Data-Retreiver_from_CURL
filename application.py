@@ -81,7 +81,7 @@ def load_user(user_id):
 
 def main():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=10)
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", days=1)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
