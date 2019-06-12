@@ -473,6 +473,9 @@ def user_assignment_data(course_id, user_id):
             else:
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
+                    if(!user_assignment['submission']['submitted_at']):
+                        print("Assignment Does not require submission")
+                        continue
                     if(user_assignment['submission']['submitted_at'] == None):
                         try:
                             if(user_assignment['due_at'] != None):
