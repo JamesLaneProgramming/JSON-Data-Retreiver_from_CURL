@@ -481,7 +481,6 @@ def user_assignment_data(course_id, user_id):
                             print("Could not Parse due date. This could mean \
                             that the requested assignment does not have a due \
                             date set.")
-                            raise error
                         else:
                             if(date_now - due_date > datetime.timedelta(days=0)):
                                 #Check if database entry for this users
