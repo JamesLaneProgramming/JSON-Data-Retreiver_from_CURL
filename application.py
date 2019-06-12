@@ -81,7 +81,7 @@ def load_user(user_id):
 
 def main():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_overdue_assignments, trigger="interval", days=1)
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=5)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
@@ -460,8 +460,8 @@ def create_provisioning_report():
 def user_assignment_data(course_id, user_id):
         print(course_id, user_id)
         domain = 'https://coderacademy.instructure.com'
-        endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
-        endpoint = endpoint.format(course_id, user_id)
+        endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'.format(str(course_id), str(user_id))
+        print(domain + endpoint)
         assignment_request = canvas_API_request(domain + endpoint)
         if(assignment_request.status_code == 200):
             try:
@@ -475,14 +475,16 @@ def user_assignment_data(course_id, user_id):
                 for user_assignment in user_assignment_data:
                     if(user_assignment['submission']['submitted_at'] == None):
                         try:
-                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                            if(user_assignment['due_at'] != None):
+                                due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                            else:
+                                print("No due date set for assignment")
+                                continue
                             date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
                         except Exception as error:
-                            print("Could not Parse due date. This could mean \
-                            that the requested assignment does not have a due \
-                            date set.")
+                            raise error
                         else:
-                            if(date_now - due_date > datetime.timedelta(days=0)):
+                            if(date_now - due_date < datetime.timedelta(days=0)):
                                 #Check if database entry for this users
                                 #assignment has already been created
                                 if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
