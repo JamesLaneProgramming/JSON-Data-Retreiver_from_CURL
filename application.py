@@ -462,7 +462,7 @@ def user_assignment_data(course_id, user_id):
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
         endpoint = endpoint.format(course_id, user_id)
-        assignment_request = canvas_API_request(domain + endpoint)
+        assignment_request = canvas_API_request(domain + endpoint, request_parameters={})
         if(assignment_request.status_code == 200):
             try:
                 user_assignment_data = json.loads(assignment_request.text)
