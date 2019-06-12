@@ -214,25 +214,26 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
         #Setup request headers with auth token.
         _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
         #Append optional parameters to the URI string.
-        if(request_parameters != None and isinstance(request_parameters, dict)):
-            query_string = None
-            for each_key, each_value in request_parameters.items():
-                try:
-                    string_formatted_key = str(each_key)
-                    string_formatted_value = str(each_value)
-                except Exception as error:
-                    print("Could not convert key/value to string")
-                else:
-                    #can dict value be None?
-                    '''
-                    If each_key/each_value is the first element in requests_parameters, generate formatting accordingly. Else append to existing query_string.
-                    '''
-                    if query_string is None:
-                        query_string = '?{0}={1}'.format(string_formatted_key, string_formatted_value)
+        if(request_parameters != None):
+            if(isinstance(request_parameters, dict)):
+                query_string = None
+                for each_key, each_value in request_parameters.items():
+                    try:
+                        string_formatted_key = str(each_key)
+                        string_formatted_value = str(each_value)
+                    except Exception as error:
+                        print("Could not convert key/value to string")
                     else:
-                        query_string = '{0}&{1}={2}'.format(query_string, string_formatted_key, string_formatted_value)
-            #Concatenate URI and query string
-            canvas_URI = canvas_URI + query_string
+                        #can dict value be None?
+                        '''
+                        If each_key/each_value is the first element in requests_parameters, generate formatting accordingly. Else append to existing query_string.
+                        '''
+                        if query_string is None:
+                            query_string = '?{0}={1}'.format(string_formatted_key, string_formatted_value)
+                        else:
+                            query_string = '{0}&{1}={2}'.format(query_string, string_formatted_key, string_formatted_value)
+                #Concatenate URI and query string
+                canvas_URI = canvas_URI + query_string
         else:
             print("Incorrect argument type parsed, request_parameters must be a dictionary")
         #TODO: Convert to switch statement.
