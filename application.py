@@ -441,8 +441,8 @@ def upload_provisioning_csv():
 
 def check_overdue_assignments():
     print("Background Scheduler Working")
-    #for enrollment in Enrollment.objects():
-    #user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
+    for enrollment in Enrollment.objects():
+        user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
 
 #Needs development
 @application.route('/create_provisioning_report', methods=['GET', 'POST'])
@@ -457,7 +457,6 @@ def create_provisioning_report():
         provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
         return provisioning_report.text
 
-#@copy_current_request_context()
 def user_assignment_data(course_id, user_id):
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
