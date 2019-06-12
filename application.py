@@ -81,11 +81,11 @@ def load_user(user_id):
 
 def main():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=2)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
-    application.run(host='0.0.0.0', port=port)
+    application.run(host='0.0.0.0', port=port, use_reloader=False)
     #Set up Flask Scheduler.
 
 @application.route('/')
@@ -439,7 +439,6 @@ def upload_provisioning_csv():
                         new_enrollment.save()
             return "Success"
 
-@login_required
 def check_overdue_assignments():
     print("Background Scheduler Working")
     #for enrollment in Enrollment.objects():
