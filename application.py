@@ -81,7 +81,7 @@ def load_user(user_id):
 
 def main():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=2)
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=10)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
@@ -462,7 +462,7 @@ def user_assignment_data(course_id, user_id):
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
         endpoint = endpoint.format(course_id, user_id)
-        assignment_request = canvas_API_request(domain + endpoint, request_parameters={})
+        assignment_request = canvas_API_request(domain + endpoint)
         if(assignment_request.status_code == 200):
             try:
                 user_assignment_data = json.loads(assignment_request.text)
@@ -481,6 +481,7 @@ def user_assignment_data(course_id, user_id):
                             print("Could not Parse due date. This could mean \
                             that the requested assignment does not have a due \
                             date set.")
+                            raise error
                         else:
                             if(date_now - due_date > datetime.timedelta(days=0)):
                                 #Check if database entry for this users
