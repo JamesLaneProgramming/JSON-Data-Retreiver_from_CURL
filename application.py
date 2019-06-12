@@ -477,7 +477,7 @@ def user_assignment_data(course_id, user_id):
             else:
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    if(user_assignment['submission']['submitted_at']):
+                    try:
                         if(user_assignment['submission']['submitted_at'] == None):
                             try:
                                 if(user_assignment['due_at'] != None):
@@ -509,7 +509,7 @@ def user_assignment_data(course_id, user_id):
                                     print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
                         else:
                             print('Student has submitted for {0}'.format(user_assignment['title']))
-                    else:
+                    except Exception as error:
                         print("Assignment Does not require submission")
                         continue
                 return str(user_non_submissions)
