@@ -477,7 +477,12 @@ def user_assignment_data(course_id, user_id):
             else:
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    if(user_assignment['submission']):
+                    try:
+                        submission = user_assignment['submission']
+                    except Exception as error:
+                        print("Assignment Does not require submission")
+                        continue
+                    else:
                         if(user_assignment['submission']['submitted_at'] == None):
                             try:
                                 if(user_assignment['due_at'] != None):
@@ -490,7 +495,7 @@ def user_assignment_data(course_id, user_id):
                                 print(error)
                                 continue
                             else:
-                                if(date_now < due_date):
+                                if(date_now > due_date):
                                     #Check if database entry for this users
                                     #assignment has already been created
                                     if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
@@ -509,7 +514,7 @@ def user_assignment_data(course_id, user_id):
                                         else:
                                             print("Overdue assignment created in database")
                                 else:
-                                    print("Assignment not due yet. Days until due: ", (due_date - date_now).days)
+                                    print('Assignment not due yet. Days until due: {0}'.format(date_now - due_date).days)
                         else:
                             if(user_assignment['submission']['score']):
                                 response = 'Student has submitted for {0} with a score of {1}'
@@ -518,10 +523,9 @@ def user_assignment_data(course_id, user_id):
                             else:
                                 response = 'Student has submitted for {0} but has not been graded'.format(user_assignment['title'])
                                 print(response)
-                    else:
-                        print("Assignment Does not require submission")
-                        continue
                 return str(user_non_submissions)
+        elif(assignment_request.status_code = 404):
+            print("This resource does not exist")
         else:
             return assignment_request.status_code
 
