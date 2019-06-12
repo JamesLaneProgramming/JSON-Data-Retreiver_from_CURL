@@ -487,7 +487,7 @@ def user_assignment_data(course_id, user_id):
                                     continue
                                 date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
                             except Exception as error:
-                                print error
+                                print(error)
                                 continue
                             else:
                                 if(date_now < due_date):
