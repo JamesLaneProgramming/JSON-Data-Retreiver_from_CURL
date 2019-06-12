@@ -477,7 +477,7 @@ def user_assignment_data(course_id, user_id):
             else:
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    try:
+                    if(user_assignment['submission']):
                         if(user_assignment['submission']['submitted_at'] == None):
                             try:
                                 if(user_assignment['due_at'] != None):
@@ -487,9 +487,10 @@ def user_assignment_data(course_id, user_id):
                                     continue
                                 date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
                             except Exception as error:
-                                raise error
+                                print error
+                                continue
                             else:
-                                if(date_now - due_date > datetime.timedelta(days=0)):
+                                if(date_now < due_date):
                                     #Check if database entry for this users
                                     #assignment has already been created
                                     if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
@@ -505,11 +506,19 @@ def user_assignment_data(course_id, user_id):
                                             overdue_assignment.save()
                                         except Exception as error:
                                             raise error
+                                        else:
+                                            print("Overdue assignment created in database")
                                 else:
-                                    print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
+                                    print("Assignment not due yet. Days until due: ", (due_date - date_now).days)
                         else:
-                            print('Student has submitted for {0}'.format(user_assignment['title']))
-                    except Exception as error:
+                            if(user_assignment['submission']['score']):
+                                response = 'Student has submitted for {0} with a score of {1}'
+                                response = response.format(user_assignment['title'], user_assignment['submission']['score'])
+                                print(response)
+                            else:
+                                response = 'Student has submitted for {0} but has not been graded'.format(user_assignment['title'])
+                                print(response)
+                    else:
                         print("Assignment Does not require submission")
                         continue
                 return str(user_non_submissions)
