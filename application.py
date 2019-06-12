@@ -458,6 +458,7 @@ def create_provisioning_report():
         return provisioning_report.text
 
 def user_assignment_data(course_id, user_id):
+        print(course_id, user_id)
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
         endpoint = endpoint.format(course_id, user_id)
@@ -477,7 +478,9 @@ def user_assignment_data(course_id, user_id):
                             due_date = dateutil.parser.isoparse(user_assignment['due_at'])
                             date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
                         except Exception as error:
-                            raise error
+                            print("Could not Parse due date. This could mean \
+                            that the requested assignment does not have a due \
+                            date set.")
                         else:
                             if(date_now - due_date > datetime.timedelta(days=0)):
                                 #Check if database entry for this users
