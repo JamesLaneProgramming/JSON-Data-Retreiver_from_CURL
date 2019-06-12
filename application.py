@@ -439,7 +439,7 @@ def upload_provisioning_csv():
                         new_enrollment.save()
             return "Success"
 
-@application.route('/check_overdue', methods='GET')
+@application.route('/check_overdue', methods=['GET'])
 def check_overdue():
     check_overdue_assignments()
 
