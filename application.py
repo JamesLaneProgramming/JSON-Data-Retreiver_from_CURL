@@ -81,7 +81,7 @@ def load_user(user_id):
 
 def main():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=30)
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", days=1)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
@@ -439,6 +439,10 @@ def upload_provisioning_csv():
                         new_enrollment.save()
             return "Success"
 
+@application.route('/check_overdue', methods='GET')
+def check_overdue():
+    check_overdue_assignments()
+
 def check_overdue_assignments():
     print("Background Scheduler Working")
     for enrollment in Enrollment.objects():
@@ -473,40 +477,41 @@ def user_assignment_data(course_id, user_id):
             else:
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    if(!user_assignment['submission']['submitted_at']):
+                    if(user_assignment['submission']['submitted_at']):
+                        if(user_assignment['submission']['submitted_at'] == None):
+                            try:
+                                if(user_assignment['due_at'] != None):
+                                    due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                                else:
+                                    print("No due date set for assignment")
+                                    continue
+                                date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+                            except Exception as error:
+                                raise error
+                            else:
+                                if(date_now - due_date > datetime.timedelta(days=0)):
+                                    #Check if database entry for this users
+                                    #assignment has already been created
+                                    if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
+                                        print("Overdue Assignment already in database")
+                                    else:
+                                        try:
+                                            overdue_assignment = \
+                                                Overdue_Assignment(int(course_id),
+                                                int(user_assignment['assignment_id']),
+                                                int(user_id), 
+                                                due_date, 
+                                                date_now)
+                                            overdue_assignment.save()
+                                        except Exception as error:
+                                            raise error
+                                else:
+                                    print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
+                        else:
+                            print('Student has submitted for {0}'.format(user_assignment['title']))
+                    else:
                         print("Assignment Does not require submission")
                         continue
-                    if(user_assignment['submission']['submitted_at'] == None):
-                        try:
-                            if(user_assignment['due_at'] != None):
-                                due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                            else:
-                                print("No due date set for assignment")
-                                continue
-                            date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-                        except Exception as error:
-                            raise error
-                        else:
-                            if(date_now - due_date > datetime.timedelta(days=0)):
-                                #Check if database entry for this users
-                                #assignment has already been created
-                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
-                                    print("Overdue Assignment already in database")
-                                else:
-                                    try:
-                                        overdue_assignment = \
-                                            Overdue_Assignment(int(course_id),
-                                            int(user_assignment['assignment_id']),
-                                            int(user_id), 
-                                            due_date, 
-                                            date_now)
-                                        overdue_assignment.save()
-                                    except Exception as error:
-                                        raise error
-                            else:
-                                print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
-                    else:
-                        print('Student has submitted for {0}'.format(user_assignment['title']))
                 return str(user_non_submissions)
         else:
             return assignment_request.status_code
