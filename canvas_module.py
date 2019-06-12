@@ -234,8 +234,8 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
                             query_string = '{0}&{1}={2}'.format(query_string, string_formatted_key, string_formatted_value)
                 #Concatenate URI and query string
                 canvas_URI = canvas_URI + query_string
-        else:
-            print("Incorrect argument type parsed, request_parameters must be a dictionary")
+            else:
+                print("Incorrect argument type parsed, request_parameters must be a dictionary")
         #TODO: Convert to switch statement.
         if(request_method.upper() == 'POST'):
             response = requests.post(canvas_URI, headers=_headers)
