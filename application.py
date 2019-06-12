@@ -81,7 +81,7 @@ def load_user(user_id):
 
 def main():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=5)
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", minutes=30)
     scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
@@ -484,7 +484,7 @@ def user_assignment_data(course_id, user_id):
                         except Exception as error:
                             raise error
                         else:
-                            if(date_now - due_date < datetime.timedelta(days=0)):
+                            if(date_now - due_date > datetime.timedelta(days=0)):
                                 #Check if database entry for this users
                                 #assignment has already been created
                                 if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
