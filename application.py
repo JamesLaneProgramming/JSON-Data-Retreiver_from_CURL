@@ -321,7 +321,9 @@ def refresh_access_token():
                 access_token_expiry = post_request.json()['expires_in']
             except ValueError as error:
                 print("Post request response did not contain an access token")
+            #KeyError missing access_token
             except Exception as error:
+                print(post_request.text)
                 raise error
             else:
                 next = get_redirect_target()
