@@ -1,0 +1,76 @@
+warning: LF will be replaced by CRLF in application.py.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in subjects/subject_model.py.
+The file will have its original line endings in your working directory
+[1mdiff --git a/application.py b/application.py[m
+[1mindex dfdfb7c..7d6d5cb 100644[m
+[1m--- a/application.py[m
+[1m+++ b/application.py[m
+[36m@@ -704,8 +704,7 @@[m [mdef subjects():[m
+         subjects = Subject.read()[m
+         learning_outcomes = json.loads(Learning_Outcome.read())[m
+         return render_template('subjects.html',[m
+[31m-                               subjects=subjects,[m
+[31m-                               learning_outcomes=learning_outcomes)[m
+[32m+[m[32m                               subjects=subjects)[m
+     elif(request.method == 'POST'):[m
+         try:[m
+             subject_code = request.form['subject_code_field'][m
+[1mdiff --git a/subjects/subject_model.py b/subjects/subject_model.py[m
+[1mindex 1e85a84..727e8f8 100644[m
+[1m--- a/subjects/subject_model.py[m
+[1m+++ b/subjects/subject_model.py[m
+[36m@@ -9,7 +9,7 @@[m [mclass Subject(Document):[m
+     learning_outcomes = ListField(ReferenceField(Learning_Outcome))[m
+     [m
+     def read():[m
+[31m-        return Subject.objects().to_json()[m
+[32m+[m[32m        return Subject.objects().all_fields.to_json()[m
+     [m
+     def index(id):[m
+         o_id = mongo_methods.generate_objectid_from_string(id)[m
+[1mdiff --git a/templates/subjects.html b/templates/subjects.html[m
+[1mindex 462ddf3..5ec66cd 100644[m
+[1m--- a/templates/subjects.html[m
+[1m+++ b/templates/subjects.html[m
+[36m@@ -6,23 +6,23 @@[m
+   </head>[m
+   <body>[m
+     <div class="container">[m
+[31m-	    <ul>[m
+[31m-		    {% for each_subject in subjects %}[m
+[31m-	    		<li>[m
+[31m-            <div>[m
+[31m-				      <p> {{each_subject.subject_name}} </p>[m
+[31m-              <p> {{each_subject.subject_description}} </p>[m
+[31m-              <ul>[m
+[31m-                {% for each_learning_outcome in subjects.learning_outcomes %}[m
+[31m-                  <li>[m
+[31m-                    {{each_learning_outcome.learning_outcome_name}}[m
+[31m-                  </li>[m
+[31m-                {% endfor %}[m
+[31m-              </ul>[m
+[31m-            </div>[m
+[31m-			    </li>[m
+[31m-			{% endfor %}[m
+[31m-	    </ul>[m
+[32m+[m[32m        <ul>[m
+[32m+[m[32m        {% for each_subject in subjects %}[m
+[32m+[m[32m            <li>[m
+[32m+[m[32m                <div>[m
+[32m+[m[32m                    <p> {{each_subject.subject_name}} </p>[m
+[32m+[m[32m                    <p> {{each_subject.subject_description}} </p>[m
+[32m+[m[32m                    <ul>[m
+[32m+[m[32m                    {% for each_learning_outcome in subjects.learning_outcomes %}[m
+[32m+[m[32m                        <li>[m
+[32m+[m[32m                        {{each_learning_outcome.learning_outcome_name}}[m
+[32m+[m[32m                        </li>[m
+[32m+[m[32m                    {% endfor %}[m
+[32m+[m[32m                    </ul>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m            </li>[m
+[32m+[m[32m        {% endfor %}[m
+[32m+[m[32m        </ul>[m
+     </div>[m
+     <div class="container">[m
+ 	    <form id='subject_form'action="" method="post">[m
