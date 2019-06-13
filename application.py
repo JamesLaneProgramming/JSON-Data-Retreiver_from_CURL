@@ -112,7 +112,8 @@ def login():
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
             else:
-                return redirect(url_for('signup'), code=302)
+                next = get_redirect_target()
+                return redirect(url_for('signup'), next=next)
     else:
         return render_template('login.html')
 
@@ -164,16 +165,29 @@ def signup():
         try:
             username = str(request.form['username'])
             password = str(request.form['password'])
+            safeword = str(request.form['safeword'])
         except Exception as error:
             raise error
         else:
-            if username is not "" or password is not "" and \
-                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
-                new_user = User.create(username, password)
-                User.authenticate(username, password)
-                return redirect(redirect_back('home', next=next))
+            if username is not "" or password is not "" or safeword is not "" and \
+                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
+                if(User.objects(username=username)):
+                    flash("Username already taken")
+                    next = get_redirect_target()
+                    return redirect(url_for('signup', next=next))
+                elif(safeword == str(environ.get('safeword'))):
+                    new_user = User.create(username, password)
+                    User.authenticate(username, password)
+                    next = get_redirect_target()
+                    return redirect_back('home', next=next)
+                else:
+                    next = get_redirect_target()
+                    flash("safeword was incorrect, could not create account")
+                    return redirect(url_for('signup', next=next))
             else:
-                return redirect(url_for('signup'))
+                flash("username, password or safeword cannot be empty")
+                next = get_redirect_target()
+                return redirect(url_for('signup', next=next))
     else:
         return render_template('signup.html')
 
@@ -205,6 +219,7 @@ def require_hubspot_signature_validation(func):
                     print("Hubspot Signature Verified")
                     return func(*args, **kwargs)
                 else:
+                    print(hubspot_request_signature, request_signature)
                     print('Unauthenticated')
                     #Replace next line when hubspot works
                     return func(*args, **kwargs)
@@ -294,36 +309,41 @@ def refresh_access_token():
         except Exception as error:
             return redirect(url_for('authenticate_hubspot'))
         else:
-            endpoint = "https://api.hubapi.com/oauth/v1/token"
-            headers = {
-                       "Content-Type": "application/x-www-form-urlencoded",
-                       "charset": "utf-8"
-                      }
-            data = {
-                    "grant_type": "refresh_token",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "refresh_token": refresh_token
-                   }
+            if(refresh_token != ""):
+                endpoint = "https://api.hubapi.com/oauth/v1/token"
+                headers = {
+                           "Content-Type": "application/x-www-form-urlencoded",
+                           "charset": "utf-8"
+                          }
+                data = {
+                        "grant_type": "refresh_token",
+                        "client_id": client_id,
+                        "client_secret": client_secret,
+                        "refresh_token": refresh_token
+                       }
 
-            post_request = requests.post(
-                                         endpoint,
-                                         headers=headers,
-                                         data=data
-                                        )
-            try:
-                access_token = post_request.json()['access_token']
-                access_token_expiry = post_request.json()['expires_in']
-            except ValueError as error:
-                print("Post request response did not contain an access token")
-            except Exception as error:
-                raise error
+                post_request = requests.post(
+                                             endpoint,
+                                             headers=headers,
+                                             data=data
+                                            )
+                try:
+                    access_token = post_request.json()['access_token']
+                    access_token_expiry = post_request.json()['expires_in']
+                except ValueError as error:
+                    print("Post request response did not contain an access token")
+                #KeyError missing access_token
+                except Exception as error:
+                    print(post_request.text)
+                    raise error
+                else:
+                    next = get_redirect_target()
+                    response = make_response(redirect_back('home', next=next))
+                    response.set_cookie('hubspot_access_token', access_token)
+                    User.set_access_token_expiry(current_user.id, access_token_expiry)
+                    return response
             else:
-                next = get_redirect_target()
-                response = make_response(redirect_back('home', next=next))
-                response.set_cookie('hubspot_access_token', access_token)
-                User.set_access_token_expiry(current_user.id, access_token_expiry)
-                return response
+                return redirect(url_for('authenticate_hubspot'))
 
 @application.route('/hubspot')
 @login_required
