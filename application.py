@@ -112,7 +112,8 @@ def login():
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
             else:
-                return redirect(url_for('signup'), next=next, code=302)
+                next = get_redirect_target()
+                return redirect(url_for('signup'), next=next)
     else:
         return render_template('login.html')
 
@@ -164,21 +165,29 @@ def signup():
         try:
             username = str(request.form['username'])
             password = str(request.form['password'])
+            safeword = str(request.form['safeword'])
         except Exception as error:
             raise error
         else:
-            if username is not "" or password is not "" and \
-                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
+            if username is not "" or password is not "" or safeword is not "" and \
+                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
                 if(User.objects(username=username)):
                     flask.flash("Username already taken")
-                    return redirect(url_for('signup'))
-                else:
+                    next = get_redirect_target()
+                    return redirect(url_for('signup', next=next))
+                elif(safeword == str(environ.get('safeword')):
                     new_user = User.create(username, password)
                     User.authenticate(username, password)
+                    next = get_redirect_target()
                     return redirect(redirect_back('home', next=next))
+                else:
+                    next = get_redirect_target()
+                    flask.flash("safeword was incorrect, could not create account")
+                    return redirect(url_for('signup' next=next))
             else:
-                flask.flash("Username or Password cannot be empty")
-                return redirect(url_for('signup'))
+                flask.flash("username, password or safeword cannot be empty")
+                next = get_redirect_target()
+                return redirect(url_for('signup', next=next))
     else:
         return render_template('signup.html')
 
