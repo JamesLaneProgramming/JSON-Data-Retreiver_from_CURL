@@ -179,7 +179,7 @@ def signup():
                     new_user = User.create(username, password)
                     User.authenticate(username, password)
                     next = get_redirect_target()
-                    return redirect(redirect_back('home', next=next))
+                    return redirect_back('home', next=next)
                 else:
                     next = get_redirect_target()
                     flash("safeword was incorrect, could not create account")
@@ -219,6 +219,7 @@ def require_hubspot_signature_validation(func):
                     print("Hubspot Signature Verified")
                     return func(*args, **kwargs)
                 else:
+                    print(hubspot_request_signature, request_signature)
                     print('Unauthenticated')
                     #Replace next line when hubspot works
                     return func(*args, **kwargs)
