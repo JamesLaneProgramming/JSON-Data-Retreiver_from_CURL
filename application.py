@@ -183,7 +183,7 @@ def signup():
                 else:
                     next = get_redirect_target()
                     flask.flash("safeword was incorrect, could not create account")
-                    return redirect(url_for('signup' next=next))
+                    return redirect(url_for('signup', next=next))
             else:
                 flask.flash("username, password or safeword cannot be empty")
                 next = get_redirect_target()
