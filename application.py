@@ -172,7 +172,7 @@ def signup():
             if username is not "" or password is not "" or safeword is not "" and \
                     safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
                 if(User.objects(username=username)):
-                    flask.flash("Username already taken")
+                    flash("Username already taken")
                     next = get_redirect_target()
                     return redirect(url_for('signup', next=next))
                 elif(safeword == str(environ.get('safeword'))):
@@ -182,10 +182,10 @@ def signup():
                     return redirect(redirect_back('home', next=next))
                 else:
                     next = get_redirect_target()
-                    flask.flash("safeword was incorrect, could not create account")
+                    flash("safeword was incorrect, could not create account")
                     return redirect(url_for('signup', next=next))
             else:
-                flask.flash("username, password or safeword cannot be empty")
+                flash("username, password or safeword cannot be empty")
                 next = get_redirect_target()
                 return redirect(url_for('signup', next=next))
     else:
