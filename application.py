@@ -175,7 +175,7 @@ def signup():
                     flask.flash("Username already taken")
                     next = get_redirect_target()
                     return redirect(url_for('signup', next=next))
-                elif(safeword == str(environ.get('safeword')):
+                elif(safeword == str(environ.get('safeword'))):
                     new_user = User.create(username, password)
                     User.authenticate(username, password)
                     next = get_redirect_target()
