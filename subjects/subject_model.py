@@ -9,7 +9,7 @@ class Subject(Document):
     learning_outcomes = ListField(ReferenceField(Learning_Outcome))
     
     def read():
-        return Subject.objects().all_fields.to_json()
+        return Subject.objects().all_fields().to_json()
     
     def index(id):
         o_id = mongo_methods.generate_objectid_from_string(id)
