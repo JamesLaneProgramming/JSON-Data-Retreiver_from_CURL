@@ -701,7 +701,7 @@ def retreive_rubric_assessment():
 @login_required
 def subjects():
     if(request.method == 'GET'):
-        subjects = Subject.read()
+        subjects = json.loads(Subject.read())
         return render_template('subjects.html',
                                subjects=subjects)
     elif(request.method == 'POST'):
