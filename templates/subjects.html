@@ -9,17 +9,15 @@
         <ul>
         {% for each_subject in subjects %}
             <li>
-                <div>
-                    <p> {{each_subject.subject_name}} </p>
-                    <p> {{each_subject.subject_description}} </p>
-                    <ul>
-                    {% for each_learning_outcome in subjects.learning_outcomes %}
-                        <li>
-                        {{each_learning_outcome.learning_outcome_name}}
-                        </li>
-                    {% endfor %}
-                    </ul>
-                </div>
+	        <p> {{each_subject.subject_name}} </p>
+	        <p> {{each_subject.subject_description}} </p>
+	        <ul>
+	        {% for each_learning_outcome in subjects.learning_outcomes %}
+		    <li>
+		    {{each_learning_outcome.learning_outcome_name}}
+		    </li>
+	        {% endfor %}
+	        </ul>
             </li>
         {% endfor %}
         </ul>
