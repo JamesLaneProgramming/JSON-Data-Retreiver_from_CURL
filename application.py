@@ -299,38 +299,41 @@ def refresh_access_token():
         except Exception as error:
             return redirect(url_for('authenticate_hubspot'))
         else:
-            endpoint = "https://api.hubapi.com/oauth/v1/token"
-            headers = {
-                       "Content-Type": "application/x-www-form-urlencoded",
-                       "charset": "utf-8"
-                      }
-            data = {
-                    "grant_type": "refresh_token",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "refresh_token": refresh_token
-                   }
+            if(refresh_token != ""):
+                endpoint = "https://api.hubapi.com/oauth/v1/token"
+                headers = {
+                           "Content-Type": "application/x-www-form-urlencoded",
+                           "charset": "utf-8"
+                          }
+                data = {
+                        "grant_type": "refresh_token",
+                        "client_id": client_id,
+                        "client_secret": client_secret,
+                        "refresh_token": refresh_token
+                       }
 
-            post_request = requests.post(
-                                         endpoint,
-                                         headers=headers,
-                                         data=data
-                                        )
-            try:
-                access_token = post_request.json()['access_token']
-                access_token_expiry = post_request.json()['expires_in']
-            except ValueError as error:
-                print("Post request response did not contain an access token")
-            #KeyError missing access_token
-            except Exception as error:
-                print(post_request.text)
-                raise error
+                post_request = requests.post(
+                                             endpoint,
+                                             headers=headers,
+                                             data=data
+                                            )
+                try:
+                    access_token = post_request.json()['access_token']
+                    access_token_expiry = post_request.json()['expires_in']
+                except ValueError as error:
+                    print("Post request response did not contain an access token")
+                #KeyError missing access_token
+                except Exception as error:
+                    print(post_request.text)
+                    raise error
+                else:
+                    next = get_redirect_target()
+                    response = make_response(redirect_back('home', next=next))
+                    response.set_cookie('hubspot_access_token', access_token)
+                    User.set_access_token_expiry(current_user.id, access_token_expiry)
+                    return response
             else:
-                next = get_redirect_target()
-                response = make_response(redirect_back('home', next=next))
-                response.set_cookie('hubspot_access_token', access_token)
-                User.set_access_token_expiry(current_user.id, access_token_expiry)
-                return response
+                return redirect(url_for('authenticate_hubspot'))
 
 @application.route('/hubspot')
 @login_required
