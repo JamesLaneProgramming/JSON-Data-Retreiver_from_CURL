@@ -112,7 +112,7 @@ def login():
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
             else:
-                return redirect(url_for('signup'), code=302)
+                return redirect(url_for('signup'), next=next, code=302)
     else:
         return render_template('login.html')
 
@@ -169,10 +169,15 @@ def signup():
         else:
             if username is not "" or password is not "" and \
                     safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
-                new_user = User.create(username, password)
-                User.authenticate(username, password)
-                return redirect(redirect_back('home', next=next))
+                if(User.objects(username=username)):
+                    flask.flash("Username already taken")
+                    return redirect(url_for('signup'))
+                else:
+                    new_user = User.create(username, password)
+                    User.authenticate(username, password)
+                    return redirect(redirect_back('home', next=next))
             else:
+                flask.flash("Username or Password cannot be empty")
                 return redirect(url_for('signup'))
     else:
         return render_template('signup.html')
