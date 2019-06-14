@@ -846,10 +846,25 @@ def map_rubric(rubric_id):
     else:
         pass
 
-@application.route('/map_rubric_criterion', methods=['POST'])
+def _build_cors_preflight_response():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add('Access-Control-Allow-Headers', "*")
+    response.headers.add('Access-Control-Allow-Methods', "*")
+    return response
+
+def _corsify_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@application.route('/map_rubric_criterion', methods=['POST', 'OPTIONS'])
 @login_required
 def map_rubric_criterion():
-    print(request.get_data())
+    if(request.method == "OPTIONS"):
+        return _build_cors_preflight_response()
+    elif(request.method == "POST"):
+        return _corsify_response("It Worked")
+        print(request.get_data())
 
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
