@@ -6,21 +6,34 @@
   </head>
   <body>
     <div class="container">
-	    <ul>
-		{% for criterion in criteria['data'] %}
-	    	<li>
-			<p> {{criterion['description']}} </p>
-			<select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
-			<!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
-			<!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
-			{% for each_learning_outcome in learning_outcomes %}
-				<option value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
-			{% endfor %}
-			</select>
-		</li>
-		{% endfor %}
+      <ul>
+      {% for criterion in criteria['data'] %}
+        <li>
+          <form id='criterion_map'>
+            <p> {{criterion['description']}} </p>
+	    <select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
+	    <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
+	    <!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
+	    {% for each_learning_outcome in learning_outcomes %}
+	      <option value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
+	    {% endfor %}
+	    </select>
+          </form>
+        </li>
+	{% endfor %}
+        <button type="Submit">Map</button
       </ul>
-      <input class="btn btn-default" type="submit" value="Create">
     </div>
   </body>
 </html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+  function map_rubric() {
+    var forms = getElementsById('criterion_map');
+    for each (form in forms) {
+      var formData = new FormData(form);
+      xhr.open('POST', 'https://canvas-integration.herokuapp.com/map_rubric_criterion', true)
+      xhr.send(formData)
+    }
+  } 
+</script>

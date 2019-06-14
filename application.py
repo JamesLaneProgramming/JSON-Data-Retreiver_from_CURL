@@ -844,8 +844,12 @@ def map_rubric(rubric_id):
                         learning_outcomes=learning_outcomes
                         )
     else:
-        #Handle the mappings and safe to db as mapping document.
         pass
+
+@application.route('/map_rubric_criterion', methods=['POST'])
+@login_required
+def map_rubric_criterion():
+    print(request.get_data())
 
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
