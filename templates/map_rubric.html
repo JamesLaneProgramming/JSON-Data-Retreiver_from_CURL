@@ -21,14 +21,12 @@
           </form>
         </li>
 	{% endfor %}
-        <button type="Button" onclick="map_rubric()">Map</button
+        <button onclick="mapRubric()">Map</button>
       </ul>
     </div>
-  </body>
-</html>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script>
-  function map_rubric() {
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+  function mapRubric() {
     var forms = getElementsById('criterion_map');
     for each (form in forms) {
       var formData = new FormData(form);
@@ -36,4 +34,7 @@
       xhr.send(formData)
     }
   } 
-</script>
+  </script>
+  </body>
+</html>
+
