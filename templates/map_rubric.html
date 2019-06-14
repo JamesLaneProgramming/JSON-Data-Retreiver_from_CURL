@@ -4,23 +4,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
   </head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+    function mapRubric() {
+      var forms = document.getElementsByClassName('criterion_mapping');
+      var iterator;
+      let xhr = new XMLHttpRequest();
+      for (iterator = 0; iterator < forms.length; iterator++) {
+        var formData = new FormData(forms[iterator]);
+        xhr.open('POST', 'https://canvas-integration.herokuapp.com/map_rubric_criterion', true);
+	xhr.setRequestHeader('X-PINGOTHER', 'pingpong');
+        xhr.send(formData);
+      }
+    } 
+  </script>
   <body>
     <div class="container">
-	    <ul>
-		{% for criterion in criteria['data'] %}
-	    	<li>
-			<p> {{criterion['description']}} </p>
-			<select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
-			<!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
-			<!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
-			{% for each_learning_outcome in learning_outcomes %}
-				<option value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
-			{% endfor %}
-			</select>
-		</li>
-		{% endfor %}
+      <ul>
+      {% for criterion in criteria['data'] %}
+        <li>
+          <form class='criterion_mapping'>
+            <p> {{criterion['description']}} </p>
+	    <select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
+	    <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
+	    <!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
+	    {% for each_learning_outcome in learning_outcomes %}
+	      <option value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
+	    {% endfor %}
+	    </select>
+          </form>
+        </li>
+	{% endfor %}
+        <button onclick="mapRubric()">Map</button>
       </ul>
-      <input class="btn btn-default" type="submit" value="Create">
     </div>
   </body>
 </html>
+

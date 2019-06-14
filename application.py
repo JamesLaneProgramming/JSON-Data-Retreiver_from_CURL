@@ -34,6 +34,7 @@ from flask import Flask, flash, render_template, request, abort, redirect, \
     url_for, make_response, send_from_directory, copy_current_request_context, \
     has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
@@ -48,6 +49,8 @@ from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
 
 application = Flask(__name__, template_folder='templates')
+CORS(application)
+#Cross origin requests can be enabled for resources using the @cross_origin decorator method
 
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
@@ -701,7 +704,7 @@ def retreive_rubric_assessment():
 @login_required
 def subjects():
     if(request.method == 'GET'):
-        subjects = Subject.read()
+        subjects = json.loads(Subject.read())
         learning_outcomes = json.loads(Learning_Outcome.read())
         return render_template('subjects.html',
                                subjects=subjects,
@@ -844,8 +847,27 @@ def map_rubric(rubric_id):
                         learning_outcomes=learning_outcomes
                         )
     else:
-        #Handle the mappings and safe to db as mapping document.
         pass
+
+def _build_cors_preflight_response():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add('Access-Control-Allow-Headers', "*")
+    response.headers.add('Access-Control-Allow-Methods', "*")
+    return response
+
+def _corsify_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@application.route('/map_rubric_criterion', methods=['POST', 'OPTIONS'])
+@login_required
+def map_rubric_criterion():
+    if(request.method == "OPTIONS"):
+        return _build_cors_preflight_response()
+    elif(request.method == "POST"):
+        return _corsify_response("It Worked")
+        print(request.get_data())
 
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
