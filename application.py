@@ -34,6 +34,7 @@ from flask import Flask, flash, render_template, request, abort, redirect, \
     url_for, make_response, send_from_directory, copy_current_request_context, \
     has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
@@ -48,6 +49,8 @@ from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
 
 application = Flask(__name__, template_folder='templates')
+CORS(application)
+#Cross origin requests can be enabled for resources using the @cross_origin decorator method
 
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
