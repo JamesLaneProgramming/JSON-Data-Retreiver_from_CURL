@@ -866,7 +866,7 @@ def map_rubric_criterion():
     if(request.method == "OPTIONS"):
         return _build_cors_preflight_response()
     elif(request.method == "POST"):
-        return _corsify_response("It Worked")
+        return _corsify_response(make_response("It Worked"))
         print(request.get_data())
 
 @application.route('/assessments', methods=['GET', 'POST'])
