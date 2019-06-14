@@ -13,7 +13,7 @@
       for (iterator = 0; iterator < forms.length; iterator++) {
         var formData = new FormData(forms[iterator]);
         xhr.open('POST', 'https://canvas-integration.herokuapp.com/map_rubric_criterion', true);
-	invocation.setRequestHeader('X-PINGOTHER', 'pingpong');
+	xhr.setRequestHeader('X-PINGOTHER', 'pingpong');
         xhr.send(formData);
       }
     } 
