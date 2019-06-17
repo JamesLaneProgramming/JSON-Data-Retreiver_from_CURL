@@ -858,7 +858,7 @@ def map_rubric(rubric_id):
                         )
     else:
         try:
-            rubric_mapping = request.values.getall('subject_learning_outcomes_field[]')
+            rubric_mapping = request.values.to_dict()
             print(rubric_mapping)
         except Exception as error:
             raise error
