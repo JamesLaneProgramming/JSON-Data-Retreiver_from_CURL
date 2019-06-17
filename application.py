@@ -851,7 +851,6 @@ def map_rubric(rubric_id):
             else:
                 #Generate dictionary of rubric_data criterion. ID and Name
                 learning_outcomes = json.loads(Learning_Outcome.read())
-                print("Criteria", criteria)
                 return render_template(
                         'map_rubric.html',
                         criteria=criteria,
@@ -919,37 +918,15 @@ def map_rubric_data(submission_data):
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
             best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
-            print(best_fit_student.json())
             student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
             print("This student does not have a rubric_assessment")
             pass
         else:
-            '''
-            learning_outcome_count = 0
-            grade_total = 0
-            shared_outcome_total = 0
-            learning_outcomes_data = {}
-            learning_outcome_data[str(student_name)] = {}a
             for each, value in submission_rubric_assessment.items():
                 print(each, value)
-                grade_total = grade_total + value['points']
-                learning_outcome_data[str(student_name)][each] = value['points']
-                if(learning_outcome_count == 14):
-                    grades[str(student_name) + ' CMP1043'] = grade_total
-                    grade_total = 0
-                if(learning_outcome_count == 35):
-                    grades[str(student_name) + ' PRG1006'] = grade_total
-                    grade_total = 0
-                if(learning_outcome_count == 37):
-                    print(each, value)
-                    grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
-                    grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
-                learning_outcome_count = learning_outcome_count + 1
-            print(learning_outcome_data)
-            '''
-    print(grades)
-    return grades
+                if(each == Assignment_Mapping.objects(criterion_id=each)):
+                    print("Mapping Found")
 
 '''
 submission = submission_object(
