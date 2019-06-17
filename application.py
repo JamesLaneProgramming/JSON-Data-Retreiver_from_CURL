@@ -693,22 +693,25 @@ def retreive_rubric_assessment():
         return render_template('rubric_data.html')
     elif(request.method == 'POST'):
         try:
-            course_ID = str(request.values.get('course_id'))
-            assessment_ID = str(request.values.get('assessment_id'))
+            course_id = str(request.values.get('course_id'))
+            assignment_id = str(request.values.get('assessment_id'))
         #Handle Conversion error.
         except Exception as error:
             raise error
         else:
-            if(course_ID is not None and assessment_ID is not None):
+            if(course_id is not None and assignment_id is not None):
                 try:
-                    rubric_data = extract_rubric_data(course_ID, assessment_ID)
+                    rubric_data = extract_rubric_data(course_id, assignment_id)
                 except Exception as error:
                     print("Unexpected error in extract_rubric_data method")
                 else:
                     if(rubric_data is not None):
-                    learning_outcomes = json.loads(Learning_Outcomes.read())
+                        criteria = rubric_data['rubric_assessment']
+                        learning_outcomes = json.loads(Learning_Outcomes.read())
                         return render_template(
                             'map_rubric_assessment.html',
+                            course_id=course_id,
+                            assignment_id=assignment_id,
                             criteria=rubric_data['rubric_assessment'],
                             learning_outcomes=learning_outcomes
                         )
