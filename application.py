@@ -867,7 +867,7 @@ def map_rubric(rubric_id):
 @login_required
 def map_criterion():
     if(request.method == 'POST'):
-        print(request.form['subject_learning_outcome_field'])
+        print(request.form['subject_learning_outcome_field[]'])
 
 def _build_cors_preflight_response():
     response = make_response()
