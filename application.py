@@ -84,13 +84,14 @@ def load_user(user_id):
 
 @application.route('/mail')
 def send_simple_message():
-    return requests.post(
+    mail_request = requests.post(
         "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
         auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
         data={"from": "Excited User <mailgun@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
             "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
             "subject": "Hello",
             "text": "Testing some Mailgun awesomness!"})
+    return mail_request.text
 
 def main():
     scheduler = BackgroundScheduler()
