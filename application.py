@@ -706,7 +706,7 @@ def retreive_rubric_assessment():
                     print("Unexpected error in extract_rubric_data method")
                 else:
                     if(rubric_data is not None):
-                        #print(map_rubric_data(rubric_data.json()))
+                        print(map_rubric_data(rubric_data.json()))
                         return(rubric_data.text)
             else:
                 print('Invalid or missing arguments parsed')
@@ -911,6 +911,7 @@ def assessments():
 #TODO: Refactor with new rubric mapping workflow.
 def map_rubric_data(submission_data):
     grades = {}
+    assignment_mappings = json.loads(Assignment_Mapping.read())
     for each_submission_item in submission_data:
         try:
             submission_ID = each_submission_item['id']
@@ -929,8 +930,9 @@ def map_rubric_data(submission_data):
             grade_total = 0
             shared_outcome_total = 0
             learning_outcomes_data = {}
-            learning_outcome_data[str(student_name)] = {}
+            learning_outcome_data[str(student_name)] = {}a
             for each, value in submission_rubric_assessment.items():
+                print(each, value)
                 grade_total = grade_total + value['points']
                 learning_outcome_data[str(student_name)][each] = value['points']
                 if(learning_outcome_count == 14):
