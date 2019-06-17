@@ -846,6 +846,7 @@ def map_rubric(rubric_id):
             try:
                 rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
                 criteria = rubric_data.json()
+                print(criteria)
             except Exception as error:
                 raise error
             else:
