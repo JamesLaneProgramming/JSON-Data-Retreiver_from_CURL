@@ -649,7 +649,7 @@ def get_student_id_list_from_assignment_override_object(override_object,
         group_id = override_object['group_id']
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/groups/{0}/users'.format(group_id)
-        group_request = canvas_API_request(domain + endpoint)
+        uconsole.log(formData);roup_request = canvas_API_request(domain + endpoint)
         for student in group_request:
             list_of_student_ids.append(student['id'])
     elif 'course_section_id' in override_object:
@@ -858,7 +858,7 @@ def map_rubric(rubric_id):
                         )
     else:
         try:
-            rubric_mapping = request.values
+            rubric_mapping = request.values.getall('subject_learning_outcomes_field[]')
             print(rubric_mapping)
         except Exception as error:
             raise error
