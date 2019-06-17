@@ -706,14 +706,13 @@ def retreive_rubric_assessment():
                     print("Unexpected error in extract_rubric_data method")
                 else:
                     if(rubric_data is not None):
-                        criteria = rubric_data.json()
-                        print(criteria)
+                        submissions = rubric_data.json()
                         learning_outcomes = json.loads(Learning_Outcome.read())
                         return render_template(
                             'map_rubric_assessment.html',
                             course_id=course_id,
                             assignment_id=assignment_id,
-                            criteria=criteria,
+                            submissions=submissions,
                             learning_outcomes=learning_outcomes
                         )
             else:
