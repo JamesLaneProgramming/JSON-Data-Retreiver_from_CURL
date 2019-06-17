@@ -27,6 +27,9 @@
 	  <p> {{criterion['description']}} </p>
           <form action="/map_criterion" class='criterion_mapping' method='post'>
 	    <select multiple name="subject_learning_outcomes_field[]">
+	    {% for key in criterion.keys() %}
+	      <input type="hidden" name="criterion_id" value={{key}}>
+	    {% endfor %}
 	    <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
 	    <!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
 	    {% for each_learning_outcome in learning_outcomes %}

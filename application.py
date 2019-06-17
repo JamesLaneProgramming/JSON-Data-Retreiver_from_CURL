@@ -867,7 +867,17 @@ def map_rubric(rubric_id):
 @login_required
 def map_criterion():
     if(request.method == 'POST'):
-        print(request.form['subject_learning_outcomes_field[]'])
+        try:
+            learning_outcome_list = request.form.getlist(['subject_learning_outcomes_field[]'])
+        except Exception as error:
+            raise error
+        else:
+            selected_learning_outcomes = []
+            for learning_outcome in learning_outcome_list:
+                selected_learning_outcomes.append(Learning_Outcome.index(learning_outcome))
+            print(selected_learning_outcomes)
+        
+
 
 def _build_cors_preflight_response():
     response = make_response()
