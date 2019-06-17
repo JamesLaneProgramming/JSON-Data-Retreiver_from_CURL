@@ -708,7 +708,7 @@ def retreive_rubric_assessment():
                     if(rubric_data is not None):
                         criteria = rubric_data.json()
                         print(criteria)
-                        learning_outcomes = json.loads(Learning_Outcomes.read())
+                        learning_outcomes = json.loads(Learning_Outcome.read())
                         return render_template(
                             'map_rubric_assessment.html',
                             course_id=course_id,
