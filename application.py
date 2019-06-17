@@ -859,7 +859,7 @@ def map_rubric(rubric_id):
                         )
     else:
         try:
-            rubric_mapping = request.data
+            rubric_mapping = request.values
             print(rubric_mapping)
         except Exception as error:
             raise error
