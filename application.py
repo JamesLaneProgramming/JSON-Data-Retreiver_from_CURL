@@ -864,7 +864,7 @@ def map_rubric(rubric_id):
 def map_criterion():
     if(request.method == 'POST'):
         try:
-            learning_outcome_list = request.form.getlist(['subject_learning_outcomes_field[]'])
+            learning_outcome_list = request.form.getlist('subject_learning_outcomes_field[]')
             criterion_id = request.form['criterion_id']
         except Exception as error:
             raise error
