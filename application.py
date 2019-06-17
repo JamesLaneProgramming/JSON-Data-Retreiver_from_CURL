@@ -87,7 +87,7 @@ def send_simple_message():
     mail_request = requests.post(
         "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
         auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
-        data={"from": "Excited User <mailgun@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
+        data={"from": "Excited User <postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
             "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
             "subject": "Hello",
             "text": "Testing some Mailgun awesomness!"})
@@ -858,7 +858,11 @@ def map_rubric(rubric_id):
                         learning_outcomes=learning_outcomes
                         )
     else:
-        pass
+        try:
+            rubric_mapping = request.data
+            print(rubric_mapping)
+        except Exception as error:
+            raise error
 
 def _build_cors_preflight_response():
     response = make_response()
