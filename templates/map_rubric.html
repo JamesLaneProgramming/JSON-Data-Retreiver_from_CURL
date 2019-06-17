@@ -24,8 +24,8 @@
       <ul>
       {% for criterion in criteria['data'] %}
         <li>
+	  <p> {{criterion['description']}} </p>
           <form action="/map_criterion" class='criterion_mapping' method='post'>
-            <p> {{criterion['description']}} </p>
 	    <select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
 	    <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
 	    <!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->

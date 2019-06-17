@@ -867,7 +867,7 @@ def map_rubric(rubric_id):
 @login_required
 def map_criterion():
     if(request.method == 'POST'):
-        print(request.values.to_dict())
+        print(request.get_json(force=True))
 
 def _build_cors_preflight_response():
     response = make_response()
