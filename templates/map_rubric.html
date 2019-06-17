@@ -24,7 +24,7 @@
       <ul>
       {% for criterion in criteria['data'] %}
         <li>
-          <form class='criterion_mapping'>
+          <form action="" class='criterion_mapping' method='post'>
             <p> {{criterion['description']}} </p>
 	    <select multiple name="subject_learning_outcomes_field[]" form='subject_form'>
 	    <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
