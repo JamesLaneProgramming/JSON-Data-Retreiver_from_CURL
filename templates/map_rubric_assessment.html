@@ -22,7 +22,8 @@
   <body>
     <div class="container">
       <ul>
-      {% for criterion_id, criterion_values in criteria.items() %}
+      {% for submission in submissions %}
+        {% for criterion_id, criterion_values in submission['rubric_assessment'] %}
         <li>
 	  <p> {{criterion_id}} </p>
           <form action="/map_criterion" class='criterion_mapping' method='post'>

@@ -713,7 +713,7 @@ def retreive_rubric_assessment():
                             'map_rubric_assessment.html',
                             course_id=course_id,
                             assignment_id=assignment_id,
-                            criteria=rubric_data['rubric_assessment'],
+                            criteria=criteria,
                             learning_outcomes=learning_outcomes
                         )
             else:
