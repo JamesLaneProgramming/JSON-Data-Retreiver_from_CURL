@@ -863,6 +863,12 @@ def map_rubric(rubric_id):
         except Exception as error:
             raise error
 
+@application.route('/map_criterion', methods=['POST'])
+@login_required
+def map_criterion()
+    if(request.method == 'POST'):
+        print(request.values.to_dict())
+
 def _build_cors_preflight_response():
     response = make_response()
     response.headers.add("Access-Control-Allow-Origin", "*")
