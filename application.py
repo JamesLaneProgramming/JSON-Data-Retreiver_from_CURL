@@ -706,8 +706,12 @@ def retreive_rubric_assessment():
                     print("Unexpected error in extract_rubric_data method")
                 else:
                     if(rubric_data is not None):
-                        print(map_rubric_data(rubric_data.json()))
-                        return(rubric_data.text)
+                    learning_outcomes = json.loads(Learning_Outcomes.read())
+                        return render_template(
+                            'map_rubric_assessment.html',
+                            criteria=rubric_data['rubric_assessment'],
+                            learning_outcomes=learning_outcomes
+                        )
             else:
                 print('Invalid or missing arguments parsed')
                 return render_template('rubric_data.html')
@@ -858,6 +862,15 @@ def map_rubric(rubric_id):
                         learning_outcomes=learning_outcomes
                         )
     else:
+        pass
+
+@application.route('/map_rubric_assessment', methods=['GET', 'POST'])
+@login_required
+def map_rubric_assessment():
+    if(request.method == 'GET'):
+        learning_outcomes = json.loads(Learning_Outcome.read())
+        
+    elif(request.method == 'POST'):
         pass
 
 @application.route('/map_criterion', methods=['POST'])
