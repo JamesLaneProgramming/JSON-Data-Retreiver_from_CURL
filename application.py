@@ -857,11 +857,7 @@ def map_rubric(rubric_id):
                         learning_outcomes=learning_outcomes
                         )
     else:
-        try:
-            rubric_mapping = request.values.to_dict()
-            print(rubric_mapping)
-        except Exception as error:
-            raise error
+        pass
 
 @application.route('/map_criterion', methods=['POST'])
 @login_required
@@ -869,15 +865,16 @@ def map_criterion():
     if(request.method == 'POST'):
         try:
             learning_outcome_list = request.form.getlist(['subject_learning_outcomes_field[]'])
+            criterion_id = request.form['criterion_id']
         except Exception as error:
             raise error
         else:
             selected_learning_outcomes = []
-            for learning_outcome in learning_outcome_list:
-                selected_learning_outcomes.append(Learning_Outcome.index(learning_outcome))
-            print(selected_learning_outcomes)
-        
-
+            for learning_outcome_id in learning_outcome_list:
+                learning_outcome = Learning_Outcome.index(learning_outcome_id)
+                selected_learning_outcomes.append(learning_outcome)
+            new_assignment_mapping = Assignment_Mapping(criterion_id, selected_learning_outcomes).save()
+        return "Success"
 
 def _build_cors_preflight_response():
     response = make_response()
