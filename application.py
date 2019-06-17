@@ -865,7 +865,7 @@ def map_rubric(rubric_id):
 
 @application.route('/map_criterion', methods=['POST'])
 @login_required
-def map_criterion()
+def map_criterion():
     if(request.method == 'POST'):
         print(request.values.to_dict())
 
