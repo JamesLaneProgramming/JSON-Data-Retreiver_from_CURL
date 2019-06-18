@@ -707,13 +707,17 @@ def retreive_rubric_assessment():
                 else:
                     if(rubric_data is not None):
                         submissions = rubric_data.json()
+                        criteria = []
+                        for submission in submissions:
+                            for criterion_id in submission['rubric_assessment'].keys():
+                                criteria.append(criterion_id)
                         print(submissions)
                         learning_outcomes = json.loads(Learning_Outcome.read())
                         return render_template(
                             'map_rubric_assessment.html',
                             course_id=course_id,
                             assignment_id=assignment_id,
-                            submissions=submissions,
+                            criteria=criteria,
                             learning_outcomes=learning_outcomes
                         )
             else:
