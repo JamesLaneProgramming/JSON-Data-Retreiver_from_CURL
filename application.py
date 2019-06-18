@@ -741,11 +741,21 @@ def retreive_rubric_assessment():
                                             learning_outcome_ids,
                                             float(criterion_values['points'])).save()
                                 except Exception as error:
+                                    #1 canvas user not graded, handle error
                                     print("Error: ", error)
                             return "Finished"
             else:
                 print('Invalid or missing arguments parsed')
                 return redirect(url_for('retreive_rubric_assessment'))
+
+@application.route('/student_subject_grades', methods=['GET'])
+@login_required
+def student_subject_grades()
+    if(request.method == 'GET'):
+        grades = Grades.objects().distinct(field="canvas_user_id").only('canvas_user_id')
+        for each in Enrollment.objects(canvas_user_id__in=grades):
+            print(each)
+        return "Success"
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
