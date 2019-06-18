@@ -733,7 +733,9 @@ def retreive_rubric_assessment():
                                 try:
                                     for criterion_id, criterion_values in submissions[i]['rubric_assessment'].items():
                                         learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id).only('learning_outcomes')
-                                        grade = Grade(submissions[i]['user_id'], learning_outcomes, criterion_values['points']).save()
+                                        grade = Grade(str(submissions[i]['user_id']),
+                                            learning_outcomes,
+                                            float(criterion_values['points'])).save()
                                 except Exception as error:
                                     print(error)
                             return "Finished"
