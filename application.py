@@ -755,7 +755,9 @@ def student_subject_grades():
     if(request.method == 'GET'):
         try:
             distinct_graded_users = Grade.objects().distinct('user_id')
+            print(distinct_graded_users)
             for user in distinct_graded_users:
+                print(user)
                 grades = Grade.objects(canvas_user_id=user.user_id)
                 subject_grade = grades.sum('points')
                 print(subject_grade)
