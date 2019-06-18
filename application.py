@@ -708,22 +708,32 @@ def retreive_rubric_assessment():
                     if(rubric_data is not None):
                         submissions = rubric_data.json()
                         criteria = []
-                        #for i in range(0, len(submissions)):
                         for i in range(0, 1):
-                            print(submissions[i].keys())
                             try:
                                 for criterion_id in submissions[i]['rubric_assessment'].keys():
-                                    criteria.append(criterion_id)
+                                    if(Assignment_Mapping.objects(criterion_id=criterion_id).count() == 0):
+                                        criteria.append(criterion_id)
+                                    else:
+                                        print('Criteria: {0}, is already mapped'.format(criterion_id))
                             except Exception as error:
                                 print(error)
-                        learning_outcomes = json.loads(Learning_Outcome.read())
-                        return render_template(
-                            'map_rubric_assessment.html',
-                            course_id=course_id,
-                            assignment_id=assignment_id,
-                            criteria=criteria,
-                            learning_outcomes=learning_outcomes
-                        )
+                        if(len(criteria) != 0):
+                            learning_outcomes = json.loads(Learning_Outcome.read())
+                            return render_template(
+                                'map_rubric_assessment.html',
+                                course_id=course_id,
+                                assignment_id=assignment_id,
+                                criteria=criteria,
+                                learning_outcomes=learning_outcomes
+                            )
+                        else:
+                            for i in range(0, len(submissions)):
+                                try:
+                                    for criterion_id, criterion_values in submissions[i]['rubric_assessment'].items():
+                                        learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id).only('learning_outcomes')
+                                        grade = Grade(submissions[i]['user_id'], learning_outcomes, criterion_values['points']).save()
+                                except Exception as error:
+                                    print(error)
             else:
                 print('Invalid or missing arguments parsed')
                 return render_template('rubric_data.html')
