@@ -750,7 +750,7 @@ def retreive_rubric_assessment():
 
 @application.route('/student_subject_grades', methods=['GET'])
 @login_required
-def student_subject_grades()
+def student_subject_grades():
     if(request.method == 'GET'):
         grades = Grades.objects().distinct(field="canvas_user_id").only('canvas_user_id')
         for each in Enrollment.objects(canvas_user_id__in=grades):
