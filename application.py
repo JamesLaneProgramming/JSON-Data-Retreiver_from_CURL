@@ -48,6 +48,7 @@ from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
 from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
+from grades.grade_model import Grade
 
 application = Flask(__name__, template_folder='templates')
 CORS(application)
