@@ -758,7 +758,7 @@ def student_subject_grades():
             print(distinct_graded_users)
             for user in distinct_graded_users:
                 print(user)
-                grades = Grade.objects(canvas_user_id=user)
+                grades = Grade.objects(user_id=user)
                 subject_grade = grades.sum('points')
                 print(subject_grade)
             return "Success"

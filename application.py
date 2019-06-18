@@ -756,11 +756,17 @@ def student_subject_grades():
         try:
             distinct_graded_users = Grade.objects().distinct('user_id')
             print(distinct_graded_users)
+            subjects = Subject.objects()
             for user in distinct_graded_users:
-                print(user)
-                grades = Grade.objects(canvas_user_id=user)
-                subject_grade = grades.sum('points')
-                print(subject_grade)
+                for subject in subjects:
+                    print('subject: ', subject)
+                    user_grades = Grade.objects(user_id=user, learning_outcomes__in=subject.learning_outcomes)
+                    for grade in user_grades:
+                        print('Grade: ', grade)
+                        print('Subject Grade: ', grade.sum('points')
+                        Subject_Grade(user_id=user, grade=user_grades.sum('points')).save()
+                print(subject_grades)
+
             return "Success"
         except Exception as error:
             print(error)
