@@ -766,7 +766,7 @@ def student_subject_grades():
                         for learning_outcome in grade.learning_outcomes:
                             print(learning_outcome)
                             print(subject.learning_outcomes)
-                            if(learning_outcome in subject.learning_outcomes):
+                            if(learning_outcome in subject.learning_outcomes.only('id')):
                                 subject_grade += grade.points
                                 print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
                     subject_grades = Subject_Grade(user_id=user, grade=subject_grade).save()
