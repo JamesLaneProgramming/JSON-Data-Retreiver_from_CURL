@@ -732,9 +732,12 @@ def retreive_rubric_assessment():
                             for i in range(0, len(submissions)):
                                 try:
                                     for criterion_id, criterion_values in submissions[i]['rubric_assessment'].items():
-                                        learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id).only('learning_outcomes')
+                                        learning_outcome_ids = []
+                                        assignment_mapping_learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id).only('learning_outcomes')
+                                        for assignment_mapping_learning_outcome in assignment_mapping_learning_outcomes:
+                                            learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome['$oid']))
                                         grade = Grade(str(submissions[i]['user_id']),
-                                            learning_outcomes,
+                                            learning_outcomes_ids,
                                             float(criterion_values['points'])).save()
                                 except Exception as error:
                                     print(error)
