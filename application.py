@@ -735,6 +735,7 @@ def retreive_rubric_assessment():
                                         learning_outcome_ids = []
                                         print(criterion_id, criterion_values)
                                         assignment_mapping_learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id).only('learning_outcomes')
+                                        print("Assignment_Mapping_Learning_Outcomes: ", assignment_mapping_learning_outcomes)
                                         for assignment_mapping_learning_outcome in assignment_mapping_learning_outcomes:
                                             learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome['$oid']))
                                         grade = Grade(str(submissions[i]['user_id']),
