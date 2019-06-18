@@ -738,8 +738,8 @@ def retreive_rubric_assessment():
                                         print("COUNT", assignment_mapping_learning_outcomes.count())
                                         for assignment_mapping_learning_outcome in assignment_mapping_learning_outcomes:
                                             print(assignment_mapping_learning_outcome)
-                                            print(assignment_mapping_learning_outcome._id)
-                                            learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome._id))
+                                            print(assignment_mapping_learning_outcome.id)
+                                            learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome.id))
                                         grade = Grade(str(submissions[i]['user_id']),
                                             learning_outcomes_ids,
                                             float(criterion_values['points'])).save()
