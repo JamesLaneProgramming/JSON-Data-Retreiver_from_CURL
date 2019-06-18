@@ -708,7 +708,7 @@ def retreive_rubric_assessment():
                     if(rubric_data is not None):
                         submissions = rubric_data.json()
                         criteria = []
-                        for (i = 0; i < submissions.length; i++):
+                        for i in range(0, submissions.length):
                             print(submissions[i])
                             for criterion_id in submissions[i]['rubric_assessment'].keys():
                                 criteria.append(criterion_id)
