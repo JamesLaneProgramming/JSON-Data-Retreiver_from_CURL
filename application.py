@@ -704,6 +704,7 @@ def retreive_rubric_assessment():
                     rubric_data = extract_rubric_data(course_id, assignment_id)
                 except Exception as error:
                     print("Unexpected error in extract_rubric_data method")
+                    return abort(500)
                 else:
                     if(rubric_data is not None):
                         submissions = rubric_data.json()
@@ -734,9 +735,10 @@ def retreive_rubric_assessment():
                                         grade = Grade(submissions[i]['user_id'], learning_outcomes, criterion_values['points']).save()
                                 except Exception as error:
                                     print(error)
+                            return "Finished"
             else:
                 print('Invalid or missing arguments parsed')
-                return render_template('rubric_data.html')
+                return redirect(url_for('retreive_rubric_assessment'))
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
