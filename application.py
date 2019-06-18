@@ -752,10 +752,14 @@ def retreive_rubric_assessment():
 @login_required
 def student_subject_grades():
     if(request.method == 'GET'):
-        grades = Grades.objects().distinct(field="canvas_user_id").only('canvas_user_id')
-        for each in Enrollment.objects(canvas_user_id__in=grades):
-            print(each)
-        return "Success"
+        try:
+            grades = Grade.objects().distinct(field="canvas_user_id").only('canvas_user_id')
+            for each in Enrollment.objects(canvas_user_id__in=grades):
+                print(each)
+            return "Success"
+        except Exception as error:
+            print(error)
+            return error
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
