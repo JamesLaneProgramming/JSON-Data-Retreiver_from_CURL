@@ -763,7 +763,7 @@ def student_subject_grades():
                     user_grades = Grade.objects(user_id=user, learning_outcomes__in=subject.learning_outcomes)
                     for grade in user_grades:
                         print('Grade: ', grade)
-                        print('Subject Grade: ', grade.sum('points')
+                        print('Subject Grade: ', grade.sum('points'))
                         Subject_Grade(user_id=user, grade=user_grades.sum('points')).save()
                 print(subject_grades)
 
