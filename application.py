@@ -754,7 +754,7 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            distinct_graded_users = Grade.objects().distinct(field="canvas_user_id")
+            distinct_graded_users = Grade.objects().distinct('canvas_user_id')
             for user in distinct_graded_users:
                 subject_grade = user.sum('points')
                 print(subject_grade)
