@@ -733,6 +733,7 @@ def retreive_rubric_assessment():
                                 try:
                                     for criterion_id, criterion_values in submissions[i]['rubric_assessment'].items():
                                         learning_outcome_ids = []
+                                        print(criterion_id, criterion_values)
                                         assignment_mapping_learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id).only('learning_outcomes')
                                         for assignment_mapping_learning_outcome in assignment_mapping_learning_outcomes:
                                             learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome['$oid']))
@@ -740,7 +741,7 @@ def retreive_rubric_assessment():
                                             learning_outcomes_ids,
                                             float(criterion_values['points'])).save()
                                 except Exception as error:
-                                    print(error)
+                                    print("Error: ", error)
                             return "Finished"
             else:
                 print('Invalid or missing arguments parsed')
