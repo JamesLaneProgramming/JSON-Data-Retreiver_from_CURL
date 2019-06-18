@@ -34,6 +34,7 @@ from flask import Flask, flash, render_template, request, abort, redirect, \
     url_for, make_response, send_from_directory, copy_current_request_context, \
     has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
@@ -42,12 +43,17 @@ from canvas_module import enroll_canvas_student, extract_rubric_data, search_stu
 from users.user_model import User
 from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
+from assignment_mapping.assignment_mapping_model import Assignment_Mapping
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
 from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
+from grades.grade_model import Grade
+from subject_grades.subject_grade_model import Subject_Grade
 
 application = Flask(__name__, template_folder='templates')
+CORS(application)
+#Cross origin requests can be enabled for resources using the @cross_origin decorator method
 
 #Set application secret key to secure against CSRF
 application.secret_key = 'super secret key'
@@ -79,13 +85,24 @@ login_manager.init_app(application)
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
+@application.route('/mail')
+def send_simple_message():
+    mail_request = requests.post(
+        "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
+        auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
+        data={"from": "Excited User <postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
+            "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
+            "subject": "Hello",
+            "text": "Testing some Mailgun awesomness!"})
+    return mail_request.text
+
 def main():
-    #scheduler = BackgroundScheduler()
-    #scheduler.add_job(check_overdue_assignments, 'interval', minutes=2)
-    #scheduler.start()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=check_overdue_assignments, trigger="interval", days=1)
+    scheduler.start()
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
-    application.run(host='0.0.0.0', port=port)
+    application.run(host='0.0.0.0', port=port, use_reloader=False)
     #Set up Flask Scheduler.
 
 @application.route('/')
@@ -112,7 +129,8 @@ def login():
                 next = get_redirect_target()
                 return redirect_back('home', next=next)
             else:
-                return redirect(url_for('signup'), code=302)
+                next = get_redirect_target()
+                return redirect(url_for('signup'), next=next)
     else:
         return render_template('login.html')
 
@@ -164,16 +182,29 @@ def signup():
         try:
             username = str(request.form['username'])
             password = str(request.form['password'])
+            safeword = str(request.form['safeword'])
         except Exception as error:
             raise error
         else:
-            if username is not "" or password is not "" and \
-                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8')):
-                new_user = User.create(username, password)
-                User.authenticate(username, password)
-                return redirect(redirect_back('home', next=next))
+            if username is not "" or password is not "" or safeword is not "" and \
+                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
+                if(User.objects(username=username)):
+                    flash("Username already taken")
+                    next = get_redirect_target()
+                    return redirect(url_for('signup', next=next))
+                elif(safeword == str(environ.get('safeword'))):
+                    new_user = User.create(username, password)
+                    User.authenticate(username, password)
+                    next = get_redirect_target()
+                    return redirect_back('home', next=next)
+                else:
+                    next = get_redirect_target()
+                    flash("safeword was incorrect, could not create account")
+                    return redirect(url_for('signup', next=next))
             else:
-                return redirect(url_for('signup'))
+                flash("username, password or safeword cannot be empty")
+                next = get_redirect_target()
+                return redirect(url_for('signup', next=next))
     else:
         return render_template('signup.html')
 
@@ -205,6 +236,7 @@ def require_hubspot_signature_validation(func):
                     print("Hubspot Signature Verified")
                     return func(*args, **kwargs)
                 else:
+                    print(hubspot_request_signature, request_signature)
                     print('Unauthenticated')
                     #Replace next line when hubspot works
                     return func(*args, **kwargs)
@@ -213,22 +245,23 @@ def require_hubspot_signature_validation(func):
 def require_hubspot_access_token(func):
     @wraps(func)
     def update_hubspot_access_token(*args, **kwargs):
-        if('hubspot_access_token' not in request.cookies):
+        if request.cookies.get('hubspot_access_token') is None:
             '''
             https://tools.ietf.org/html/rfc6749#section-1.5
             '''
+            print("Hubspot access token not in cookies")
             return redirect(url_for('refresh_access_token'))
         else:
             try:
-                token_expiry = current_user.hubspot_access_token_expiry
-                last_token_refresh = current_user.last_hubspot_access_token_refresh
+                hubspot_access_token_expiry = current_user.hubspot_access_token_expiry
+                last_hubspot_access_token_refresh = current_user.last_hubspot_access_token_refresh
                 '''TODO: Implement logic if access token revolked but expiry is
                 still valid
                 '''
             except Exception as error:
                 print('Could not update cookie with user access token, refreshing access token')
             else:
-                if(current_user.last_hubspot_access_token_refresh + current_user.hubspot_access_expiry > datetime.datetime.utcnow()):
+                if(last_hubspot_access_token_refresh + datetime.timedelta(minutes=hubspot_access_token_expiry) < datetime.datetime.utcnow()):
                     return redirect(url_for('refresh_access_token'))
                 else:
                     return func(*args, **kwargs)
@@ -293,36 +326,41 @@ def refresh_access_token():
         except Exception as error:
             return redirect(url_for('authenticate_hubspot'))
         else:
-            endpoint = "https://api.hubapi.com/oauth/v1/token"
-            headers = {
-                       "Content-Type": "application/x-www-form-urlencoded",
-                       "charset": "utf-8"
-                      }
-            data = {
-                    "grant_type": "refresh_token",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "refresh_token": refresh_token
-                   }
+            if(refresh_token != ""):
+                endpoint = "https://api.hubapi.com/oauth/v1/token"
+                headers = {
+                           "Content-Type": "application/x-www-form-urlencoded",
+                           "charset": "utf-8"
+                          }
+                data = {
+                        "grant_type": "refresh_token",
+                        "client_id": client_id,
+                        "client_secret": client_secret,
+                        "refresh_token": refresh_token
+                       }
 
-            post_request = requests.post(
-                                         endpoint,
-                                         headers=headers,
-                                         data=data
-                                        )
-            try:
-                access_token = post_request.json()['access_token']
-                access_token_expiry = post_request.json()['expires_in']
-            except ValueError as error:
-                print("Post request response did not contain an access token")
-            except Exception as error:
-                raise error
+                post_request = requests.post(
+                                             endpoint,
+                                             headers=headers,
+                                             data=data
+                                            )
+                try:
+                    access_token = post_request.json()['access_token']
+                    access_token_expiry = post_request.json()['expires_in']
+                except ValueError as error:
+                    print("Post request response did not contain an access token")
+                #KeyError missing access_token
+                except Exception as error:
+                    print(post_request.text)
+                    raise error
+                else:
+                    next = get_redirect_target()
+                    response = make_response(redirect_back('home', next=next))
+                    response.set_cookie('hubspot_access_token', access_token)
+                    User.set_access_token_expiry(current_user.id, access_token_expiry)
+                    return response
             else:
-                next = get_redirect_target()
-                response = make_response(redirect_back('home', next=next))
-                response.set_cookie('hubspot_access_token', access_token)
-                User.set_access_token_expiry(current_user.id, access_token_expiry)
-                return response
+                return redirect(url_for('authenticate_hubspot'))
 
 @application.route('/hubspot')
 @login_required
@@ -439,8 +477,11 @@ def upload_provisioning_csv():
             return "Success"
 
 @application.route('/check_overdue', methods=['GET'])
-@login_required
+def check_overdue():
+    check_overdue_assignments()
+
 def check_overdue_assignments():
+    print("Background Scheduler Working")
     for enrollment in Enrollment.objects():
         user_assignment_data(enrollment.canvas_course_id, enrollment.canvas_user_id)
 
@@ -457,11 +498,11 @@ def create_provisioning_report():
         provisioning_report = canvas_API_request(domain + endpoint, request_parameters=request_parameters, method='POST')
         return provisioning_report.text
 
-#@copy_current_request_context()
 def user_assignment_data(course_id, user_id):
+        print(course_id, user_id)
         domain = 'https://coderacademy.instructure.com'
-        endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'
-        endpoint = endpoint.format(course_id, user_id)
+        endpoint = '/api/v1/courses/{0}/analytics/users/{1}/assignments'.format(str(course_id), str(user_id))
+        print(domain + endpoint)
         assignment_request = canvas_API_request(domain + endpoint)
         if(assignment_request.status_code == 200):
             try:
@@ -473,36 +514,55 @@ def user_assignment_data(course_id, user_id):
             else:
                 user_non_submissions = []
                 for user_assignment in user_assignment_data:
-                    if(user_assignment['submission']['submitted_at'] == None):
-                        try:
-                            due_date = dateutil.parser.isoparse(user_assignment['due_at'])
-                            date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-                        except Exception as error:
-                            raise error
-                        else:
-                            if(date_now - due_date > datetime.timedelta(days=0)):
-                                #Check if database entry for this users
-                                #assignment has already been created
-                                if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
-                                    print("Overdue Assignment already in database")
-                                else:
-                                    try:
-                                        overdue_assignment = \
-                                            Overdue_Assignment(int(course_id),
-                                            int(user_assignment['assignment_id']),
-                                            int(user_id), 
-                                            due_date, 
-                                            date_now)
-                                        overdue_assignment.save()
-                                    except Exception as error:
-                                        raise error
-                            else:
-                                print("Assignment not due yet. Days until due: ", (date_now - due_date).days)
+                    try:
+                        submission = user_assignment['submission']
+                    except Exception as error:
+                        print("Assignment Does not require submission")
+                        continue
                     else:
-                        print('Student has submitted for {0}'.format(user_assignment['title']))
+                        if(user_assignment['submission']['submitted_at'] == None):
+                            try:
+                                if(user_assignment['due_at'] != None):
+                                    due_date = dateutil.parser.isoparse(user_assignment['due_at'])
+                                else:
+                                    print("No due date set for assignment")
+                                    continue
+                                date_now = dateutil.parser.isoparse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+                            except Exception as error:
+                                print(error)
+                                continue
+                            else:
+                                if(date_now > due_date):
+                                    #Check if database entry for this users
+                                    #assignment has already been created
+                                    if(Overdue_Assignment.objects(course_id=course_id, assignment_id=user_assignment['assignment_id'], user_id=user_id)):
+                                        print("Overdue Assignment already in database")
+                                    else:
+                                        try:
+                                            overdue_assignment = \
+                                                Overdue_Assignment(int(course_id),
+                                                int(user_assignment['assignment_id']),
+                                                int(user_id), 
+                                                due_date, 
+                                                date_now)
+                                            overdue_assignment.save()
+                                        except Exception as error:
+                                            raise error
+                                        else:
+                                            print("Overdue assignment created in database")
+                                else:
+                                    print('Assignment not due yet. Days until due: {0}'.format(date_now - due_date).days)
+                        else:
+                            if(user_assignment['submission']['score']):
+                                response = 'Student has submitted for {0} with a score of {1}'
+                                response = response.format(user_assignment['title'], user_assignment['submission']['score'])
+                                print(response)
+                            else:
+                                response = 'Student has submitted for {0} but has not been graded'.format(user_assignment['title'])
+                                print(response)
                 return str(user_non_submissions)
-        elif has_request_context():
-            return abort(assignment_request.status_code)
+        elif(assignment_request.status_code == 404):
+            print("This resource does not exist")
         else:
             return assignment_request.status_code
 
@@ -592,7 +652,7 @@ def get_student_id_list_from_assignment_override_object(override_object,
         group_id = override_object['group_id']
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/groups/{0}/users'.format(group_id)
-        group_request = canvas_API_request(domain + endpoint)
+        uconsole.log(formData);roup_request = canvas_API_request(domain + endpoint)
         for student in group_request:
             list_of_student_ids.append(student['id'])
     elif 'course_section_id' in override_object:
@@ -635,30 +695,79 @@ def retreive_rubric_assessment():
         return render_template('rubric_data.html')
     elif(request.method == 'POST'):
         try:
-            course_ID = str(request.values.get('course_id'))
-            assessment_ID = str(request.values.get('assessment_id'))
+            course_id = str(request.values.get('course_id'))
+            assignment_id = str(request.values.get('assessment_id'))
         #Handle Conversion error.
         except Exception as error:
             raise error
         else:
-            if(course_ID is not None and assessment_ID is not None):
+            if(course_id is not None and assignment_id is not None):
                 try:
-                    rubric_data = extract_rubric_data(course_ID, assessment_ID)
+                    rubric_data = extract_rubric_data(course_id, assignment_id)
                 except Exception as error:
                     print("Unexpected error in extract_rubric_data method")
+                    return abort(500)
                 else:
                     if(rubric_data is not None):
-                        #print(map_rubric_data(rubric_data.json()))
-                        return(rubric_data.text)
+                        submissions = rubric_data.json()
+                        criteria = []
+                        for i in range(0, 1):
+                            try:
+                                for criterion_id in submissions[i]['rubric_assessment'].keys():
+                                    if(Assignment_Mapping.objects(criterion_id=criterion_id).count() == 0):
+                                        criteria.append(criterion_id)
+                                    else:
+                                        print('Criteria: {0}, is already mapped'.format(criterion_id))
+                            except Exception as error:
+                                print(error)
+                        if(len(criteria) != 0):
+                            learning_outcomes = json.loads(Learning_Outcome.read())
+                            return render_template(
+                                'map_rubric_assessment.html',
+                                course_id=course_id,
+                                assignment_id=assignment_id,
+                                criteria=criteria,
+                                learning_outcomes=learning_outcomes
+                            )
+                        else:
+                            for i in range(0, len(submissions)):
+                                try:
+                                    for criterion_id, criterion_values in submissions[i]['rubric_assessment'].items():
+                                        learning_outcome_ids = []
+                                        print(criterion_id, criterion_values)
+                                        assignment_mapping_learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id)
+                                        for assignment_mapping_learning_outcome in assignment_mapping_learning_outcomes:
+                                            learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome.id))
+                                        grade = Grade(str(submissions[i]['user_id']),
+                                            learning_outcome_ids,
+                                            float(criterion_values['points'])).save()
+                                except Exception as error:
+                                    #1 canvas user not graded, handle error
+                                    print("Error: ", error)
+                            return "Finished"
             else:
                 print('Invalid or missing arguments parsed')
-                return render_template('rubric_data.html')
+                return redirect(url_for('retreive_rubric_assessment'))
+
+@application.route('/student_subject_grades', methods=['GET'])
+@login_required
+def student_subject_grades():
+    if(request.method == 'GET'):
+        try:
+            distinct_graded_users = Grade.objects().distinct(field="canvas_user_id")
+            for user in distinct_graded_users:
+                subject_grade = user.sum('points')
+                print(each)
+            return "Success"
+        except Exception as error:
+            print(error)
+            return error
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
 def subjects():
     if(request.method == 'GET'):
-        subjects = Subject.read()
+        subjects = json.loads(Subject.read())
         learning_outcomes = json.loads(Learning_Outcome.read())
         return render_template('subjects.html',
                                subjects=subjects,
@@ -787,22 +896,66 @@ def map_rubric(rubric_id):
             print(request_url)
             try:
                 rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
-                print(rubric_data.text)
                 criteria = rubric_data.json()
+                print(criteria)
             except Exception as error:
                 raise error
             else:
                 #Generate dictionary of rubric_data criterion. ID and Name
                 learning_outcomes = json.loads(Learning_Outcome.read())
-                print("Criteria", criteria)
                 return render_template(
                         'map_rubric.html',
                         criteria=criteria,
                         learning_outcomes=learning_outcomes
                         )
     else:
-        #Handle the mappings and safe to db as mapping document.
         pass
+
+@application.route('/map_rubric_assessment', methods=['GET', 'POST'])
+@login_required
+def map_rubric_assessment():
+    if(request.method == 'GET'):
+        learning_outcomes = json.loads(Learning_Outcome.read())
+        
+    elif(request.method == 'POST'):
+        pass
+
+@application.route('/map_criterion', methods=['POST'])
+@login_required
+def map_criterion():
+    if(request.method == 'POST'):
+        try:
+            learning_outcome_list = request.form.getlist('subject_learning_outcomes_field[]')
+            criterion_id = request.form['criterion_id']
+        except Exception as error:
+            raise error
+        else:
+            selected_learning_outcomes = []
+            for learning_outcome_id in learning_outcome_list:
+                learning_outcome = Learning_Outcome.index(learning_outcome_id)
+                selected_learning_outcomes.append(learning_outcome)
+            new_assignment_mapping = Assignment_Mapping(criterion_id, selected_learning_outcomes).save()
+        return "Success"
+
+def _build_cors_preflight_response():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add('Access-Control-Allow-Headers', "*")
+    response.headers.add('Access-Control-Allow-Methods', "*")
+    return response
+
+def _corsify_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@application.route('/map_rubric_criterion', methods=['POST', 'OPTIONS'])
+@login_required
+def map_rubric_criterion():
+    if(request.method == "OPTIONS"):
+        return _build_cors_preflight_response()
+    elif(request.method == "POST"):
+        return _corsify_response(make_response("It Worked"))
+        print(request.get_data())
 
 @application.route('/assessments', methods=['GET', 'POST'])
 @login_required
@@ -818,6 +971,7 @@ def assessments():
 #TODO: Refactor with new rubric mapping workflow.
 def map_rubric_data(submission_data):
     grades = {}
+    assignment_mappings = json.loads(Assignment_Mapping.read())
     for each_submission_item in submission_data:
         try:
             submission_ID = each_submission_item['id']
@@ -825,36 +979,15 @@ def map_rubric_data(submission_data):
             submission_assignment_ID = each_submission_item['assignment_id']
             submission_rubric_assessment = each_submission_item['rubric_assessment'] 
             best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
-            print(best_fit_student.json())
             student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
             print("This student does not have a rubric_assessment")
             pass
         else:
-            '''
-            learning_outcome_count = 0
-            grade_total = 0
-            shared_outcome_total = 0
-            learning_outcomes_data = {}
-            learning_outcome_data[str(student_name)] = {}
             for each, value in submission_rubric_assessment.items():
-                grade_total = grade_total + value['points']
-                learning_outcome_data[str(student_name)][each] = value['points']
-                if(learning_outcome_count == 14):
-                    grades[str(student_name) + ' CMP1043'] = grade_total
-                    grade_total = 0
-                if(learning_outcome_count == 35):
-                    grades[str(student_name) + ' PRG1006'] = grade_total
-                    grade_total = 0
-                if(learning_outcome_count == 37):
-                    print(each, value)
-                    grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
-                    grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
-                learning_outcome_count = learning_outcome_count + 1
-            print(learning_outcome_data)
-            '''
-    print(grades)
-    return grades
+                print(each, value)
+                if(each == Assignment_Mapping.objects(criterion_id=each)):
+                    print("Mapping Found")
 
 '''
 submission = submission_object(

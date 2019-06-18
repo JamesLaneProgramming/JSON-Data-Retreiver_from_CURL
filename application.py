@@ -49,6 +49,7 @@ from subjects.subject_model import Subject
 from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
 from grades.grade_model import Grade
+from subject_grades.subject_grade_model import Subject_Grade
 
 application = Flask(__name__, template_folder='templates')
 CORS(application)
@@ -753,9 +754,10 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            grades = Grade.objects().distinct(field="canvas_user_id").only('canvas_user_id')
-            for each in Enrollment.objects(canvas_user_id__in=grades):
-                print(each)
+            distinct_graded_users = Grade.objects().distinct(field="canvas_user_id")
+            for user in distinct_graded_users:
+                subject_grade = user.sum('points')
+                print(subject_grade)
             return "Success"
         except Exception as error:
             print(error)
