@@ -709,7 +709,7 @@ def retreive_rubric_assessment():
                         submissions = rubric_data.json()
                         criteria = []
                         for submission in submissions:
-                            for criterion_id in submission['rubric_assessment'].keys():
+                            for criterion_id in submissions[submission]['rubric_assessment'].keys():
                                 criteria.append(criterion_id)
                         print(submissions)
                         learning_outcomes = json.loads(Learning_Outcome.read())
