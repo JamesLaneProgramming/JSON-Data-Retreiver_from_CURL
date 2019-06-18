@@ -759,6 +759,10 @@ def student_subject_grades():
             subjects = Subject.objects()
             for user in distinct_graded_users:
                 for subject in subjects:
+                    subject_learning_outcomes = []
+                    for learning_outcome in subject.learning_outcomes:
+                        print(learning_outcome, learning_outcome.id)
+                        subject_learning_outcomes.append(learning_outcome.id)
                     subject_grade = 0
                     print('subject: ', subject)
                     user_grades = Grade.objects(user_id=user).only('learning_outcomes', 'points')
@@ -766,7 +770,7 @@ def student_subject_grades():
                         for learning_outcome in grade.learning_outcomes:
                             print(learning_outcome)
                             print(subject.learning_outcomes)
-                            if(learning_outcome in subject.learning_outcomes.only('id')):
+                            if(learning_outcome in subject_learning_outcomes):
                                 subject_grade += grade.points
                                 print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
                     subject_grades = Subject_Grade(user_id=user, grade=subject_grade).save()
