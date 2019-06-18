@@ -764,15 +764,15 @@ def student_subject_grades():
                     user_grades = Grade.objects(user_id=user).only('learning_outcomes', 'points')
                     for grade in user_grades:
                         for learning_outcome in grade.learning_outcomes:
+                            print(learning_outcome)
                             if(learning_outcome in subject.learning_outcomes):
                                 subject_grade += grade.points
                                 print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
                     subject_grades = Subject_Grade(user_id=user, grade=subject_grade).save()
-
             return "Success"
         except Exception as error:
             print(error)
-            return error
+            return "Failure"
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
