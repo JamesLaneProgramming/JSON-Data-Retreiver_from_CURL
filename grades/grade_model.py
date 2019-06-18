@@ -4,7 +4,7 @@ import mongo_methods
 
 class Grade(Document):
     user_id = StringField(required=True)
-    learning_outcome = ReferenceField(Learning_Outcome, required=True)
+    learning_outcomes = ListField(ReferenceField(Learning_Outcome, required=True))
     points = FloatField(required=True)
 
     def read():
