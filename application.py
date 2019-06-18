@@ -761,15 +761,11 @@ def student_subject_grades():
                 for subject in subjects:
                     subject_grade = 0
                     print('subject: ', subject)
-                    user_grades = Grade.objects(user_id=user).only('learning_outcomes', 'points')
+                    user_grades = Grade.objects(user_id=user, learning_outcomes__in=subject.learning_outcomes).only('learning_outcomes', 'points')
                     for grade in user_grades:
                         for learning_outcome in grade.learning_outcomes:
-                            if(Subject.objects(learning_outcomes__contains(learning_outcome)).count() != 0):
-                                print(learning_outcome)
-                                subject_grade += grade.points
-                                print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
-                            else:
-                                print("learning outcome not in subject")
+                            subject_grade += grade.points
+                            print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
                     subject_grades = Subject_Grade(user_id=user, grade=subject_grade).save()
             return "Success"
         except Exception as error:
