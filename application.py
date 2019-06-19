@@ -704,6 +704,7 @@ def retreive_rubric_assessment():
             if(course_id is not None and assignment_id is not None):
                 try:
                     rubric_data = extract_rubric_data(course_id, assignment_id)
+                    return rubric_data
                 except Exception as error:
                     print("Unexpected error in extract_rubric_data method")
                     return abort(500)
@@ -762,6 +763,7 @@ def student_subject_grades():
                     subject_grade = 0
                     print('subject: ', subject)
                     user_grades = Grade.objects(user_id=user).only('learning_outcomes', 'points')
+                    user.grades.filter('
                     for grade in user_grades:
                         for learning_outcome in grade.learning_outcomes:
                             if(Subject.objects(learning_outcomes__contains=learning_outcome) == subject):
