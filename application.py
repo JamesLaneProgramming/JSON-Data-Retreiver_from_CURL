@@ -765,6 +765,12 @@ def student_subject_grades():
                         {
                             "$unwind": "$learning_outcomes"
                         },
+                        {
+                            "$project": { 
+                                "_id": 0, 
+                                "Learning_outcomes": "$learning_outcomes"
+                            }
+                        }
                     ],
                     "as": "grades"
                 }
