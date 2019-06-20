@@ -755,15 +755,22 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            subjects = Subject.objects().aggregate(
-            {
+            subjects = Subject.objects().aggregate({
                 '$unwind': "$learning_outcomes"
             },
             { 
                 '$lookup': {
                     "from": "Grades",
+                    "let": {
+                        "learning_outcomes": "$Grades.learning_outcomes"
+                    }
+                    "pipeline": [
+                        {
+                            "$unwind": "$$learning_outcomes"
+                        }
+                    ]
                     "localField": "learning_outcomes",
-                    "foreignField": "_id",
+                    "foreignField": "id",
                     "as": "grades"
                 }
             })
