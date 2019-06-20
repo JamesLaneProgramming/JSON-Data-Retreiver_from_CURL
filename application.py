@@ -755,8 +755,7 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            subjects = db.subject.aggregate([{
-                $lookup: {
+            subjects = db.subject.aggregate( [ { $lookup: {
                     from: "Grades",
                     localField: "learning_outcomes",
                     foreignField: "_id",
