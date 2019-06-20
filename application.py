@@ -762,11 +762,11 @@ def student_subject_grades():
                 '$lookup': {
                     "from": "Grades",
                     "let": {
-                        "learning_outcomes": "$Grades.learning_outcomes"
+                        "lo": "$Grades.learning_outcomes"
                     },
                     "pipeline": [
                         {
-                            "$unwind": "$$learning_outcomes"
+                            "$unwind": "$lo"
                         }
                     ],
                     "as": "grades"
