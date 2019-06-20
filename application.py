@@ -757,19 +757,14 @@ def student_subject_grades():
         try:
             subjects = Subject.objects().aggregate({
                 '$unwind': "$learning_outcomes"
-            }).aggregate(
-            {
+            }).aggregate({
                 '$lookup': {
                     "from": "Grades",
                     "localField": "learning_outcomes",
                     "foreignField": "_id",
                     "as": "grades"
                 }
-            })
-                $unwind: "$grades"
             }
-            ])
-            '''
             print(list(subjects))
             '''
             for subject in subjects:
