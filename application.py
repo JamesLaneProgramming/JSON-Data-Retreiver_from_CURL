@@ -761,14 +761,10 @@ def student_subject_grades():
             { 
                 '$lookup': {
                     "from": "Grades",
-                    "let": {
-                        "lo": "$Grades.learning_outcomes"
-                    },
                     "pipeline": [
                         {
-                            "$unwind": "$lo"
+                            "$unwind": "$learning_outcomes"
                         },
-                        { "$replaceRoot" : { "newRoot": "lo" } }
                     ],
                     "as": "grades"
                 }
