@@ -755,8 +755,7 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            subjects = Subject.objects().aggregate([
-            {
+            subjects = Subject.objects().aggregate([{
                 $unwind: "$learning_outcomes"
             },
             {
