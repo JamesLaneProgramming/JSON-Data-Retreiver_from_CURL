@@ -763,12 +763,12 @@ def student_subject_grades():
                     "from": "Grades",
                     "let": {
                         "learning_outcomes": "$Grades.learning_outcomes"
-                    }
+                    },
                     "pipeline": [
                         {
                             "$unwind": "$$learning_outcomes"
                         }
-                    ]
+                    ],
                     "as": "grades"
                 }
             })
