@@ -757,7 +757,8 @@ def student_subject_grades():
         try:
             subjects = db.subject.aggregate([{
                 $unwind: { "$learning_outcomes" }
-            },
+            }]
+            '''
             {
                 $lookup: {
                     from: "Grades",
@@ -770,6 +771,7 @@ def student_subject_grades():
                 $unwind: "$grades"
             }
             ])
+            '''
             print(subjects)
             '''
             for subject in subjects:
