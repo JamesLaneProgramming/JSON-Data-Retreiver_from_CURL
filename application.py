@@ -769,8 +769,6 @@ def student_subject_grades():
                             "$unwind": "$$learning_outcomes"
                         }
                     ]
-                    "localField": "learning_outcomes",
-                    "foreignField": "id",
                     "as": "grades"
                 }
             })
