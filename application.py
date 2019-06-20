@@ -761,7 +761,7 @@ def student_subject_grades():
             
             '''
             {
-{ 
+            {
                 '$lookup': {
                     "from": "Grades",
                     "localField": "learning_outcomes",
@@ -773,7 +773,7 @@ def student_subject_grades():
             }
             ])
             '''
-            print(subjects)
+            print(list(subjects))
             '''
             for subject in subjects:
                 for learning_outcome in subject.learning_outcomes:
