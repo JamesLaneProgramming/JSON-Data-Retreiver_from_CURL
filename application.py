@@ -756,17 +756,14 @@ def student_subject_grades():
     if(request.method == 'GET'):
         try:
             subjects = db.subject.aggregate([{
-                $unwind: "$learning_outcomes"
-            }])
-            '''
-            {
                 $lookup: {
                     from: "Grades",
                     localField: "learning_outcomes",
                     foreignField: "_id",
                     as: "grades"
                 }
-            },
+            }])
+            '''
             {
                 $unwind: "$grades"
             }
