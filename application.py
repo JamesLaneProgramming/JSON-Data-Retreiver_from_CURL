@@ -755,21 +755,48 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            distinct_graded_users = Grade.objects().distinct('user_id')
-            print(distinct_graded_users)
-            subjects = Subject.objects()
-            for user in distinct_graded_users:
-                for subject in subjects:
+            subjects = Subject.objects().aggregate([
+            {
+                $unwind: "$learning_outcomes"
+            },
+            {
+                $lookup: {
+                    from: "Grades",
+                    localField: "learning_outcomes",
+                    foreignField: "_id",
+                    as: "grades"
+                }
+            },
+            {
+                $unwind: "$grades"
+            }
+            ])
+            print(subjects)
+            '''
+            for subject in subjects:
+                for learning_outcome in subject.learning_outcomes:
                     subject_grade = 0
-                    print('subject: ', subject)
-                    user_grades = Grade.objects(user_id=user).only('learning_outcomes', 'points')
-                    user.grades.filter('
+                    user_grades =
+                    Grade.objects(learning_outcomes__contains=learning_outcome).aggregate([
+                        {
+                            $unwind: "$learning_outcomes"
+                        },
+                        {
+                            $group: {
+                                _id: { user_id: { $user_id: "$user_id"}, 
+                                        points: { $sum: "$points"},
+                            }
+                        }
+                    ])
+                    print(grades)
                     for grade in user_grades:
-                        for learning_outcome in grade.learning_outcomes:
+                        learning_outcome_count = Grade.objects(user_id=grade.user_id, learning_outcomes__contains=learning_outcome).count()
+                        learning_outcome_total = grade.sum('points')
                             if(Subject.objects(learning_outcomes__contains=learning_outcome) == subject):
                                 subject_grade += grade.points
                                 print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
                     subject_grades = Subject_Grade(user_id=user, grade=subject_grade).save()
+            '''
             return "Success"
         except Exception as error:
             print(error)
