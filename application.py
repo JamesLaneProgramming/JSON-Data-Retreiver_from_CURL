@@ -767,7 +767,8 @@ def student_subject_grades():
                     "pipeline": [
                         {
                             "$unwind": "$lo"
-                        }
+                        },
+                        { "$replaceRoot" : { "newRoot": "lo" } }
                     ],
                     "as": "grades"
                 }
