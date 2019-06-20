@@ -764,7 +764,7 @@ def student_subject_grades():
                     "foreignField": "_id",
                     "as": "grades"
                 }
-            }
+            })
             print(list(subjects))
             '''
             for subject in subjects:
