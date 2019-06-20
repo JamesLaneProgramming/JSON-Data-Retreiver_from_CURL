@@ -756,7 +756,7 @@ def student_subject_grades():
     if(request.method == 'GET'):
         try:
             subjects = db.subject.aggregate([{
-                $unwind: { "$learning_outcomes" }
+                $unwind: "$learning_outcomes"
             }]
             '''
             {
