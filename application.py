@@ -769,8 +769,8 @@ def student_subject_grades():
                         },
                         {
                             "$project": {
-                                "_id": 0,
-                                "learning_outcomes": 1
+                                "_id": "0",
+                                "learning_outcomes": "1"
                             }
                         }
                     ],
