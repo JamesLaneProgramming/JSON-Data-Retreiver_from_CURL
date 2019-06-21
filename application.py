@@ -772,7 +772,8 @@ def student_subject_grades():
                                 "_id": "0",
                                 "learning_outcomes": "1"
                             }
-                        }
+                        },
+                        { "$replaceRoot": { "newRoot": "$learning_outcomes" } }
                     ],
                     "as": "grades"
                 }
