@@ -772,7 +772,7 @@ def student_subject_grades():
                             }
                         },
                         {
-                            "$replaceRoot": { "newRoot": "$loi" }
+                            "$replaceRoot": { "newRoot": "$learning_outcomes" }
                         }
                     ],
                     "as": "grades"
