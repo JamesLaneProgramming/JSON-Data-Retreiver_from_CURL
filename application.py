@@ -768,13 +768,9 @@ def student_subject_grades():
                             "$unwind": "$learning_outcomes"
                         },
                         {
-                            "$match":{
-                                "$expr":{
-                                    "$eq":[
-                                        "$$lo_id",
-                                        "$learning_outcomes"
-                                    ]
-                                }
+                            "$project": {
+                                "_id": 0,
+                                "learning_outcomes": 1
                             }
                         }
                     ],
