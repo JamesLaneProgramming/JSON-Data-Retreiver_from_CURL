@@ -767,7 +767,7 @@ def student_subject_grades():
                     "pipeline": [{ 
                             "$match": {
                                 "$expr": {
-                                    "$in": [ "$$lo_id", "$learning_outcomes" ]
+                                    "$in": [ "$learning_outcomes", "$$lo_id" ]
                                 }
                             }
                         }
