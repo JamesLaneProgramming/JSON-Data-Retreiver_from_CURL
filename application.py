@@ -764,16 +764,13 @@ def student_subject_grades():
                     "let": {
                         "lo_id": "$learning_outcomes"
                     },
-                    "pipeline": [{
-                            "$unwind": "$learning_outcomes"
-                        },
-                        {
-                            "$project": {
-                                "_id": "0",
-                                "learning_outcomes": "1"
+                    "pipeline": [{ 
+                            "$match": {
+                                "$expr": {
+                                    "$in": [ "$$lo_id", "$learning_outcomes" ]
+                                }
                             }
-                        },
-                        { "$replaceRoot": { "newRoot": "$learning_outcomes" } }
+                        }
                     ],
                     "as": "grades"
                 }
