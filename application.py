@@ -687,7 +687,7 @@ def pygalexample():
         return(str(error))
 
 @application.route('/student_grade_graph/<student_id>')
-def pygalexample(student_id):
+def student_graph_grade(student_id):
     try:
         graph = pygal.Bar()
         graph.title = '% Grade Graph'
