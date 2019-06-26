@@ -691,7 +691,10 @@ def student_graph_grade(student_id):
     try:
         graph = pygal.Bar()
         graph.title = '% Grade Graph'
-        graph.add(str(student_id), Grade.objects(user_id=student_id).only('points'))
+        graph_values = []
+        for each in Grade.objects(user_id=student_id).only('points'):
+            graph_value.append(float(each.points))
+        graph.add(str(student_id), graph_values)
         #graph_data = graph.render_data_uri()
         #return render_template("graphing.html", graph_data = graph_data)
         return graph.render_response()
