@@ -94,7 +94,8 @@ def generate_cookie_signature(cookie):
     except Exception as error:
         print(error)
     else:
-        return cookie_signature = sha256(cookie_bytes + application_secret_key).hexdigest()
+        cookie_signature = sha256(cookie_bytes + application_secret_key).hexdigest()
+        return cookie_signature
 
 def main():
     scheduler = BackgroundScheduler()
