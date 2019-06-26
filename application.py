@@ -673,14 +673,15 @@ def get_student_id_list_from_assignment_override_object(override_object,
 @application.route('/pygalexample/')
 def pygalexample():
     try:
-        graph = pygal.Line()
+        graph = pygal.Bar()
         graph.title = '% Grade Graph'
         graph.x_labels =  graph.add('Python', [15, 31, 89, 200, 356, 900])
         graph.add('Java', [15, 45, 76, 80,  91,  95])
         graph.add('C++', [5, 51, 54, 102, 150, 201])
         graph.add('All others combined!', [5, 15, 21, 55, 92, 105])
-        graph_data = graph.render_data_uri()
-        return render_template("graphing.html", graph_data = graph_data)
+        #graph_data = graph.render_data_uri()
+        #return render_template("graphing.html", graph_data = graph_data)
+        return graph.render_response()
     except Exception as error:
         return(str(error))
 
