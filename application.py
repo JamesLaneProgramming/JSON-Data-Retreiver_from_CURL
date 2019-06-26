@@ -682,7 +682,7 @@ def pygalexample():
         graph_data = graph.render_data_uri()
         return render_template("graphing.html", graph_data = graph_data)
     except Exception as error:
-        return(str(e))
+        return(str(error))
 
 @application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
 @login_required
