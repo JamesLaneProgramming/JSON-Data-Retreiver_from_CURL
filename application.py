@@ -56,7 +56,7 @@ CORS(application)
 #Cross origin requests can be enabled for resources using the @cross_origin decorator method
 
 #Set application secret key to secure against CSRF
-application.secret_key = 'super secret key'
+application.config['SECRET_KEY'] = environ.get('Application_Secret_Key')
 application.config['SESSION_TYPE'] = 'filesystem'
 application.config['UPLOAD_FOLDER'] = '/uploads'
 
@@ -85,16 +85,15 @@ login_manager.init_app(application)
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
-@application.route('/mail')
-def send_simple_message():
-    mail_request = requests.post(
-        "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
-        auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
-        data={"from": "Excited User <postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
-            "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
-            "subject": "Hello",
-            "text": "Testing some Mailgun awesomness!"})
-    return mail_request.text
+def generate_cookie_signature(cookie):
+    #https://stackoverflow.com/questions/22463939/demystify-flask-app-secret-ke://stackoverflow.com/questions/22463939/demystify-flask-app-secret-key
+    try:
+        cookie_bytes = str(cookie).encode('utf8')
+        application_secret_key = str(application.config['SECRET_KEY'])
+    except Exception as error:
+        print(error)
+    else:
+        return cookie_signature = sha256(cookie_bytes + application_secret_key).hexdigest()
 
 def main():
     scheduler = BackgroundScheduler()
@@ -103,7 +102,6 @@ def main():
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port, use_reloader=False)
-    #Set up Flask Scheduler.
 
 @application.route('/')
 def home():
@@ -116,21 +114,24 @@ def login():
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
-            return redirect(url_for('login'))
+            next = get_redirect_target()
+            return redirect(url_for('login'), next=next)
         else:
             #Inform users of username/password constrains.
             if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
-                user = User.authenticate(username, password)
-                
-            if user is not None and user.is_authenticated:
-                login_status = login_user(user)
-                #http://flask.pocoo.org/docs/1.0/patterns/flashing/
-                flash('Logged in successfully.')
-                next = get_redirect_target()
-                return redirect_back('home', next=next)
+                user = User.authenticate(username.encode('utf-8'), password.encode('utf-8'))
+                if user is not None and user.is_authenticated:
+                    login_status = login_user(user)
+                    #http://flask.pocoo.org/docs/1.0/patterns/flashing/
+                    flash('Logged in successfully.')
+                    next = get_redirect_target()
+                    return redirect_back('home', next=next)
+                else:
+                    next = get_redirect_target()
+                    return redirect(url_for('signup'), next=next)
             else:
                 next = get_redirect_target()
-                return redirect(url_for('signup'), next=next)
+                return redirect(url_for('login'), next=next)
     else:
         return render_template('login.html')
 
@@ -183,6 +184,7 @@ def signup():
             username = str(request.form['username'])
             password = str(request.form['password'])
             safeword = str(request.form['safeword'])
+            next = get_redirect_target()
         except Exception as error:
             raise error
         else:
@@ -190,20 +192,16 @@ def signup():
                     safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
                 if(User.objects(username=username)):
                     flash("Username already taken")
-                    next = get_redirect_target()
                     return redirect(url_for('signup', next=next))
                 elif(safeword == str(environ.get('safeword'))):
-                    new_user = User.create(username, password)
+                    new_user = User.create(username.encode('utf-8'), password.encode('utf-8'))
                     User.authenticate(username, password)
-                    next = get_redirect_target()
                     return redirect_back('home', next=next)
                 else:
-                    next = get_redirect_target()
                     flash("safeword was incorrect, could not create account")
                     return redirect(url_for('signup', next=next))
             else:
                 flash("username, password or safeword cannot be empty")
-                next = get_redirect_target()
                 return redirect(url_for('signup', next=next))
     else:
         return render_template('signup.html')
@@ -271,9 +269,9 @@ def require_hubspot_access_token(func):
 @login_required
 def request_refresh_token():
     try:
-        code = request.args.get('code')
-        client_id = environ.get('hubspot_client_id')
-        client_secret = environ.get('hubspot_client_secret')
+        code = str(request.args.get('code'))
+        client_id = str(environ.get('hubspot_client_id'))
+        client_secret = str(environ.get('hubspot_client_secret'))
         '''
         redirect_uri must match the redirect_uri used to intitiate the OAuth
         connection
@@ -282,7 +280,8 @@ def request_refresh_token():
         redirect_uri = url_for('request_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
-        raise error
+        flash('Could not find auth code in request arguments')
+        return redirect(url_for('authenticate_hubspot'))
     else:
         _headers = {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
@@ -305,10 +304,8 @@ def request_refresh_token():
         except Exception as error:
             raise error
         else:
-            User.set_refresh_token(
-                                   current_user.id, 
-                                   refresh_token
-                                  )
+            User.set_refresh_token(current_user.id,
+                refresh_token)
             return redirect(url_for('refresh_access_token'))
 
 @application.route('/refresh_access_token', methods=['GET'])
@@ -318,8 +315,8 @@ def refresh_access_token():
         client_id = str(environ.get('hubspot_client_id'))
         client_secret = str(environ.get('hubspot_client_secret'))
     except Exception as error:
-        print('client_id or client_secret environment variables cannot be found')
-        raise error
+        flash('client_id or client_secret environment variables cannot be found')
+        return redirect(url_for('refresh_access_code'))
     else:
         try:
             refresh_token = current_user.hubspot_refresh_token
@@ -348,11 +345,12 @@ def refresh_access_token():
                     access_token = post_request.json()['access_token']
                     access_token_expiry = post_request.json()['expires_in']
                 except ValueError as error:
+                    #TODO: Redirect to where?
                     print("Post request response did not contain an access token")
                 #KeyError missing access_token
                 except Exception as error:
-                    print(post_request.text)
-                    raise error
+                    #TODO: Redirect to where?
+                    print(error)
                 else:
                     next = get_redirect_target()
                     response = make_response(redirect_back('home', next=next))
@@ -1360,6 +1358,17 @@ def google_request(spreadsheet_ID, range_name, scope):
         sys.exit()
     else:
         return sheet_data
+
+@application.route('/mail')
+def send_simple_message():
+    mail_request = requests.post(
+        "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
+        auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
+        data={"from": "Excited User <postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
+            "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
+            "subject": "Hello",
+            "text": "Testing some Mailgun awesomness!"})
+    return mail_request.text
 
 if __name__ == "__main__":
     main()
