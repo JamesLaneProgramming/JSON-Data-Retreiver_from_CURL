@@ -642,6 +642,7 @@ def list_assignment_extensions():
                         return ''.join(i for i in assignment_extension_ids if not assignment_extensions_ids.index(i) == 0)
             else:
                 return abort(status_code)
+
 def get_student_id_list_from_assignment_override_object(override_object,
                                                         course_id):
     if not isinstance(course_id, str):
@@ -694,6 +695,25 @@ def student_graph_grade(student_id):
         graph = pygal.Bar()
         graph.title = '% Grade Graph'
         graph_values = []
+        grade_averages = []
+        for each in Grade.objects().aggregate([
+            {
+                "$unwind": "$learning_outcomes"
+            },
+            {
+                "$group": {
+                    "_id": "$learning_outcomes",
+                    "avgPoints": {
+                        "$avg": "$points"
+                    }
+                }
+            }
+        ]):
+            print(each)
+            try:
+                print(each.avgPoints)
+            except Exception:
+                pass
         for each in Grade.objects(user_id=student_id).only('points'):
             graph_values.append(float(each.points))
         graph.add(str(student_id), graph_values)
