@@ -1179,7 +1179,7 @@ def create_canvas_account():
                         return abort(500)
                     else:
                         try:
-                            hubspot_request = Hubspot_Request(course_ID, section_ID, first_name, last_name, user_email)
+                            hubspot_request = Hubspot_Request(course_ID, section_ID, first_name, last_name, user_email).save()
                         except Exception as error:
                             print(error)
                         creation_response = create_canvas_login(user_name, user_email)
