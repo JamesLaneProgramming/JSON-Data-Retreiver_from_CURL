@@ -319,6 +319,7 @@ def refresh_access_token():
         client_secret = str(environ.get('hubspot_client_secret'))
     except Exception as error:
         flash('client_id or client_secret environment variables cannot be found')
+        print('client_id or client_secret environment variables cannot be found')
         return redirect(url_for('refresh_access_code'))
     else:
         try:
