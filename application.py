@@ -1247,10 +1247,10 @@ def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
         #Convert ImmutableMultiDict to Dict
-        #request_arguments = request.form.to_dict()
-        course_ID = str(request.args.get('course_id'))
-        section_ID = str(request.args.get('section_id'))
-        user_ID = str(request.args.get('user_id'))
+        request_arguments = request.get_json(force=True)
+        course_ID = str(request_arguments['course_id'])
+        section_ID = str(request_arguments['section_id'])
+        user_ID = str(request_arguments['user_id'])
     except Exception as error:
         print(error)
         return abort(500)
