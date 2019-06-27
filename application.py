@@ -697,7 +697,6 @@ def student_graph_grade(student_id):
         graph_values = []
         grade_averages = []
         for each in Grade.objects().aggregate({
-            {
                 "$unwind": "$learning_outcomes"
             },
             {
@@ -708,7 +707,7 @@ def student_graph_grade(student_id):
                     }
                 }
             }
-        }):
+        ):
             print(each)
             try:
                 print(each.avgPoints)
