@@ -828,6 +828,9 @@ def student_subject_grades():
                                         "$in": [ "$learning_outcomes", "$$lo_id" ]
                                     }
                                 }
+                        },
+                        {
+                            "$project": { "_id": 1 }
                         }],
                         "as": "grades"
                     }
