@@ -58,7 +58,7 @@ CORS(application)
 #Cross origin requests can be enabled for resources using the @cross_origin decorator method
 
 #Set application secret key to secure against CSRF
-application.config['SECRET_KEY'] = environ.get('Application_Secret_Key')
+application.config['SECRET_KEY'] = environ.get('Application_Secret_Key').encode('utf-8')
 application.config['SESSION_TYPE'] = 'filesystem'
 application.config['UPLOAD_FOLDER'] = '/uploads'
 
@@ -131,7 +131,7 @@ def login():
                     return redirect_back('home', next=next)
                 else:
                     next = get_redirect_target()
-                    return redirect(url_for('signup'), next=next)
+                    return redirect(url_for('signup'))
             else:
                 next = get_redirect_target()
                 return redirect(url_for('login'), next=next)
