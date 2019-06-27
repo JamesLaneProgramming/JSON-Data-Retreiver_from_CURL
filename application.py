@@ -822,7 +822,7 @@ def student_subject_grades():
                         "let": {
                             "lo_id": "$learning_outcomes"
                         },
-                        "pipeline": {
+                        "pipeline": [{
                                 "$match": {
                                     "$expr": {
                                         "$in": [ "$learning_outcomes", "$$lo_id" ]
@@ -830,7 +830,7 @@ def student_subject_grades():
                                 }
                         },
                         "as": "grades"
-                    }
+                    }]
                 })
             print(list(subjects))
             '''
