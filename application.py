@@ -1219,6 +1219,7 @@ def create_canvas_account():
                                 "course_id": course_ID,
                                 "section_id": section_ID
                                 }
+                        print(_data)
                         try:
                             user_enrollment_request = requests.post(url, data=_data)
                         except ConnectionError as error:
