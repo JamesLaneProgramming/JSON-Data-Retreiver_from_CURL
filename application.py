@@ -828,9 +828,9 @@ def student_subject_grades():
                                         "$in": [ "$learning_outcomes", "$$lo_id" ]
                                     }
                                 }
-                        }
-                    },
-                    "as": "grades"
+                        },
+                        "as": "grades"
+                    }
                 })
             print(list(subjects))
             '''
