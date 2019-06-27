@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 '''
-#Google OATH imports 
+#Google OATH imports
 try:
     from googleapiclient.discovery import build
     from httplib2 import Http
@@ -51,6 +51,7 @@ from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
 from grades.grade_model import Grade
 from subject_grades.subject_grade_model import Subject_Grade
+from hubspot_requests.hubspot_request_model import Hubspot_Request
 
 application = Flask(__name__, template_folder='templates')
 CORS(application)
@@ -289,15 +290,15 @@ def request_refresh_token():
                     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
                    }
         data = {
-                'grant_type':'authorization_code', 
+                'grant_type':'authorization_code',
                 'client_id': client_id,
-                'client_secret': client_secret, 
+                'client_secret': client_secret,
                 'redirect_uri': redirect_uri,
                 'code': code
                }
         post_request = requests.post(
                                      'https://api.hubapi.com/oauth/v1/token',
-                                     headers=_headers, 
+                                     headers=_headers,
                                      data=data
                                     )
         try:
@@ -377,7 +378,7 @@ def authenticate_hubspot():
     They will be prompted to authenticate and authorise the application.
 
     Users will be redirected to the redirect_uri with a code query parameter.
-    
+
     Use the code above to request access token and refresh token.
     Headers = Content-Type: application/x-www-form-urlencoded;charset=utf-8
     Data:
@@ -433,7 +434,7 @@ def workflow_history(workflow_id):
                    }
     try:
         put_request = requests.put(
-                             request_url, 
+                             request_url,
                              headers=request_headers,
                              params=request_body
                             )
@@ -542,8 +543,8 @@ def user_assignment_data(course_id, user_id):
                                             overdue_assignment = \
                                                 Overdue_Assignment(int(course_id),
                                                 int(user_assignment['assignment_id']),
-                                                int(user_id), 
-                                                due_date, 
+                                                int(user_id),
+                                                due_date,
                                                 date_now)
                                             overdue_assignment.save()
                                         except Exception as error:
@@ -580,7 +581,7 @@ def user_assignment_data_endpoint():
         else:
             return user_assignment_data(course_id, user_id)
             #Get assignment details
-   
+
 @application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
 def list_assignment_extensions():
@@ -619,7 +620,7 @@ def list_assignment_extensions():
                         print("No due date could be extracted from json data")
                     else:
                         assignment_due_at = dateutil.parser.parse(assignment_object_due_date)
-                        
+
                         #Get assignment overrides
                         domain = 'https://coderacademy.instructure.com'
                         endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
@@ -789,13 +790,13 @@ def student_subject_grades():
             subjects = Subject.objects().aggregate({
                 '$unwind': "$learning_outcomes"
             },
-            { 
+            {
                 '$lookup': {
                     "from": "Grade",
                     "let": {
                         "lo_id": "$learning_outcomes"
                     },
-                    "pipeline": [{ 
+                    "pipeline": [{
                             "$match": {
                                 "$expr": {
                                     "$in": [ "$learning_outcomes", "$$lo_id" ]
@@ -818,7 +819,7 @@ def student_subject_grades():
                         },
                         {
                             $group: {
-                                _id: { user_id: { $user_id: "$user_id"}, 
+                                _id: { user_id: { $user_id: "$user_id"},
                                         points: { $sum: "$points"},
                             }
                         }
@@ -861,7 +862,7 @@ def subjects():
 
         subject = Subject(
                           subject_code,
-                          subject_name, 
+                          subject_name,
                           subject_description,
                           subject_learning_outcomes
                          ).save()
@@ -874,7 +875,7 @@ def subjects():
 def learning_outcomes():
     if(request.method == 'GET'):
         learning_outcomes = json.loads(Learning_Outcome.read())
-        return render_template('learning_outcomes.html', 
+        return render_template('learning_outcomes.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
@@ -938,7 +939,7 @@ def rubrics():
             #if error not in json_data?
             return render_template(
                 'rubrics.html',
-                rubrics=json.loads(rubrics.text), 
+                rubrics=json.loads(rubrics.text),
                 course_id=course_id
             )
 
@@ -954,8 +955,8 @@ def map_rubric(rubric_id):
             raise error
         else:
             """
-            
-            cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash. 
+
+            cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash.
             If the user does not request a style, this key will be absent.",
             #           "type": "array",
             #           "items": { "type": "object" }
@@ -990,7 +991,7 @@ def map_rubric(rubric_id):
 def map_rubric_assessment():
     if(request.method == 'GET'):
         learning_outcomes = json.loads(Learning_Outcome.read())
-        
+
     elif(request.method == 'POST'):
         pass
 
@@ -1036,7 +1037,7 @@ def map_rubric_criterion():
 def assessments():
     if(request.method == 'GET'):
         assessments = json.loads(Assessment.read())
-        return render_template('assessments.html', 
+        return render_template('assessments.html',
                                assessments = assessments)
     else:
         #Create new assessment.
@@ -1051,7 +1052,7 @@ def map_rubric_data(submission_data):
             submission_ID = each_submission_item['id']
             student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
-            submission_rubric_assessment = each_submission_item['rubric_assessment'] 
+            submission_rubric_assessment = each_submission_item['rubric_assessment']
             best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
             student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
@@ -1065,7 +1066,7 @@ def map_rubric_data(submission_data):
 
 '''
 submission = submission_object(
-        submission_ID, 
+        submission_ID,
         submission_assignment_ID,
         submission_rubric_assessment
         )
@@ -1075,7 +1076,7 @@ for each_criteria in submission.criteria:
         learning_outcome = Learning_Outcome(int(each_criteria.id),
                                             float(each_criteria.points)).save()
     except Exception as error:
-        #Some points are marked blank and cannot be converted. 
+        #Some points are marked blank and cannot be converted.
         pass
     else:
         submission_grades.append(learning_outcome)
@@ -1167,7 +1168,7 @@ def create_canvas_account():
                 if json_data and isinstance(json_data, dict):
                     try:
                         first_name = json_data['properties']['firstname']['value']
-                        last_name = json_data['properties']['lastname']['value'] 
+                        last_name = json_data['properties']['lastname']['value']
                         user_email = json_data['properties']['email']['value']
                         user_name = first_name + " " + last_name
                     except KeyError as error:
@@ -1177,6 +1178,10 @@ def create_canvas_account():
                         print(error)
                         return abort(500)
                     else:
+                        try:
+                            hubspot_request = Hubspot_Request(course_ID, Section_ID, first_name, last_name, user_email)
+                        except Exception as error:
+                            print(error)
                         creation_response = create_canvas_login(user_name, user_email)
                         if(creation_response.status_code == 400):
                             print("The user already exists", creation_response)
@@ -1242,10 +1247,10 @@ def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
         #Convert ImmutableMultiDict to Dict
-        request_arguments = request.form.to_dict()
-        course_ID = str(request_arguments['course_id'])
-        section_ID = str(request_arguments['section_id'])
-        user_ID = str(request_arguments['user_id'])
+        #request_arguments = request.form.to_dict()
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
+        user_ID = str(request.args.get('user_id'))
     except Exception as error:
         print(error)
         return abort(500)
@@ -1333,12 +1338,12 @@ def get_config(_dir):
         Reads the file specified by the _dir string and returns the contents
         using yaml.load(). Alternatively you could use yaml.safe_load().
     '''
-    
+
     file_content = None
 
     #Checks whether the _dir method argument is a string. isinstance() supports DataTypes that inherit the String base class.
     assert isinstance(_dir, str)
-    
+
     #Check if the directory method argument exists in the current filesystem.
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
@@ -1386,7 +1391,7 @@ def google_request(spreadsheet_ID, range_name, scope):
     result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_ID,
                                                 range=range_name).execute()
     sheet_data = result.get('values', [])
-    
+
     if not sheet_data:
         sys.exit()
     else:
