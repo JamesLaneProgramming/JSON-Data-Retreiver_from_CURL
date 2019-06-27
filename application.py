@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 '''
-#Google OATH imports 
+#Google OATH imports
 try:
     from googleapiclient.discovery import build
     from httplib2 import Http
@@ -25,6 +25,7 @@ import requests
 import json
 import hashlib
 import pandas
+import pygal
 from werkzeug import secure_filename
 from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
@@ -43,17 +44,21 @@ from canvas_module import enroll_canvas_student, extract_rubric_data, search_stu
 from users.user_model import User
 from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
+from assignment_mapping.assignment_mapping_model import Assignment_Mapping
 from learning_outcomes.learning_outcome_model import Learning_Outcome
 from subjects.subject_model import Subject
 from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
+from grades.grade_model import Grade
+from subject_grades.subject_grade_model import Subject_Grade
+from hubspot_requests.hubspot_request_model import Hubspot_Request
 
 application = Flask(__name__, template_folder='templates')
 CORS(application)
 #Cross origin requests can be enabled for resources using the @cross_origin decorator method
 
 #Set application secret key to secure against CSRF
-application.secret_key = 'super secret key'
+application.config['SECRET_KEY'] = environ.get('Application_Secret_Key')
 application.config['SESSION_TYPE'] = 'filesystem'
 application.config['UPLOAD_FOLDER'] = '/uploads'
 
@@ -82,16 +87,16 @@ login_manager.init_app(application)
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
-@application.route('/mail')
-def send_simple_message():
-    mail_request = requests.post(
-        "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
-        auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
-        data={"from": "Excited User <postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
-            "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
-            "subject": "Hello",
-            "text": "Testing some Mailgun awesomness!"})
-    return mail_request.text
+def generate_cookie_signature(cookie):
+    #https://stackoverflow.com/questions/22463939/demystify-flask-app-secret-ke://stackoverflow.com/questions/22463939/demystify-flask-app-secret-key
+    try:
+        cookie_bytes = str(cookie).encode('utf8')
+        application_secret_key = str(application.config['SECRET_KEY'])
+    except Exception as error:
+        print(error)
+    else:
+        cookie_signature = sha256(cookie_bytes + application_secret_key).hexdigest()
+        return cookie_signature
 
 def main():
     scheduler = BackgroundScheduler()
@@ -100,7 +105,6 @@ def main():
     application.debug = True
     port = int(os.environ.get('PORT', 5000))
     application.run(host='0.0.0.0', port=port, use_reloader=False)
-    #Set up Flask Scheduler.
 
 @application.route('/')
 def home():
@@ -113,21 +117,24 @@ def login():
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
-            return redirect(url_for('login'))
+            next = get_redirect_target()
+            return redirect(url_for('login'), next=next)
         else:
             #Inform users of username/password constrains.
             if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
-                user = User.authenticate(username, password)
-                
-            if user is not None and user.is_authenticated:
-                login_status = login_user(user)
-                #http://flask.pocoo.org/docs/1.0/patterns/flashing/
-                flash('Logged in successfully.')
-                next = get_redirect_target()
-                return redirect_back('home', next=next)
+                user = User.authenticate(username.encode('utf-8'), password.encode('utf-8'))
+                if user is not None and user.is_authenticated:
+                    login_status = login_user(user)
+                    #http://flask.pocoo.org/docs/1.0/patterns/flashing/
+                    flash('Logged in successfully.')
+                    next = get_redirect_target()
+                    return redirect_back('home', next=next)
+                else:
+                    next = get_redirect_target()
+                    return redirect(url_for('signup'), next=next)
             else:
                 next = get_redirect_target()
-                return redirect(url_for('signup'), next=next)
+                return redirect(url_for('login'), next=next)
     else:
         return render_template('login.html')
 
@@ -180,6 +187,7 @@ def signup():
             username = str(request.form['username'])
             password = str(request.form['password'])
             safeword = str(request.form['safeword'])
+            next = get_redirect_target()
         except Exception as error:
             raise error
         else:
@@ -187,20 +195,16 @@ def signup():
                     safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
                 if(User.objects(username=username)):
                     flash("Username already taken")
-                    next = get_redirect_target()
                     return redirect(url_for('signup', next=next))
                 elif(safeword == str(environ.get('safeword'))):
-                    new_user = User.create(username, password)
+                    new_user = User.create(username.encode('utf-8'), password.encode('utf-8'))
                     User.authenticate(username, password)
-                    next = get_redirect_target()
                     return redirect_back('home', next=next)
                 else:
-                    next = get_redirect_target()
                     flash("safeword was incorrect, could not create account")
                     return redirect(url_for('signup', next=next))
             else:
                 flash("username, password or safeword cannot be empty")
-                next = get_redirect_target()
                 return redirect(url_for('signup', next=next))
     else:
         return render_template('signup.html')
@@ -268,9 +272,9 @@ def require_hubspot_access_token(func):
 @login_required
 def request_refresh_token():
     try:
-        code = request.args.get('code')
-        client_id = environ.get('hubspot_client_id')
-        client_secret = environ.get('hubspot_client_secret')
+        code = str(request.args.get('code'))
+        client_id = str(environ.get('hubspot_client_id'))
+        client_secret = str(environ.get('hubspot_client_secret'))
         '''
         redirect_uri must match the redirect_uri used to intitiate the OAuth
         connection
@@ -279,21 +283,22 @@ def request_refresh_token():
         redirect_uri = url_for('request_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
-        raise error
+        flash('Could not find auth code in request arguments')
+        return redirect(url_for('authenticate_hubspot'))
     else:
         _headers = {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
                    }
         data = {
-                'grant_type':'authorization_code', 
+                'grant_type':'authorization_code',
                 'client_id': client_id,
-                'client_secret': client_secret, 
+                'client_secret': client_secret,
                 'redirect_uri': redirect_uri,
                 'code': code
                }
         post_request = requests.post(
                                      'https://api.hubapi.com/oauth/v1/token',
-                                     headers=_headers, 
+                                     headers=_headers,
                                      data=data
                                     )
         try:
@@ -302,10 +307,8 @@ def request_refresh_token():
         except Exception as error:
             raise error
         else:
-            User.set_refresh_token(
-                                   current_user.id, 
-                                   refresh_token
-                                  )
+            User.set_refresh_token(current_user.id,
+                refresh_token)
             return redirect(url_for('refresh_access_token'))
 
 @application.route('/refresh_access_token', methods=['GET'])
@@ -315,8 +318,8 @@ def refresh_access_token():
         client_id = str(environ.get('hubspot_client_id'))
         client_secret = str(environ.get('hubspot_client_secret'))
     except Exception as error:
-        print('client_id or client_secret environment variables cannot be found')
-        raise error
+        flash('client_id or client_secret environment variables cannot be found')
+        return redirect(url_for('refresh_access_code'))
     else:
         try:
             refresh_token = current_user.hubspot_refresh_token
@@ -345,11 +348,12 @@ def refresh_access_token():
                     access_token = post_request.json()['access_token']
                     access_token_expiry = post_request.json()['expires_in']
                 except ValueError as error:
+                    #TODO: Redirect to where?
                     print("Post request response did not contain an access token")
                 #KeyError missing access_token
                 except Exception as error:
-                    print(post_request.text)
-                    raise error
+                    #TODO: Redirect to where?
+                    print(error)
                 else:
                     next = get_redirect_target()
                     response = make_response(redirect_back('home', next=next))
@@ -374,7 +378,7 @@ def authenticate_hubspot():
     They will be prompted to authenticate and authorise the application.
 
     Users will be redirected to the redirect_uri with a code query parameter.
-    
+
     Use the code above to request access token and refresh token.
     Headers = Content-Type: application/x-www-form-urlencoded;charset=utf-8
     Data:
@@ -430,7 +434,7 @@ def workflow_history(workflow_id):
                    }
     try:
         put_request = requests.put(
-                             request_url, 
+                             request_url,
                              headers=request_headers,
                              params=request_body
                             )
@@ -539,8 +543,8 @@ def user_assignment_data(course_id, user_id):
                                             overdue_assignment = \
                                                 Overdue_Assignment(int(course_id),
                                                 int(user_assignment['assignment_id']),
-                                                int(user_id), 
-                                                due_date, 
+                                                int(user_id),
+                                                due_date,
                                                 date_now)
                                             overdue_assignment.save()
                                         except Exception as error:
@@ -577,7 +581,7 @@ def user_assignment_data_endpoint():
         else:
             return user_assignment_data(course_id, user_id)
             #Get assignment details
-   
+
 @application.route('/list-assignment-extensions', methods=['GET', 'POST'])
 @login_required
 def list_assignment_extensions():
@@ -616,7 +620,7 @@ def list_assignment_extensions():
                         print("No due date could be extracted from json data")
                     else:
                         assignment_due_at = dateutil.parser.parse(assignment_object_due_date)
-                        
+
                         #Get assignment overrides
                         domain = 'https://coderacademy.instructure.com'
                         endpoint = '/api/v1/courses/{0}/assignments/{1}/overrides'
@@ -649,7 +653,7 @@ def get_student_id_list_from_assignment_override_object(override_object,
         group_id = override_object['group_id']
         domain = 'https://coderacademy.instructure.com'
         endpoint = '/api/v1/groups/{0}/users'.format(group_id)
-        group_request = canvas_API_request(domain + endpoint)
+        uconsole.log(formData);roup_request = canvas_API_request(domain + endpoint)
         for student in group_request:
             list_of_student_ids.append(student['id'])
     elif 'course_section_id' in override_object:
@@ -666,6 +670,37 @@ def get_student_id_list_from_assignment_override_object(override_object,
         print('No id in override object')
         print(override_object)
     return ''.join(str(i) + ', ' for i in list_of_student_ids)
+
+@application.route('/pygalexample/')
+def pygalexample():
+    try:
+        graph = pygal.Bar()
+        graph.title = '% Grade Graph'
+        graph.x_labels = ['2011','2012','2013','2014','2015','2016']
+        graph.add('Python', [15, 31, 89, 200, 356, 900])
+        graph.add('Java', [15, 45, 76, 80,  91,  95])
+        graph.add('C++', [5, 51, 54, 102, 150, 201])
+        graph.add('All others combined!', [5, 15, 21, 55, 92, 105])
+        #graph_data = graph.render_data_uri()
+        #return render_template("graphing.html", graph_data = graph_data)
+        return graph.render_response()
+    except Exception as error:
+        return(str(error))
+
+@application.route('/student_grade_graph/<student_id>')
+def student_graph_grade(student_id):
+    try:
+        graph = pygal.Bar()
+        graph.title = '% Grade Graph'
+        graph_values = []
+        for each in Grade.objects(user_id=student_id).only('points'):
+            graph_values.append(float(each.points))
+        graph.add(str(student_id), graph_values)
+        #graph_data = graph.render_data_uri()
+        #return render_template("graphing.html", graph_data = graph_data)
+        return graph.render_response()
+    except Exception as error:
+        return(str(error))
 
 @application.route('/retreive_rubric_assessment', methods=['GET', 'POST'])
 @login_required
@@ -692,24 +727,116 @@ def retreive_rubric_assessment():
         return render_template('rubric_data.html')
     elif(request.method == 'POST'):
         try:
-            course_ID = str(request.values.get('course_id'))
-            assessment_ID = str(request.values.get('assessment_id'))
+            course_id = str(request.values.get('course_id'))
+            assignment_id = str(request.values.get('assessment_id'))
         #Handle Conversion error.
         except Exception as error:
             raise error
         else:
-            if(course_ID is not None and assessment_ID is not None):
+            if(course_id is not None and assignment_id is not None):
                 try:
-                    rubric_data = extract_rubric_data(course_ID, assessment_ID)
+                    rubric_data = extract_rubric_data(course_id, assignment_id)
+                    return rubric_data
                 except Exception as error:
                     print("Unexpected error in extract_rubric_data method")
+                    return abort(500)
                 else:
                     if(rubric_data is not None):
-                        #print(map_rubric_data(rubric_data.json()))
-                        return(rubric_data.text)
+                        submissions = rubric_data.json()
+                        criteria = []
+                        for i in range(0, 1):
+                            try:
+                                for criterion_id in submissions[i]['rubric_assessment'].keys():
+                                    if(Assignment_Mapping.objects(criterion_id=criterion_id).count() == 0):
+                                        criteria.append(criterion_id)
+                                    else:
+                                        print('Criteria: {0}, is already mapped'.format(criterion_id))
+                            except Exception as error:
+                                print(error)
+                        if(len(criteria) != 0):
+                            learning_outcomes = json.loads(Learning_Outcome.read())
+                            return render_template(
+                                'map_rubric_assessment.html',
+                                course_id=course_id,
+                                assignment_id=assignment_id,
+                                criteria=criteria,
+                                learning_outcomes=learning_outcomes
+                            )
+                        else:
+                            for i in range(0, len(submissions)):
+                                try:
+                                    for criterion_id, criterion_values in submissions[i]['rubric_assessment'].items():
+                                        learning_outcome_ids = []
+                                        print(criterion_id, criterion_values)
+                                        assignment_mapping_learning_outcomes = Assignment_Mapping.objects(criterion_id=criterion_id)
+                                        for assignment_mapping_learning_outcome in assignment_mapping_learning_outcomes:
+                                            learning_outcome_ids.append(Learning_Outcome.index(assignment_mapping_learning_outcome.id))
+                                        grade = Grade(str(submissions[i]['user_id']),
+                                            learning_outcome_ids,
+                                            float(criterion_values['points'])).save()
+                                except Exception as error:
+                                    #1 canvas user not graded, handle error
+                                    print("Error: ", error)
+                            return "Finished"
             else:
                 print('Invalid or missing arguments parsed')
-                return render_template('rubric_data.html')
+                return redirect(url_for('retreive_rubric_assessment'))
+
+@application.route('/student_subject_grades', methods=['GET'])
+@login_required
+def student_subject_grades():
+    if(request.method == 'GET'):
+        try:
+            subjects = Subject.objects().aggregate({
+                '$unwind': "$learning_outcomes"
+            },
+            {
+                '$lookup': {
+                    "from": "Grade",
+                    "let": {
+                        "lo_id": "$learning_outcomes"
+                    },
+                    "pipeline": [{
+                            "$match": {
+                                "$expr": {
+                                    "$in": [ "$learning_outcomes", "$$lo_id" ]
+                                }
+                            }
+                        }
+                    ],
+                    "as": "grades"
+                }
+            })
+            print(list(subjects))
+            '''
+            for subject in subjects:
+                for learning_outcome in subject.learning_outcomes:
+                    subject_grade = 0
+                    user_grades =
+                    Grade.objects(learning_outcomes__contains=learning_outcome).aggregate([
+                        {
+                            $unwind: "$learning_outcomes"
+                        },
+                        {
+                            $group: {
+                                _id: { user_id: { $user_id: "$user_id"},
+                                        points: { $sum: "$points"},
+                            }
+                        }
+                    ])
+                    print(grades)
+                    for grade in user_grades:
+                        learning_outcome_count = Grade.objects(user_id=grade.user_id, learning_outcomes__contains=learning_outcome).count()
+                        learning_outcome_total = grade.sum('points')
+                            if(Subject.objects(learning_outcomes__contains=learning_outcome) == subject):
+                                subject_grade += grade.points
+                                print('Subject Grade: ', grade.sum('points')/len(grade.learning_outcomes))
+                    subject_grades = Subject_Grade(user_id=user, grade=subject_grade).save()
+            '''
+            return "Success"
+        except Exception as error:
+            print(error)
+            return "Failure"
 
 @application.route('/subjects', methods=['GET', 'POST'])
 @login_required
@@ -735,7 +862,7 @@ def subjects():
 
         subject = Subject(
                           subject_code,
-                          subject_name, 
+                          subject_name,
                           subject_description,
                           subject_learning_outcomes
                          ).save()
@@ -748,7 +875,7 @@ def subjects():
 def learning_outcomes():
     if(request.method == 'GET'):
         learning_outcomes = json.loads(Learning_Outcome.read())
-        return render_template('learning_outcomes.html', 
+        return render_template('learning_outcomes.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
@@ -812,7 +939,7 @@ def rubrics():
             #if error not in json_data?
             return render_template(
                 'rubrics.html',
-                rubrics=json.loads(rubrics.text), 
+                rubrics=json.loads(rubrics.text),
                 course_id=course_id
             )
 
@@ -828,8 +955,8 @@ def map_rubric(rubric_id):
             raise error
         else:
             """
-            
-            cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash. 
+
+            cription: "(Optional) If 'full' is included in the 'style' parameter, returned assessments will have their full details contained in their data hash.
             If the user does not request a style, this key will be absent.",
             #           "type": "array",
             #           "items": { "type": "object" }
@@ -844,25 +971,46 @@ def map_rubric(rubric_id):
             print(request_url)
             try:
                 rubric_data = canvas_API_request(request_url, request_parameters=request_parameters)
-                print(rubric_data.text)
                 criteria = rubric_data.json()
+                print(criteria)
             except Exception as error:
                 raise error
             else:
                 #Generate dictionary of rubric_data criterion. ID and Name
                 learning_outcomes = json.loads(Learning_Outcome.read())
-                print("Criteria", criteria)
                 return render_template(
                         'map_rubric.html',
                         criteria=criteria,
                         learning_outcomes=learning_outcomes
                         )
     else:
+        pass
+
+@application.route('/map_rubric_assessment', methods=['GET', 'POST'])
+@login_required
+def map_rubric_assessment():
+    if(request.method == 'GET'):
+        learning_outcomes = json.loads(Learning_Outcome.read())
+
+    elif(request.method == 'POST'):
+        pass
+
+@application.route('/map_criterion', methods=['POST'])
+@login_required
+def map_criterion():
+    if(request.method == 'POST'):
         try:
-            rubric_mapping = request.values
-            print(rubric_mapping)
+            learning_outcome_list = request.form.getlist('subject_learning_outcomes_field[]')
+            criterion_id = request.form['criterion_id']
         except Exception as error:
             raise error
+        else:
+            selected_learning_outcomes = []
+            for learning_outcome_id in learning_outcome_list:
+                learning_outcome = Learning_Outcome.index(learning_outcome_id)
+                selected_learning_outcomes.append(learning_outcome)
+            new_assignment_mapping = Assignment_Mapping(criterion_id, selected_learning_outcomes).save()
+        return "Success"
 
 def _build_cors_preflight_response():
     response = make_response()
@@ -889,7 +1037,7 @@ def map_rubric_criterion():
 def assessments():
     if(request.method == 'GET'):
         assessments = json.loads(Assessment.read())
-        return render_template('assessments.html', 
+        return render_template('assessments.html',
                                assessments = assessments)
     else:
         #Create new assessment.
@@ -898,47 +1046,27 @@ def assessments():
 #TODO: Refactor with new rubric mapping workflow.
 def map_rubric_data(submission_data):
     grades = {}
+    assignment_mappings = json.loads(Assignment_Mapping.read())
     for each_submission_item in submission_data:
         try:
             submission_ID = each_submission_item['id']
             student_ID = each_submission_item['user_id']
             submission_assignment_ID = each_submission_item['assignment_id']
-            submission_rubric_assessment = each_submission_item['rubric_assessment'] 
+            submission_rubric_assessment = each_submission_item['rubric_assessment']
             best_fit_student = canvas_API_request('https://coderacademy.instructure.com/api/v1/users/{0}'.format(student_ID))
-            print(best_fit_student.json())
             student_name = json.loads(best_fit_student.text)['name']
         except Exception as error:
             print("This student does not have a rubric_assessment")
             pass
         else:
-            '''
-            learning_outcome_count = 0
-            grade_total = 0
-            shared_outcome_total = 0
-            learning_outcomes_data = {}
-            learning_outcome_data[str(student_name)] = {}
             for each, value in submission_rubric_assessment.items():
-                grade_total = grade_total + value['points']
-                learning_outcome_data[str(student_name)][each] = value['points']
-                if(learning_outcome_count == 14):
-                    grades[str(student_name) + ' CMP1043'] = grade_total
-                    grade_total = 0
-                if(learning_outcome_count == 35):
-                    grades[str(student_name) + ' PRG1006'] = grade_total
-                    grade_total = 0
-                if(learning_outcome_count == 37):
-                    print(each, value)
-                    grades[str(student_name) + ' CMP1043'] =  grades[str(student_name) + ' CMP1043'] + (grade_total / 2)
-                    grades[str(student_name) + ' PRG1006'] =  grades[str(student_name) + ' PRG1006'] + (grade_total / 2)
-                learning_outcome_count = learning_outcome_count + 1
-            print(learning_outcome_data)
-            '''
-    print(grades)
-    return grades
+                print(each, value)
+                if(each == Assignment_Mapping.objects(criterion_id=each)):
+                    print("Mapping Found")
 
 '''
 submission = submission_object(
-        submission_ID, 
+        submission_ID,
         submission_assignment_ID,
         submission_rubric_assessment
         )
@@ -948,7 +1076,7 @@ for each_criteria in submission.criteria:
         learning_outcome = Learning_Outcome(int(each_criteria.id),
                                             float(each_criteria.points)).save()
     except Exception as error:
-        #Some points are marked blank and cannot be converted. 
+        #Some points are marked blank and cannot be converted.
         pass
     else:
         submission_grades.append(learning_outcome)
@@ -1040,7 +1168,7 @@ def create_canvas_account():
                 if json_data and isinstance(json_data, dict):
                     try:
                         first_name = json_data['properties']['firstname']['value']
-                        last_name = json_data['properties']['lastname']['value'] 
+                        last_name = json_data['properties']['lastname']['value']
                         user_email = json_data['properties']['email']['value']
                         user_name = first_name + " " + last_name
                     except KeyError as error:
@@ -1050,6 +1178,10 @@ def create_canvas_account():
                         print(error)
                         return abort(500)
                     else:
+                        try:
+                            hubspot_request = Hubspot_Request(course_ID, Section_ID, first_name, last_name, user_email)
+                        except Exception as error:
+                            print(error)
                         creation_response = create_canvas_login(user_name, user_email)
                         if(creation_response.status_code == 400):
                             print("The user already exists", creation_response)
@@ -1115,10 +1247,10 @@ def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
         #Convert ImmutableMultiDict to Dict
-        request_arguments = request.form.to_dict()
-        course_ID = str(request_arguments['course_id'])
-        section_ID = str(request_arguments['section_id'])
-        user_ID = str(request_arguments['user_id'])
+        #request_arguments = request.form.to_dict()
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
+        user_ID = str(request.args.get('user_id'))
     except Exception as error:
         print(error)
         return abort(500)
@@ -1206,12 +1338,12 @@ def get_config(_dir):
         Reads the file specified by the _dir string and returns the contents
         using yaml.load(). Alternatively you could use yaml.safe_load().
     '''
-    
+
     file_content = None
 
     #Checks whether the _dir method argument is a string. isinstance() supports DataTypes that inherit the String base class.
     assert isinstance(_dir, str)
-    
+
     #Check if the directory method argument exists in the current filesystem.
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
@@ -1259,11 +1391,22 @@ def google_request(spreadsheet_ID, range_name, scope):
     result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_ID,
                                                 range=range_name).execute()
     sheet_data = result.get('values', [])
-    
+
     if not sheet_data:
         sys.exit()
     else:
         return sheet_data
+
+@application.route('/mail')
+def send_simple_message():
+    mail_request = requests.post(
+        "https://api.mailgun.net/v3/sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org/messages",
+        auth=("api", "412c248f4efdd95f34e8b541726e1b7e-29b7488f-07e4e4c0"),
+        data={"from": "Excited User <postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org>",
+            "to": ["james.lane@redhilleducation.com", "postmaster@sandboxbd63b75742724ec48a7ff11a143eae19.mailgun.org"],
+            "subject": "Hello",
+            "text": "Testing some Mailgun awesomness!"})
+    return mail_request.text
 
 if __name__ == "__main__":
     main()
