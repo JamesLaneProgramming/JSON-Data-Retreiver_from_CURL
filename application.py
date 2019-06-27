@@ -1179,7 +1179,7 @@ def create_canvas_account():
                         return abort(500)
                     else:
                         try:
-                            hubspot_request = Hubspot_Request(course_ID, section_ID, first_name, last_name, user_email)
+                            hubspot_request = Hubspot_Request(course_ID, section_ID, first_name, last_name, user_email).save()
                         except Exception as error:
                             print(error)
                         creation_response = create_canvas_login(user_name, user_email)
@@ -1247,14 +1247,14 @@ def enroll_user_in_course():
     #Arguments passed through the data parameter will be form-encoded
     try:
         #Convert ImmutableMultiDict to Dict
-        request_arguments = request.get_json(force=True)
-        course_ID = str(request_arguments['course_id'])
-        section_ID = str(request_arguments['section_id'])
-        user_ID = str(request_arguments['user_id'])
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
+        user_ID = str(request.args.get('user_id'))
     except Exception as error:
         print(error)
         return abort(500)
     else:
+        print(user_ID, course_ID, section_ID)
         user_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
         return user_enrollment_request.text
 
