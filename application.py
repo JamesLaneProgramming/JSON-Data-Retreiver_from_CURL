@@ -696,18 +696,24 @@ def student_graph_grade(student_id):
         graph.title = '% Grade Graph'
         graph_values = []
         grade_averages = []
-        for each in Grade.objects().aggregate({
-                "$unwind": "$learning_outcomes"
-            },
-            {
-                "$group": {
-                    "_id": "$learning_outcomes",
-                    "avgPoints": {
-                        "$avg": "$points"
-                    }
+        pipeline = {
+            "$unwind": "$learning_outcomes"
+        },
+        {
+            "$lookup": {
+                "from": "$learning_outcomes",
+                #Finish
+            }
+        }
+        {
+            "$group": {
+                "_id": "$learning_outcomes",
+                "avgPoints": {
+                    "$avg": "$points"
                 }
             }
-        ):
+        }
+        for each in Grade.objects().aggregate(pipeline):
             print(each)
             try:
                 print(each.avgPoints)
@@ -808,25 +814,24 @@ def student_subject_grades():
     if(request.method == 'GET'):
         try:
             subjects = Subject.objects().aggregate({
-                '$unwind': "$learning_outcomes"
-            },
-            {
-                '$lookup': {
-                    "from": "Grade",
-                    "let": {
-                        "lo_id": "$learning_outcomes"
-                    },
-                    "pipeline": [{
-                            "$match": {
-                                "$expr": {
-                                    "$in": [ "$learning_outcomes", "$$lo_id" ]
+                    '$unwind': "$learning_outcomes"
+                },
+                {
+                    '$lookup': {
+                        "from": "Grade",
+                        "let": {
+                            "lo_id": "$learning_outcomes"
+                        },
+                        "pipeline": {
+                                "$match": {
+                                    "$expr": {
+                                        "$in": [ "$learning_outcomes", "$$lo_id" ]
+                                    }
                                 }
-                            }
                         }
-                    ],
+                    },
                     "as": "grades"
-                }
-            })
+                })
             print(list(subjects))
             '''
             for subject in subjects:
