@@ -1249,9 +1249,9 @@ def enroll_user_in_course():
         #Convert ImmutableMultiDict to Dict
         request_arguments = request.form.to_dict()
         print(request_arguments)
-        course_ID = str(request.args.get('course_id'))
-        section_ID = str(request.args.get('section_id'))
-        user_ID = str(request.args.get('user_id'))
+        course_ID = str(request_arguments['course_id'])
+        section_ID = str(request_arguments['section_id'])
+        user_ID = str(request_arguments['user_id'])
     except Exception as error:
         print(error)
         return abort(500)
