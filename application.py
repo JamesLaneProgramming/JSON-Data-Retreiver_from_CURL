@@ -700,22 +700,21 @@ def student_graph_grade(student_id):
             "$unwind": "$learning_outcomes"
         },
         {
-            "$lookup": {
-                "from": "$learning_outcomes",
-                #Finish
-            }
-        }
-        {
             "$group": {
-                "_id": "$learning_outcomes"
+                "_id": "$learning_outcomes",
+                "avgPoints": {
+                    "$avg": "$points"
+                }
             }
         }
+        '''
         for each in Grade.objects().aggregate(pipeline):
             print(each)
             try:
                 print(each.avgPoints)
             except Exception:
                 pass
+        '''
         for each in Grade.objects(user_id=student_id).only('points'):
             graph_values.append(float(each.points))
         graph.add(str(student_id), graph_values)
