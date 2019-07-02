@@ -707,10 +707,7 @@ def student_graph_grade(student_id):
         }
         {
             "$group": {
-                "_id": "$learning_outcomes",
-                "avgPoints": {
-                    "$avg": "$points"
-                }
+                "_id": "$learning_outcomes"
             }
         }
         for each in Grade.objects().aggregate(pipeline):
