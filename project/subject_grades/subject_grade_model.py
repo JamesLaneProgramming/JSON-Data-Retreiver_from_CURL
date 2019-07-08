@@ -8,7 +8,7 @@ class Subject_Grade(Document):
 
     def read():
         return Subject_Grade.objects().to_json()
-    
+
     def index(id):
         o_id = mongo_methods.generate_objectid_from_string(id)
         return Subject_Grade.objects(pk=o_id)
