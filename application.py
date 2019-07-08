@@ -696,7 +696,7 @@ def student_graph_grade(student_id):
         graph.title = '% Grade Graph'
         graph_values = []
         grade_averages = []
-        pipeline = {
+        pipeline = [{
             "$unwind": "$learning_outcomes"
         },
         {
@@ -706,7 +706,7 @@ def student_graph_grade(student_id):
                     "$avg": "$points"
                 }
             }
-        }
+        }]
 
         for each in Grade.objects().aggregate(pipeline):
             print(each)
