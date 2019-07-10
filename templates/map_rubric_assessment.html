@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <title>Map Rubric</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+    function mapRubric() {
+      var forms = document.getElementsByClassName('criterion_mapping');
+      var iterator;
+      let xhr = new XMLHttpRequest();
+      for (iterator = 0; iterator < forms.length; iterator++) {
+        var formData = forms[iterator].serializeArray()
+	console.log(forms[iterator].serializeArray());
+        xhr.open('POST', 'https://canvas-integration.herokuapp.com/map_rubric_criterion', true);
+	xhr.setRequestHeader('X-PINGOTHER', 'pingpong');
+        xhr.send(formData);
+      }
+    } 
+  </script>
+  <body>
+    <div class="container">
+      <ul>
+      {% for criterion_id in criteria %}
+        <li>
+	  <p> {{criterion_id}} </p>
+          <form action="/map_criterion" class='criterion_mapping' method='post'>
+	    <input type="hidden" name="criterion_id" value={{criterion_id}}>
+	    <select multiple name="subject_learning_outcomes_field[]">
+	    <!--http://flask.pocoo.org/docs/1.0/templating/#standard-filters-->
+	    <!--Rubric Criterion can be mapped to multiple learning outcomes. Will need to handle this on the other side.-->
+	    {% for each_learning_outcome in learning_outcomes %}
+	      <option name="option" value={{ each_learning_outcome['_id']['$oid'] }}>{{each_learning_outcome['learning_outcome_name']}}</option>
+	    {% endfor %}
+	    </select>
+	    <input type="submit" value="Save Assessment Mapping to Database" name="Submit"> 
+          </form>
+        </li>
+      {% endfor %}
+      </ul>
+    </div>
+  </body>
+</html>
+

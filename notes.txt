@@ -1,3 +1,0 @@
-criteria => One to many to learning outcome.
-
-learning_outcome which subject.

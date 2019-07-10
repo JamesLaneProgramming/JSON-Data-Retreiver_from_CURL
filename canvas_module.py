@@ -4,7 +4,7 @@ from functools import reduce
 
 #TODO: Setup routes and function for retrieving rubric data
 
-def extract_rubric_data(course_ID, assessment_ID):
+def extract_rubric_data(course_ID, assessment_ID, per_page=100):
     '''
     Docstring
     ---------
@@ -24,7 +24,10 @@ def extract_rubric_data(course_ID, assessment_ID):
     '''
     #TODO: Assert that the course_ID and assessment_ID are strings or can be
     #converted to strings without error.
-    parameters = { 'include[]': 'rubric_assessment', 'per_page': '100'}
+    parameters = { 
+            'include[]': 'rubric_assessment', 
+            'per_page': per_page 
+            }
     request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/assignments/{1}/submissions'.format(course_ID, assessment_ID)
     response = canvas_API_request(request_url, request_parameters=parameters, request_method='GET')
     return response
@@ -103,17 +106,17 @@ def enroll_canvas_student(student_ID, course_ID, section_ID=None):
     -----
     Need to assert that the arguments are positive integers and that they are valid canvas users, courses and sections.
     '''
-    assert isinstance(student_ID, int)
-    assert isinstance(course_ID, int)
-    
-    request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(course_ID)
-    if(section_ID != None):
-        assert isinstance(section_ID, int)
-        parameters = {'enrollment[user_id]': str(student_ID), 'enrollment[course_section_id]': str(section_ID)}
-    else:
+    try:
+        request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/enrollments'.format(str(course_ID))
+        print(request_url)
         parameters = {'enrollment[user_id]': str(student_ID)}
-
-    response = canvas_API_request(request_url, request_parameters=parameters, request_method='POST')
+        if(section_ID != None):
+            parameters['enrollment[course_section_id]'] = str(section_ID)
+        print(parameters)
+    except Exception as error:
+        raise error
+    else:
+        response = canvas_API_request(request_url, request_parameters=parameters, request_method='POST')
     return response
 
 def create_canvas_login(student_name, student_email):
@@ -170,6 +173,9 @@ def update_canvas_email(student_ID, student_email):
     response = canvas_API_request(request_url, request_parameters=parameters, request_method='PUT')
     return response
 
+def get_current_canvas_instance():
+    return environ.get('canvas_instance')
+
 def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'):
     '''
     Docstring
@@ -190,7 +196,8 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
     '''
     #Attempt to load canvas_secret from environment
     try:
-        canvas_bearer_token = environ.get('canvas_secret')
+        canvas_bearer_token = str(environ.get('canvas_secret'))
+        canvas_URI = str(canvas_URI)
     except KeyError as error:
         '''
         If canvas_secret token cannot be loaded from the server, return a 500
@@ -200,42 +207,51 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
     except ImportError as error:
         print("OS module could not be imported, please ensure that OS module has been installed and is in the requirements.txt file")
         return abort(500)
+    #Handle conversion error
     except Exception as error:
         raise error
-
-    assert isinstance(canvas_URI, str)
-    assert isinstance(request_method, str)
-
-    #Setup request headers with auth token.
-    _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
-    #Append optional parameters to the URI string.
-    if(request_parameters != None):
-        assert isinstance(request_parameters, dict)
-        query_string = None
-        for each_key, each_value in request_parameters.items():
-            if query_string is None:
-                query_string = '?{0}={1}'.format(each_key, each_value)
+    else:
+        #Setup request headers with auth token.
+        _headers = {'Authorization' : 'Bearer {0}'.format(canvas_bearer_token)}
+        #Append optional parameters to the URI string.
+        if(request_parameters != None):
+            if(isinstance(request_parameters, dict)):
+                query_string = None
+                for each_key, each_value in request_parameters.items():
+                    try:
+                        string_formatted_key = str(each_key)
+                        string_formatted_value = str(each_value)
+                    except Exception as error:
+                        print("Could not convert key/value to string")
+                    else:
+                        #can dict value be None?
+                        '''
+                        If each_key/each_value is the first element in requests_parameters, generate formatting accordingly. Else append to existing query_string.
+                        '''
+                        if query_string is None:
+                            query_string = '?{0}={1}'.format(string_formatted_key, string_formatted_value)
+                        else:
+                            query_string = '{0}&{1}={2}'.format(query_string, string_formatted_key, string_formatted_value)
+                #Concatenate URI and query string
+                canvas_URI = canvas_URI + query_string
             else:
-                query_string = '{0}&{1}={2}'.format(query_string, each_key, each_value)
-        #Concatenate URI and query string
-        canvas_URI = canvas_URI + query_string
-    
-    #Request resource
-    if(request_method.upper() == 'POST'):
-        response = requests.post(canvas_URI, headers=_headers)
-    elif(request_method.upper() == 'GET'):
-        response = requests.get(canvas_URI, headers=_headers)
-    elif(request_method.upper() == 'PUT'):
-        response = requests.put(canvas_URI, headers=_headers)
-    else:
-        print("Could not understand request_method, Please specify 'GET', 'POST' or 'PUT'")
+                print("Incorrect argument type parsed, request_parameters must be a dictionary")
+        #TODO: Convert to switch statement.
+        if(request_method.upper() == 'POST'):
+            response = requests.post(canvas_URI, headers=_headers)
+        elif(request_method.upper() == 'GET'):
+            response = requests.get(canvas_URI, headers=_headers)
+        elif(request_method.upper() == 'PUT'):
+            response = requests.put(canvas_URI, headers=_headers)
+        else:
+            print("Could not understand request_method, Please specify 'GET', 'POST' or 'PUT'")
 
-    #Handle responses
-    if response.status_code == 200:
-        print("Request successful")
-    elif response.status_code == 401:
-        print("Authorisation error, please check canvas_secret environment variable")
-    else:
-        print(response.status_code)
-    return response
+        #Handle responses
+        if response.status_code == 200:
+            print("Request successful")
+        elif response.status_code == 401:
+            print("Authorisation error, please check canvas_secret environment variable")
+        else:
+            print(response.status_code)
+        return response
 
