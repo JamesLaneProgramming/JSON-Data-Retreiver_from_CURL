@@ -1263,7 +1263,7 @@ def enroll_user_in_course():
         return abort(500)
     else:
         print(course_ID, section_ID, user_ID)
-        student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
+        student_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
         print(student_enrollment_request.text)
         return student_enrollment_request.text
 
