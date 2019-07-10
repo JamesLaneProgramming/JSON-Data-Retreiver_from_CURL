@@ -8,4 +8,5 @@ def generate_objectid_from_string(objectid_string):
         o_id = ObjectId(objectid_string)
     except Exception as error:
         raise error
-    return o_id
+    else:
+        return o_id

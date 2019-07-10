@@ -415,7 +415,7 @@ def subjects():
 
         subject = Subject(
                           subject_code,
-                          subject_name, 
+                          subject_name,
                           subject_description,
                           subject_learning_outcomes
                          ).save()
@@ -428,7 +428,7 @@ def subjects():
 def learning_outcomes():
     if(request.method == 'GET'):
         learning_outcomes = json.loads(Learning_Outcome.read())
-        return render_template('learning_outcomes.html', 
+        return render_template('learning_outcomes.html',
                                learning_outcomes=learning_outcomes)
     elif(request.method == 'POST'):
         try:
@@ -479,7 +479,7 @@ def criterion():
 def assessments():
     if(request.method == 'GET'):
         assessments = json.loads(Assessment.read())
-        return render_template('assessments.html', 
+        return render_template('assessments.html',
                                assessments = assessments)
 
 def map_rubric_data(submission_data):
@@ -490,7 +490,7 @@ def map_rubric_data(submission_data):
         except Exception as error:
             raise error
         try:
-            submission_rubric_assessment = each_submission_item['rubric_assessment'] 
+            submission_rubric_assessment = each_submission_item['rubric_assessment']
         except Exception as error:
             pass
         if(submission_rubric_assessment):
@@ -502,10 +502,10 @@ def map_rubric_data(submission_data):
                     learning_outcome = Learning_Outcome(int(each_criteria.id),
                                                         float(each_criteria.points)).save()
                 except Exception as error:
-                    #Some points are marked blank and cannot be converted. 
+                    #Some points are marked blank and cannot be converted.
                     pass
                 submission_grades.append(learning_outcome)
-            assessment = Rubric_Assessment.create(each_submission_item['user_id'], 
+            assessment = Rubric_Assessment.create(each_submission_item['user_id'],
                                                   Assessment.objects(assessment_id=667),
                                                   submission_grades)
             learning_outcome_count = 0
@@ -591,7 +591,7 @@ def create_canvas_account():
             if json_data and isinstance(json_data, dict):
                 try:
                     first_name = json_data['properties']['firstname']['value']
-                    last_name = json_data['properties']['lastname']['value'] 
+                    last_name = json_data['properties']['lastname']['value']
                     student_email = json_data['properties']['email']['value']
                     student_name = first_name + " " + last_name
                 except KeyError as error:
@@ -650,6 +650,7 @@ def enroll_canvas_student():
     except Exception as error:
         raise error
     else:
+        print(course_ID, section_ID, student_ID)
         student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
         return student_enrollment_request.text
 
@@ -688,10 +689,10 @@ def update_sis_id():
             for cell in each_row:
                 student_email = cell.value
                 student_number = (student_email).split('@')[0]
-                
-                user_id = json.loads(search_students(student_email).text)['id'] 
+
+                user_id = json.loads(search_students(student_email).text)['id']
                 sis_id = student_number
-                
+
                 #GET USERS LOGIN ID.
                 domain = 'https://coderacademy.instructure.com'
                 endpoint = '/api/v1/users/{0}/logins'.format(user_id)
@@ -721,12 +722,12 @@ def get_config(_dir):
         Reads the file specified by the _dir string and returns the contents
         using yaml.load(). Alternatively you could use yaml.safe_load().
     '''
-    
+
     file_content = None
 
     #Checks whether the _dir method argument is a string. isinstance() supports DataTypes that inherit the String base class.
     assert isinstance(_dir, str)
-    
+
     #Check if the directory method argument exists in the current filesystem.
     if os.path.exists(_dir):
         with open(_dir, 'r') as config_file:
@@ -774,7 +775,7 @@ def google_request(spreadsheet_ID, range_name, scope):
     result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_ID,
                                                 range=range_name).execute()
     sheet_data = result.get('values', [])
-    
+
     if not sheet_data:
         sys.exit()
     else:
