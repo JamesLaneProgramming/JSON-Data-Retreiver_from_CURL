@@ -1148,7 +1148,7 @@ def create_canvas_account():
         section_ID = str(request.args.get('section_id'))
     except Exception as error:
         print("Invalid course_id or section_id")
-        return "Invalid course_id or section_id"
+        return abort(500)
     else:
         #Validate POST payload
         try:
@@ -1168,7 +1168,7 @@ def create_canvas_account():
                     print("Specified JSON fields are not present")
                     return abort(422)
                 except Exception as error:
-                    pass
+                    return abort(500)
                 #Check if JSON data was parsed correctly.
                 #Validate JSON Object is dict not array.
                 if json_data and isinstance(json_data, dict):
@@ -1215,7 +1215,7 @@ def create_canvas_account():
                             else:
                                 return creation_response.text
                         else:
-                            return str(creation_response.text)
+                            return abort(creation_response.status_code)
 
                         #Endpoint will return 422 if student_id doesn't exist
                         #return redirect(url_for('enroll_user_in_course', user_id=user_ID, course_id=course_ID, section_id=section_ID))
@@ -1262,8 +1262,9 @@ def enroll_user_in_course():
         print(error)
         return abort(500)
     else:
-        print(course_ID, section_ID, student_ID)
+        print(course_ID, section_ID, section_ID)
         student_enrollment_request = enroll_canvas_student(student_ID, course_ID, section_ID)
+        print(student_enrollment_request.text)
         return student_enrollment_request.text
 
 #TODO: File upload uri with student
