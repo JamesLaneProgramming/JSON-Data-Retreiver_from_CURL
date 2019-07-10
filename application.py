@@ -1328,8 +1328,8 @@ def update_sis_id():
 def uploaded_file(file_name):
     return send_from_directory(app.config['UPLOAD_FOLDER'], file_name)
 
-        '''cell_range = selected_sheet['C2': 'C96']'''
-        '''
+
+'''cell_range = selected_sheet['C2': 'C96']
         for each_row in cell_range:
             for cell in each_row:
                 student_email = cell.value
@@ -1353,7 +1353,7 @@ def uploaded_file(file_name):
                                                         request_method = 'PUT'
                                                        )
                 return user_login_details.text
-        '''
+'''
 #Opens the YAML file at the specified directory and returns the scriptable YAML object.
 def get_config(_dir):
     '''
