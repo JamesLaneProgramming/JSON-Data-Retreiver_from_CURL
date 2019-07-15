@@ -1212,8 +1212,6 @@ def create_canvas_account():
                             except Exception as error:
                                 print(error)
                                 return abort(500)
-                            else:
-                                return creation_response.text
                         else:
                             return abort(creation_response.status_code)
 
