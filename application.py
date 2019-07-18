@@ -117,12 +117,13 @@ def login():
             username = str(request.values.get('username'))
             password = str(request.values.get('password'))
         except Exception as error:
+            print(error)
             next = get_redirect_target()
             return redirect(url_for('login'), next=next)
         else:
             #Inform users of username/password constrains.
             if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
-                user = User.authenticate(username.encode('utf-8'), password.encode('utf-8'))
+                user = User.authenticate(username, password)
                 if user is not None and user.is_authenticated:
                     login_status = login_user(user)
                     #http://flask.pocoo.org/docs/1.0/patterns/flashing/
