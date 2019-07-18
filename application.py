@@ -131,10 +131,10 @@ def login():
                     return redirect_back('home', next=next)
                 else:
                     next = get_redirect_target()
-                    return redirect(url_for('signup'), next=next)
+                    return redirect_back('signup', next=next)
             else:
                 next = get_redirect_target()
-                return redirect(url_for('login'), next=next)
+                return redirect_back('login', next=next)
     else:
         return render_template('login.html')
 
