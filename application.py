@@ -737,7 +737,7 @@ def retreive_rubric_assessment():
             if(course_id is not None and assignment_id is not None):
                 try:
                     rubric_data = extract_rubric_data(course_id, assignment_id)
-                    return rubric_data
+                    return rubric_data.text
                 except Exception as error:
                     print("Unexpected error in extract_rubric_data method")
                     return abort(500)
