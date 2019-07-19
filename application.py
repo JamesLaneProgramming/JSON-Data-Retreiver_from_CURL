@@ -794,20 +794,24 @@ def student_subject_grades():
             {
                 '$lookup': {
                     "from": "Grade",
-                    "let": {
-                        "lo_id": "$learning_outcomes"
-                    },
-                    "pipeline": [{
-                            "$match": {
-                                "$expr": {
-                                    "$in": [ "$learning_outcomes", "$$lo_id._id" ]
-                                }
-                            }
-                        }
-                    ],
+                    "localField": "learning_outcomes"
+                    "foreignField": "learning_outcomes"
                     "as": "grades"
                 }
             })
+            '''
+            "let": {
+                "lo_id": "$learning_outcomes"
+            },
+            "pipeline": [{
+                    "$match": {
+                        "$expr": {
+                            "$in": [ "$learning_outcomes", "$$lo_id._id" ]
+                        }
+                    }
+                }
+            ],
+            '''
             print(list(subjects))
             '''
             for subject in subjects:
