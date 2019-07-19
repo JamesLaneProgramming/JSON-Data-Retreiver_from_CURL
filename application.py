@@ -788,7 +788,7 @@ def retreive_rubric_assessment():
 def student_subject_grades():
     if(request.method == 'GET'):
         try:
-            subjects = Subject.objects().aggregate({
+            subjects = Subject.objects().no_deference().aggregate({
                 '$unwind': "$learning_outcomes"
             },
             {
@@ -800,7 +800,7 @@ def student_subject_grades():
                     "pipeline": [{
                             "$match": {
                                 "$expr": {
-                                    "$in": [ "$learning_outcomes", "$$lo_id" ]
+                                    "$in": [ "$learning_outcomes", "$$lo_id._id" ]
                                 }
                             }
                         }
