@@ -794,8 +794,8 @@ def student_subject_grades():
             {
                 '$lookup': {
                     "from": "Grade",
-                    "localField": "learning_outcomes"
-                    "foreignField": "learning_outcomes"
+                    "localField": "learning_outcomes",
+                    "foreignField": "learning_outcomes",
                     "as": "grades"
                 }
             })
