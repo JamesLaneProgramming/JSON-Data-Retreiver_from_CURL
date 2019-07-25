@@ -1,9 +1,12 @@
 from os import environ
 import requests
 from functools import reduce
+from flask import Blueprint, flash, abort
+from hubspot_requests.hubspot_request_model import Hubspot_Request
+
+canvas_blueprint = Blueprint('canvas', __name__)
 
 #TODO: Setup routes and function for retrieving rubric data
-
 def extract_rubric_data(course_ID, assessment_ID, per_page=100):
     '''
     Docstring
@@ -16,7 +19,7 @@ def extract_rubric_data(course_ID, assessment_ID, per_page=100):
         Takes an int function argument that is used to specify the course.
     assessment_ID(Int):
         Takes an int function argument that is used to specify the assessment to extract rubric data from.
-    
+
     Returns
     -------
     rubric_data(JSON):
@@ -24,15 +27,15 @@ def extract_rubric_data(course_ID, assessment_ID, per_page=100):
     '''
     #TODO: Assert that the course_ID and assessment_ID are strings or can be
     #converted to strings without error.
-    parameters = { 
-            'include[]': 'rubric_assessment', 
-            'per_page': per_page 
+    parameters = {
+            'include[]': 'rubric_assessment',
+            'per_page': per_page
             }
     request_url = 'https://coderacademy.instructure.com/api/v1/courses/{0}/assignments/{1}/submissions'.format(course_ID, assessment_ID)
     response = canvas_API_request(request_url, request_parameters=parameters, request_method='GET')
     return response
 
-            
+
 def update_canvas_emails(sheet_data, canvas_data, _headers):
     #TODO: Setup front end for this feature
     #TODO: Setup routes for this, identify database needs
@@ -51,11 +54,11 @@ def update_canvas_emails(sheet_data, canvas_data, _headers):
             #Use variables to compare
             student_sheet_name = sheet_name_lambda(each_sheet_student)
             student_canvas_name = canvas_name_lambda(each_canvas_student)
-            
+
             #Use variables to update
             student_sheet_email = sheet_email_lambda(each_sheet_student)
             student_canvas_ID = canvas_ID_lambda(each_canvas_student)
-            
+
             if student_canvas_name == student_sheet_name:
                 update_canvas_email(
                                     student_canvas_ID,
@@ -88,7 +91,7 @@ def enroll_canvas_student(student_ID, course_ID, section_ID=None):
     Docstring
     ---------
     enroll_canvas_student is used to enroll a canvas user to a specific course and section.
-    
+
     Arguments
     ---------
     student_ID(Integer):
@@ -142,7 +145,7 @@ def create_canvas_login(student_name, student_email):
     '''
     assert isinstance(student_name, str)
     assert isinstance(student_email, str)
-    
+
     parameters = {'user[name]':student_name, 'pseudonym[unique_id]':student_email, 'pseudonym[force_self_registration]': 'True'}
     response = canvas_API_request('https://coderacademy.instructure.com/api/v1/accounts/1/users', parameters, request_method='POST')
     return response
@@ -255,3 +258,177 @@ def canvas_API_request(canvas_URI, request_parameters=None, request_method='GET'
             print(response.status_code)
         return response
 
+@require_hubspot_signature_validation
+@canvas_blueprint.route('/create-account', methods=['POST'])
+def create_canvas_account():
+    '''
+    Docstring
+    ---------
+    create_account() should only be run in a production environment
+    Arguments
+    ---------
+    student_data(JSON Object):
+        Takes a JSON Object that contains firstname, lastname and email
+    Returns
+    -------
+    Account_Creation_Successful(template):
+        Returns a template to be rendered by Flask on successful request.
+    '''
+    try:
+        course_ID = str(request.args.get('course_id'))
+        section_ID = str(request.args.get('section_id'))
+    except Exception as error:
+        print("Invalid course_id or section_id")
+        return abort(500)
+    else:
+        #Validate POST payload
+        try:
+            json_data = request.get_json()
+        except Exception as error:
+            return abort(415)
+        else:
+            #http://flask.pocoo.org/docs/1.0/api/#response-objects
+            #Returns None if JSON could not be parsed.
+            if(json_data is not None):
+                try:
+                    first_name = json_data['properties']['firstname']['value']
+                    last_name = json_data['properties']['lastname']['value']
+                    student_email = json_data['properties']['email']['value']
+                    student_name = first_name + " " + last_name
+                except KeyError as error:
+                    print("Specified JSON fields are not present")
+                    return abort(422)
+                except Exception as error:
+                    return abort(500)
+                #Check if JSON data was parsed correctly.
+                #Validate JSON Object is dict not array.
+                if json_data and isinstance(json_data, dict):
+                    try:
+                        first_name = json_data['properties']['firstname']['value']
+                        last_name = json_data['properties']['lastname']['value']
+                        user_email = json_data['properties']['email']['value']
+                        user_name = first_name + " " + last_name
+                    except KeyError as error:
+                        print("Specified JSON fields are not present")
+                        return abort(422)
+                    except Exception as error:
+                        print(error)
+                        return abort(500)
+                    else:
+                        try:
+                            hubspot_request = Hubspot_Request(course_ID, section_ID, first_name, last_name, user_email).save()
+                        except Exception as error:
+                            print(error)
+                        creation_response = create_canvas_login(user_name, user_email)
+                        if(creation_response.status_code == 400):
+                            print("The user already exists", creation_response)
+                            users_found = search_students(user_email).json()
+                            best_fit_user = users_found[0] or {}
+                            if isinstance(best_fit_user, dict):
+                                try:
+                                    user_ID = best_fit_user['id']
+                                except KeyError as error:
+                                    print("Specified JSON fields are not present")
+                                    return abort(422)
+                            else:
+                                print('users_found is not a json object')
+                                return abort(422)
+                        elif(creation_response.status_code == 200):
+                            try:
+                                user_details = creation_response.json()
+                                user_ID = user_details['id']
+                            except TypeError as error:
+                                print("Specified JSON fields are not present")
+                                return abort(422)
+                            except Exception as error:
+                                print(error)
+                                return abort(500)
+                        else:
+                            return abort(creation_response.status_code)
+                        #Endpoint will return 422 if student_id doesn't exist
+                        enroll_user_in_course(course_ID, section_ID, user_ID)
+                else:
+                    flash("JSON data not a dictionary")
+                    return abort(400)
+            else:
+                flash("Could not parse JSON, Bad Request")
+                return abort(400)
+
+#TODO: Remove endpoint and convert to internal method.
+def enroll_user_in_course(course_id, section_id, user_id):
+    try:
+        student_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
+    except Exception as error:
+        print(error)
+        print(student_enrollment_request.text)
+    else:
+        return student_enrollment_request.text
+
+@canvas_blueprint.route('/sis_id_update', methods=['GET', 'POST'])
+@login_required
+def update_sis_id():
+    if(request.method == 'GET'):
+        return render_template('sis_id_uploader.html')
+    if(request.method == 'POST'):
+        # https://openpyxl.readthedocs.io/en/stable/
+        if 'File' not in request.files:
+            flask("No file uploaded")
+            return redirect(url_for(update_sis_id))
+        uploaded_file = request.files['File']
+        if(uploaded_file.filename == ""):
+            flask("No selected file")
+            return redirect(url_for(update_sis_id))
+        if uploaded_file:
+            data_stream = pandas.read_csv(uploaded_file.stream)
+            for i in range(0, len(data_stream.index) - 1):
+                try:
+                    first_name = data_stream['First Name [Required]'][i]
+                    last_name = data_stream['Last Name [Required]'][i]
+                    student_name = first_name + " " + last_name
+                    student_email = data_stream['Email Address [Required]'][i]
+                    student_number = (student_email).split('@')[0]
+                except Exception as error:
+                    raise error
+                else:
+                    best_fit_student = json.loads(search_students(student_name).text)
+                if(best_fit_student):
+                    try:
+                        user_id = best_fit_student[0]['id']
+                        user_name = best_fit_student[0]['name']
+                    except Exception as error:
+                        raise error
+                    else:
+                        if(student_name.upper() == user_name.upper()):
+                            domain = 'https://coderacademy.instructure.com'
+                            endpoint = '/api/v1/users/{0}/logins'.format(user_id)
+                            user_login = canvas_API_request(
+                                                            domain + endpoint,
+                                                            request_method = 'GET'
+                                                           )
+                            user_login_id = json.loads(user_login.text)[0]['id']
+                            endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
+                            user_login_details = canvas_API_request(
+                                                                    domain + endpoint,
+                                                                    request_parameters={'login[sis_user_id]':student_number},
+                                                                    request_method = 'PUT'
+                                                                   )
+                        else:
+                            print("Matched {0} with {1}".format(student_name, user_name))
+                            print("Could not link student to canvas user account")
+                else:
+                    print("Could not find student: " + student_name)
+            return "success"
+
+@canvas_blueprint.route('/students', methods=['GET', 'POST'])
+@login_required
+def student_search():
+    if(request.method == 'POST'):
+        try:
+            search_term = request.form['search_term']
+        except Exception as error:
+            raise error
+        else:
+            search_results = search_students(search_term)
+            return search_results.text
+    else:
+        return render_template('student_search.html')
