@@ -64,6 +64,7 @@ def request_hubspot_refresh_token():
                                _scheme='https')
     except Exception as error:
         flash('Could not find auth code in request arguments')
+        print('Could not find auth code in request arguments')
         return redirect(url_for('hubspot.authenticate_hubspot'))
     else:
         _headers = {
