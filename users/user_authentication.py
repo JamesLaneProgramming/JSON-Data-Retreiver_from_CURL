@@ -1,7 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash, render_template
 from request_helper import get_redirect_target, redirect_back
 from werkzeug.security import safe_str_cmp
-from user_model import User
+from users.user_model import User
 from os import environ
 
 user_authentication_blueprint = Blueprint('user_authentication_blueprint', __name__)
