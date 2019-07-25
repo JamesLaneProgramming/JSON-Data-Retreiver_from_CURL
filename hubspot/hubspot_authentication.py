@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, flash, make_response, url_for, request
 import requests
-from flask_login import login_required
+from flask_login import login_required, current_user
 from functools import wraps
 from os import environ
 import datetime
