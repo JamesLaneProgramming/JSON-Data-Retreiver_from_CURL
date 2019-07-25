@@ -159,8 +159,6 @@ class User(UserMixin, Document):
         return user
 
     def create(username, password):
-        assert isinstance(username, str)
-        assert isinstance(password, str)
         password_hash = generate_password_hash(password)
         try:
             created_user = User(username, password_hash).save()

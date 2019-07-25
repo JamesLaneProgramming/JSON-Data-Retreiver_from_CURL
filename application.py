@@ -62,7 +62,7 @@ application.register_blueprint(user_authentication_blueprint, prefix='/users/aut
 CORS(application)
 
 #Set application secret key to secure against CSRF
-application.config['SECRET_KEY'] = environ.get('Application_Secret_Key')
+application.config['SECRET_KEY'] = environ.get('Application_Secret_Key').encode('utf-8')
 application.config['SESSION_TYPE'] = 'filesystem'
 application.config['UPLOAD_FOLDER'] = '/uploads'
 
@@ -352,6 +352,21 @@ def student_graph_grade(student_id):
         graph = pygal.Bar()
         graph.title = '% Grade Graph'
         graph_values = []
+        grade_averages = []
+
+        for each in Grade.objects().aggregate({
+            "$unwind": "$learning_outcomes"
+        },
+        {
+            "$group": {
+                "_id": "$learning_outcomes",
+                "avgPoints": {
+                    "$avg": "$points"
+                }
+            }
+        }):
+            print(each)
+
         for each in Grade.objects(user_id=student_id).only('points'):
             graph_values.append(float(each.points))
         graph.add(str(student_id), graph_values)
