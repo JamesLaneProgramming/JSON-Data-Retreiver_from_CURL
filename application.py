@@ -1219,31 +1219,8 @@ def create_canvas_account():
                                 return abort(500)
                         else:
                             return abort(creation_response.status_code)
-
                         #Endpoint will return 422 if student_id doesn't exist
-                        #return redirect(url_for('enroll_user_in_course', user_id=user_ID, course_id=course_ID, section_id=section_ID))
-                        url = url_for('enroll_user_in_course', _external=True, _schema='https')
-                        _data = {
-                                "user_id": user_ID,
-                                "course_id": course_ID,
-                                "section_id": section_ID
-                                }
-                        try:
-                            user_enrollment_request = requests.post(url, data=_data)
-                        except ConnectionError as error:
-                            print("DNS Failure, Refused Connection, etc.")
-                            return abort(500)
-                        except requests.exceptions.Timeout as error:
-                            print("Request timed out, please try again")
-                            return abort(500)
-                        except requests.exceptions.TooManyRedirects as error:
-                            print("Too many redirects.", error)
-                            return abort(500)
-                        except Exception as error:
-                            print(error)
-                            return abort(500)
-                        else:
-                            return user_enrollment_request.text
+                        enroll_user_in_course(course_ID, section_ID, user_ID)
                 else:
                     flash("JSON data not a dictionary")
                     return abort(400)
@@ -1251,23 +1228,14 @@ def create_canvas_account():
                 flash("Could not parse JSON, Bad Request")
                 return abort(400)
 
-@application.route('/enroll_user', methods=['POST'])
-def enroll_user_in_course():
-    #Arguments passed through the data parameter will be form-encoded
+#TODO: Remove endpoint and convert to internal method.
+def enroll_user_in_course(course_id, section_id, user_id):
     try:
-        #Convert ImmutableMultiDict to Dict
-        request_arguments = request.form.to_dict()
-        print(request_arguments)
-        course_ID = str(request_arguments['course_id'])
-        section_ID = str(request_arguments['section_id'])
-        user_ID = str(request_arguments['user_id'])
+        student_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
     except Exception as error:
         print(error)
-        return abort(500)
-    else:
-        print(course_ID, section_ID, user_ID)
-        student_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
         print(student_enrollment_request.text)
+    else:
         return student_enrollment_request.text
 
 #TODO: File upload uri with student
