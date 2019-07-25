@@ -49,7 +49,7 @@ from enrollments.enrollment_model import Enrollment
 from grades.grade_model import Grade
 from subject_grades.subject_grade_model import Subject_Grade
 
-from hubspot.hubspot_authentication import hubspot_blueprint, require_hubspot_signature_validation
+from hubspot.hubspot_authentication import hubspot_authentication_blueprint, require_hubspot_signature_validation
 from canvas.canvas_module import canvas_blueprint
 from users.user_authentication import user_authentication_blueprint
 
