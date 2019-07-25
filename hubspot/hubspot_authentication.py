@@ -5,7 +5,7 @@ import datetime
 from users.user_model import User
 from request_helper import get_redirect_target, redirect_back
 
-hubspot__authentication_blueprint = Blueprint('hubspot', __name__)
+hubspot_authentication_blueprint = Blueprint('hubspot', __name__)
 
 '''
 Routes
