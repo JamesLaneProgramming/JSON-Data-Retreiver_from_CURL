@@ -1,5 +1,5 @@
 from flask import Blueprint, request, redirect, url_for, flash, render_template
-from flask_login import login_required
+from flask_login import login_required, login_user, logout_user, current_user
 from request_helper import get_redirect_target, redirect_back
 from werkzeug.security import safe_str_cmp
 from users.user_model import User

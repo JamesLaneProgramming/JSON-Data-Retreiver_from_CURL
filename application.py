@@ -30,7 +30,7 @@ from openpyxl import Workbook, load_workbook
 from flask import Flask, flash, render_template, request, abort, redirect, \
     url_for, make_response, send_from_directory, copy_current_request_context, \
     has_request_context
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_required
 from flask_cors import CORS
 from request_helper import get_redirect_target, redirect_back, _build_cors_preflight_response, _corsify_response
 from apscheduler.schedulers.background import BackgroundScheduler
