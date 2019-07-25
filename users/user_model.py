@@ -31,7 +31,7 @@ class User(UserMixin, Document):
         ---------
         is_authenticated() checks whether the user has successfully logged in using valid credentials. is_authenticated() must equate to True as a criteria of
         login_required().
-        
+
         Returns
         -------
         authenticated(Bool):
@@ -44,27 +44,27 @@ class User(UserMixin, Document):
         Docstring
         ---------
         is_active checks whether the user's account has special restrictions in place. For example, if the account has been suspended.
-        
+
         Returns
         -------
         active(Bool):
             Returns True if the user's account is active(No restrictions in place). Returns False if the user's account has been deactivated(Restrictions in place).
         '''
         return self.active
-    
+
     def is_anonymous(self):
         '''
         Docstring
         ---------
         is_anonymous checks whether the current user is anonymous. Some webapps will allow anonymous use. If particular functionality does not require an authenticated User, is_anonymous() may be useful.
-        
+
         Returns
         -------
         anonymous(Bool):
             Returns True if the user is an anonymous user. Returns False if the user is authenticated.
         '''
         return self.anonymous
-    
+
     def authenticate(username, password):
         '''
         Docstring
@@ -83,7 +83,7 @@ class User(UserMixin, Document):
         None(None):
             Returns None if the username was not found in the database or if the password asociated with a user is incorrect
         '''
-        #TODO: Sanitise inputs before query database 
+        #TODO: Sanitise inputs before query database
         try:
             username = str(username)
             password = str(password)
@@ -108,7 +108,7 @@ class User(UserMixin, Document):
         Docstring
         ---------
         get_id() returns the Unicode ID of the User.
-        
+
         Returns
         -------
         ID(Unicode String):
@@ -116,18 +116,18 @@ class User(UserMixin, Document):
         '''
         #TODO: Encode user id as unicode string
         return str(self.pk)
-    
+
     def get(_id):
         '''
         Docstring
         ---------
         Retrieves a user from the database from a _id stored in the session upon successful login.
-        
+
         Arguments
         ---------
         _id(string):
             Takes a String function argument to query the database with.
-        
+
         Returns
         -------
         user(Dict):
@@ -145,13 +145,13 @@ class User(UserMixin, Document):
         except Exception as error:
             raise error
 
-    def set_refresh_token(user_id, refresh_token):
+    def set_hubspot_refresh_token(user_id, refresh_token):
         user = User.get(user_id)
         user.update(hubspot_refresh_token=refresh_token)
         user.save()
         return user
-   
-    def set_access_token_expiry(user_id, access_token_expiry):
+
+    def set_hubspot_access_token_expiry(user_id, access_token_expiry):
         user = User.get(user_id)
         user.update(hubspot_access_token_expiry=access_token_expiry)
         user.update(last_hubspot_access_token_refresh=datetime.datetime.utcnow())
@@ -171,14 +171,14 @@ class User(UserMixin, Document):
         return created_user
     '''
     def encode_auth_token(user_id):
-        
+
         Docstring
         ---------
         Returns
         -------
         auth_token(String):
             Returns a User Auth Token.
-        
+
         try:
             payload = {
                     'exp': datetime.datetime.utcnow() + datetime.timedelta(days=365, seconds=0),

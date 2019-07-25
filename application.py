@@ -14,7 +14,6 @@ except Exception as error:
 #End Google module imports
 '''
 #TODO: Setup workflow for OAuth2 refresh tokens
-
 import os, sys
 from os import environ
 import datetime
@@ -27,20 +26,18 @@ import hashlib
 import pandas
 import pygal
 from werkzeug import secure_filename
-from werkzeug.security import safe_str_cmp
 from openpyxl import Workbook, load_workbook
-from functools import wraps
-from urllib.parse import urlparse, urljoin
 from flask import Flask, flash, render_template, request, abort, redirect, \
     url_for, make_response, send_from_directory, copy_current_request_context, \
     has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_cors import CORS
+from request_helper import get_redirect_target, redirect_back, _build_cors_preflight_response, _corsify_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mongoengine import MongoEngine
 #Should not import canvas_API_request function. Instead create an endpoint for specific action.
-from canvas_module import update_canvas_email, create_canvas_login, canvas_API_request
-from canvas_module import enroll_canvas_student, extract_rubric_data, search_students
+from canvas.canvas_module import update_canvas_email, create_canvas_login, canvas_API_request
+from canvas.canvas_module import enroll_canvas_student, extract_rubric_data, search_students
 from users.user_model import User
 from hubspot_webhooks.hubspot_webhook_model import Hubspot_Webhook
 from assessments.assessment_model import Criterion
@@ -51,11 +48,18 @@ from overdue_assignments.overdue_assignment_model import Overdue_Assignment
 from enrollments.enrollment_model import Enrollment
 from grades.grade_model import Grade
 from subject_grades.subject_grade_model import Subject_Grade
-from hubspot_requests.hubspot_request_model import Hubspot_Request
+
+from hubspot.hubspot_authentication import hubspot_blueprint, require_hubspot_signature_validation,
+from canvas.canvas_module import canvas_blueprint
+from users.user_authentication import user_authentication_blueprint
 
 application = Flask(__name__, template_folder='templates')
-CORS(application)
+application.register_blueprint(hubspot_authentication_blueprint, url_prefix='/hubspot/authentication')
+application.register_blueprint(canvas_blueprint, url_prefix='/canvas')
+application.register_blueprint(user_authentication_blueprint, prefix='/users/authentication')
+
 #Cross origin requests can be enabled for resources using the @cross_origin decorator method
+CORS(application)
 
 #Set application secret key to secure against CSRF
 application.config['SECRET_KEY'] = environ.get('Application_Secret_Key')
@@ -79,24 +83,13 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 
 #Redirect to login view when a user has yet to authenticate.
-login_manager.login_view = 'login'
+login_manager.login_view = 'users/authentication/login'
 login_manager.init_app(application)
 
 #user_loader callback used to load a user from a session ID.
 @login_manager.user_loader
 def load_user(user_id):
     return User.objects(pk=user_id).first()
-
-def generate_cookie_signature(cookie):
-    #https://stackoverflow.com/questions/22463939/demystify-flask-app-secret-ke://stackoverflow.com/questions/22463939/demystify-flask-app-secret-key
-    try:
-        cookie_bytes = str(cookie).encode('utf8')
-        application_secret_key = str(application.config['SECRET_KEY'])
-    except Exception as error:
-        print(error)
-    else:
-        cookie_signature = sha256(cookie_bytes + application_secret_key).hexdigest()
-        return cookie_signature
 
 def main():
     scheduler = BackgroundScheduler()
@@ -109,342 +102,6 @@ def main():
 @application.route('/')
 def home():
     return render_template('home.html')
-
-@application.route('/login', methods=['GET','POST'])
-def login():
-    if(request.method == 'POST'):
-        try:
-            username = str(request.values.get('username'))
-            password = str(request.values.get('password'))
-        except Exception as error:
-            print(error)
-            next = get_redirect_target()
-            return redirect(url_for('login'), next=next)
-        else:
-            #Inform users of username/password constrains.
-            if(safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'))):
-                user = User.authenticate(username, password)
-                if user is not None and user.is_authenticated:
-                    login_status = login_user(user)
-                    #http://flask.pocoo.org/docs/1.0/patterns/flashing/
-                    flash('Logged in successfully.')
-                    next = get_redirect_target()
-                    return redirect_back('home', next=next)
-                else:
-                    next = get_redirect_target()
-                    return redirect_back('signup', next=next)
-            else:
-                next = get_redirect_target()
-                return redirect_back('login', next=next)
-    else:
-        return render_template('login.html')
-
-#See http://flask.pocoo.org/snippets/62
-def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    target_url = urlparse(urljoin(request.host_url, target))
-    return target_url.scheme in ('http', 'https') and \
-           ref_url.netloc == target_url.netloc
-
-def get_redirect_target():
-    for target in request.values.get('next'), request.referrer:
-        if not target:
-            continue
-        if is_safe_url(target):
-            return target
-
-def redirect_back(endpoint, **values):
-    target = request.args.get('next')
-    if not target or not is_safe_url(target):
-        target = url_for(endpoint, **values)
-    return redirect(target)
-
-def check_if_parameter_in_request_data(request, parameter_to_check, allow_empty_value=True, allow_none_value=True):
-    if parameter_to_check not in request.files:
-        return False
-    elif(request.files[parameter_to_check] == ""):
-        if(allow_empty_values):
-            return True
-        else:
-            return False
-    elif(request.files[parameter_to_check] == None):
-        if(allow_none_values):
-            return True
-        else:
-            return False
-    else:
-        return True
-
-@application.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-@application.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if(request.method == 'POST'):
-        try:
-            username = str(request.form['username'])
-            password = str(request.form['password'])
-            safeword = str(request.form['safeword'])
-            next = get_redirect_target()
-        except Exception as error:
-            raise error
-        else:
-            if username is not "" or password is not "" or safeword is not "" and \
-                    safe_str_cmp(username.encode('utf-8'), password.encode('utf-8'), safeword.encode('utf-8')):
-                if(User.objects(username=username)):
-                    flash("Username already taken")
-                    return redirect(url_for('signup', next=next))
-                elif(safeword == str(environ.get('safeword'))):
-                    new_user = User.create(username.encode('utf-8'), password.encode('utf-8'))
-                    User.authenticate(username, password)
-                    return redirect_back('home', next=next)
-                else:
-                    flash("safeword was incorrect, could not create account")
-                    return redirect(url_for('signup', next=next))
-            else:
-                flash("username, password or safeword cannot be empty")
-                return redirect(url_for('signup', next=next))
-    else:
-        return render_template('signup.html')
-
-def require_hubspot_signature_validation(func):
-    #https://developers.hubspot.com/docs/faq/validating-requests-from-hubspot
-    #https://developers.hubspot.com/docs/methods/webhooks/webhooks-overview
-    @wraps(func)
-    def validate_hubspot_response_signature(*args, **kwargs):
-        try:
-            hubspot_client_secret = environ.get('hubspot_client_secret')
-            hubspot_request_signature = request.headers.get('X-HubSpot-Signature')
-            request_method = request.method
-            request_uri = request.base_url
-            print("Request URI: ", request_uri)
-            request_body = request.get_data(as_text=True)
-            print("Request Body: ", request_body)
-        except Exception as error:
-            raise error
-        else:
-            try:
-                hash_string = hubspot_client_secret + request_method + request_uri + request_body
-                encoded_hash_string = hash_string.encode('utf-8')
-                request_signature = hashlib.sha256(encoded_hash_string).hexdigest()
-            except Exception as error:
-                print(error)
-                return "Could not create signature"
-            else:
-                if(hubspot_request_signature == request_signature):
-                    print("Hubspot Signature Verified")
-                    return func(*args, **kwargs)
-                else:
-                    print(hubspot_request_signature, request_signature)
-                    print('Unauthenticated')
-                    #Replace next line when hubspot works
-                    return func(*args, **kwargs)
-    return validate_hubspot_response_signature
-
-def require_hubspot_access_token(func):
-    @wraps(func)
-    def update_hubspot_access_token(*args, **kwargs):
-        if request.cookies.get('hubspot_access_token') is None:
-            '''
-            https://tools.ietf.org/html/rfc6749#section-1.5
-            '''
-            print("Hubspot access token not in cookies")
-            return redirect(url_for('refresh_access_token'))
-        else:
-            try:
-                hubspot_access_token_expiry = current_user.hubspot_access_token_expiry
-                last_hubspot_access_token_refresh = current_user.last_hubspot_access_token_refresh
-                '''TODO: Implement logic if access token revolked but expiry is
-                still valid
-                '''
-            except Exception as error:
-                print('Could not update cookie with user access token, refreshing access token')
-            else:
-                if(last_hubspot_access_token_refresh + datetime.timedelta(minutes=hubspot_access_token_expiry) < datetime.datetime.utcnow()):
-                    return redirect(url_for('refresh_access_token'))
-                else:
-                    return func(*args, **kwargs)
-    return update_hubspot_access_token
-
-@application.route('/request_refresh_token', methods=['GET'])
-@login_required
-def request_refresh_token():
-    try:
-        code = str(request.args.get('code'))
-        client_id = str(environ.get('hubspot_client_id'))
-        client_secret = str(environ.get('hubspot_client_secret'))
-        '''
-        redirect_uri must match the redirect_uri used to intitiate the OAuth
-        connection
-
-        '''
-        redirect_uri = url_for('request_refresh_token', _external=True,
-                               _scheme='https')
-    except Exception as error:
-        flash('Could not find auth code in request arguments')
-        return redirect(url_for('authenticate_hubspot'))
-    else:
-        _headers = {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-                   }
-        data = {
-                'grant_type':'authorization_code',
-                'client_id': client_id,
-                'client_secret': client_secret,
-                'redirect_uri': redirect_uri,
-                'code': code
-               }
-        post_request = requests.post(
-                                     'https://api.hubapi.com/oauth/v1/token',
-                                     headers=_headers,
-                                     data=data
-                                    )
-        try:
-            refresh_token = post_request.json()['refresh_token']
-            access_token_expiry = post_request.json()['expires_in']
-        except Exception as error:
-            raise error
-        else:
-            User.set_refresh_token(current_user.id,
-                refresh_token)
-            return redirect(url_for('refresh_access_token'))
-
-@application.route('/refresh_access_token', methods=['GET'])
-@login_required
-def refresh_access_token():
-    try:
-        client_id = str(environ.get('hubspot_client_id'))
-        client_secret = str(environ.get('hubspot_client_secret'))
-    except Exception as error:
-        flash('client_id or client_secret environment variables cannot be found')
-        return redirect(url_for('refresh_access_code'))
-    else:
-        try:
-            refresh_token = current_user.hubspot_refresh_token
-        except Exception as error:
-            return redirect(url_for('authenticate_hubspot'))
-        else:
-            if(refresh_token != ""):
-                endpoint = "https://api.hubapi.com/oauth/v1/token"
-                headers = {
-                           "Content-Type": "application/x-www-form-urlencoded",
-                           "charset": "utf-8"
-                          }
-                data = {
-                        "grant_type": "refresh_token",
-                        "client_id": client_id,
-                        "client_secret": client_secret,
-                        "refresh_token": refresh_token
-                       }
-
-                post_request = requests.post(
-                                             endpoint,
-                                             headers=headers,
-                                             data=data
-                                            )
-                try:
-                    access_token = post_request.json()['access_token']
-                    access_token_expiry = post_request.json()['expires_in']
-                except ValueError as error:
-                    #TODO: Redirect to where?
-                    print("Post request response did not contain an access token")
-                #KeyError missing access_token
-                except Exception as error:
-                    #TODO: Redirect to where?
-                    print(error)
-                else:
-                    next = get_redirect_target()
-                    response = make_response(redirect_back('home', next=next))
-                    response.set_cookie('hubspot_access_token', access_token)
-                    User.set_access_token_expiry(current_user.id, access_token_expiry)
-                    return response
-            else:
-                return redirect(url_for('authenticate_hubspot'))
-
-@application.route('/hubspot')
-@login_required
-def authenticate_hubspot():
-    '''
-    Hubspot OAuth workflow:
-
-    Direct users to https://app.hubspot.com/oauth/authorize with the following
-    query parameters:
-        -client_id
-        -scope
-        -redirect_uri
-
-    They will be prompted to authenticate and authorise the application.
-
-    Users will be redirected to the redirect_uri with a code query parameter.
-
-    Use the code above to request access token and refresh token.
-    Headers = Content-Type: application/x-www-form-urlencoded;charset=utf-8
-    Data:
-        -grant_type=authorisation_code
-        -client_id
-        -client_secret
-        -redirect_uri
-        -code
-    POST https://app.hubspot.com/oauth/v1/token
-    '''
-    try:
-        client_id = environ.get('hubspot_client_id')
-        scope = environ.get('hubspot_scopes')
-        redirect_uri = url_for('request_refresh_token', _external=True,
-                               _scheme='https')
-    except Exception as error:
-        raise error
-    return redirect('https://app.hubspot.com/oauth/authorize?client_id={0}&scope={1}&redirect_uri={2}'.format(client_id,
-                                                                                                  scope,
-                                                                                                  redirect_uri))
-
-@application.route('/hubspot/workflows', methods=['GET'])
-@require_hubspot_access_token
-@login_required
-def workflows():
-    try:
-        access_token = request.cookies.get('hubspot_access_token')
-    except Exception as error:
-        raise error
-    else:
-        endpoint = 'https://api.hubapi.com/automation/v3/workflows'
-        request_headers = {
-                           "Content-Type": "application/json",
-                           "Authorization": "Bearer " + str(access_token)
-                          }
-        workflow_request = requests.get(endpoint, headers=request_headers)
-        return workflow_request.text
-
-@application.route('/hubspot/workflow_history/<workflow_id>')
-@require_hubspot_access_token
-@login_required
-def workflow_history(workflow_id):
-    access_token = request.cookies.get('hubspot_access_token')
-    domain = 'https://api.hubapi.com'
-    endpoint = '/automation/v3/logevents/workflows/{0}/filter'
-    request_url = domain + endpoint.format(workflow_id)
-    request_headers = {
-                       "Content-Type": "application/json",
-                       "Authorization": "Bearer " + str(access_token)
-                      }
-    request_body = {
-                    "types": ["ENROLLED"]
-                   }
-    try:
-        put_request = requests.put(
-                             request_url,
-                             headers=request_headers,
-                             params=request_body
-                            )
-        if put_request.status_code == 401:
-            return redirect(url_for('authenticate_hubspot'))
-        else:
-            return put_request.text
-    except Exception as error:
-        return redirect(url_for('home'))
 
 @application.route('/upload_provisioning_csv', methods=['GET', 'POST'])
 @login_required
@@ -642,6 +299,7 @@ def list_assignment_extensions():
                         return ''.join(i for i in assignment_extension_ids if not assignment_extensions_ids.index(i) == 0)
             else:
                 return abort(status_code)
+
 def get_student_id_list_from_assignment_override_object(override_object,
                                                         course_id):
     if not isinstance(course_id, str):
@@ -1017,17 +675,6 @@ def map_criterion():
             new_assignment_mapping = Assignment_Mapping(criterion_id, selected_learning_outcomes).save()
         return "Success"
 
-def _build_cors_preflight_response():
-    response = make_response()
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add('Access-Control-Allow-Headers', "*")
-    response.headers.add('Access-Control-Allow-Methods', "*")
-    return response
-
-def _corsify_response(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    return response
-
 @application.route('/map_rubric_criterion', methods=['POST', 'OPTIONS'])
 @login_required
 def map_rubric_criterion():
@@ -1117,184 +764,6 @@ class submission_object():
             else:
                 criterion_object = criterion(key, points, comments)
                 self.criteria.append(criterion_object)
-
-@application.route('/students', methods=['GET', 'POST'])
-@login_required
-def student_search():
-    if(request.method == 'POST'):
-        try:
-            search_term = request.form['search_term']
-        except Exception as error:
-            raise error
-        else:
-            search_results = search_students(search_term)
-            return search_results.text
-    else:
-        return render_template('student_search.html')
-
-@require_hubspot_signature_validation
-@application.route('/create-account', methods=['POST'])
-def create_canvas_account():
-    '''
-    Docstring
-    ---------
-    create_account() should only be run in a production environment
-    Arguments
-    ---------
-    student_data(JSON Object):
-        Takes a JSON Object that contains firstname, lastname and email
-    Returns
-    -------
-    Account_Creation_Successful(template):
-        Returns a template to be rendered by Flask on successful request.
-    '''
-    try:
-        course_ID = str(request.args.get('course_id'))
-        section_ID = str(request.args.get('section_id'))
-    except Exception as error:
-        print("Invalid course_id or section_id")
-        return abort(500)
-    else:
-        #Validate POST payload
-        try:
-            json_data = request.get_json()
-        except Exception as error:
-            return abort(415)
-        else:
-            #http://flask.pocoo.org/docs/1.0/api/#response-objects
-            #Returns None if JSON could not be parsed.
-            if(json_data is not None):
-                try:
-                    first_name = json_data['properties']['firstname']['value']
-                    last_name = json_data['properties']['lastname']['value']
-                    student_email = json_data['properties']['email']['value']
-                    student_name = first_name + " " + last_name
-                except KeyError as error:
-                    print("Specified JSON fields are not present")
-                    return abort(422)
-                except Exception as error:
-                    return abort(500)
-                #Check if JSON data was parsed correctly.
-                #Validate JSON Object is dict not array.
-                if json_data and isinstance(json_data, dict):
-                    try:
-                        first_name = json_data['properties']['firstname']['value']
-                        last_name = json_data['properties']['lastname']['value']
-                        user_email = json_data['properties']['email']['value']
-                        user_name = first_name + " " + last_name
-                    except KeyError as error:
-                        print("Specified JSON fields are not present")
-                        return abort(422)
-                    except Exception as error:
-                        print(error)
-                        return abort(500)
-                    else:
-                        try:
-                            hubspot_request = Hubspot_Request(course_ID, section_ID, first_name, last_name, user_email).save()
-                        except Exception as error:
-                            print(error)
-                        creation_response = create_canvas_login(user_name, user_email)
-                        if(creation_response.status_code == 400):
-                            print("The user already exists", creation_response)
-                            users_found = search_students(user_email).json()
-                            best_fit_user = users_found[0] or {}
-                            if isinstance(best_fit_user, dict):
-                                try:
-                                    user_ID = best_fit_user['id']
-                                except KeyError as error:
-                                    print("Specified JSON fields are not present")
-                                    return abort(422)
-                            else:
-                                print('users_found is not a json object')
-                                return abort(422)
-                        elif(creation_response.status_code == 200):
-                            try:
-                                user_details = creation_response.json()
-                                user_ID = user_details['id']
-                            except TypeError as error:
-                                print("Specified JSON fields are not present")
-                                return abort(422)
-                            except Exception as error:
-                                print(error)
-                                return abort(500)
-                        else:
-                            return abort(creation_response.status_code)
-                        #Endpoint will return 422 if student_id doesn't exist
-                        enroll_user_in_course(course_ID, section_ID, user_ID)
-                else:
-                    flash("JSON data not a dictionary")
-                    return abort(400)
-            else:
-                flash("Could not parse JSON, Bad Request")
-                return abort(400)
-
-#TODO: Remove endpoint and convert to internal method.
-def enroll_user_in_course(course_id, section_id, user_id):
-    try:
-        student_enrollment_request = enroll_canvas_student(user_ID, course_ID, section_ID)
-    except Exception as error:
-        print(error)
-        print(student_enrollment_request.text)
-    else:
-        return student_enrollment_request.text
-
-#TODO: File upload uri with student
-#url https://coderacademy/
-#uri /users/:id
-@application.route('/sis_id_update', methods=['GET', 'POST'])
-@login_required
-def update_sis_id():
-    if(request.method == 'GET'):
-        return render_template('sis_id_uploader.html')
-    if(request.method == 'POST'):
-        # https://openpyxl.readthedocs.io/en/stable/
-        if 'File' not in request.files:
-            flask("No file uploaded")
-            return redirect(url_for(update_sis_id))
-        uploaded_file = request.files['File']
-        if(uploaded_file.filename == ""):
-            flask("No selected file")
-            return redirect(url_for(update_sis_id))
-        if uploaded_file:
-            data_stream = pandas.read_csv(uploaded_file.stream)
-            for i in range(0, len(data_stream.index) - 1):
-                try:
-                    first_name = data_stream['First Name [Required]'][i]
-                    last_name = data_stream['Last Name [Required]'][i]
-                    student_name = first_name + " " + last_name
-                    student_email = data_stream['Email Address [Required]'][i]
-                    student_number = (student_email).split('@')[0]
-                except Exception as error:
-                    raise error
-                else:
-                    best_fit_student = json.loads(search_students(student_name).text)
-                if(best_fit_student):
-                    try:
-                        user_id = best_fit_student[0]['id']
-                        user_name = best_fit_student[0]['name']
-                    except Exception as error:
-                        raise error
-                    else:
-                        if(student_name.upper() == user_name.upper()):
-                            domain = 'https://coderacademy.instructure.com'
-                            endpoint = '/api/v1/users/{0}/logins'.format(user_id)
-                            user_login = canvas_API_request(
-                                                            domain + endpoint,
-                                                            request_method = 'GET'
-                                                           )
-                            user_login_id = json.loads(user_login.text)[0]['id']
-                            endpoint = '/api/v1/accounts/0/logins/{0}'.format(user_login_id)
-                            user_login_details = canvas_API_request(
-                                                                    domain + endpoint,
-                                                                    request_parameters={'login[sis_user_id]':student_number},
-                                                                    request_method = 'PUT'
-                                                                   )
-                        else:
-                            print("Matched {0} with {1}".format(student_name, user_name))
-                            print("Could not link student to canvas user account")
-                else:
-                    print("Could not find student: " + student_name)
-            return "success"
 
 @application.route('/uploads/<file_name>')
 def uploaded_file(file_name):
