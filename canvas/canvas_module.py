@@ -2,6 +2,7 @@ from os import environ
 import requests
 from functools import reduce
 from flask import Blueprint, flash, abort
+from flask_login import login_required
 from hubspot_requests.hubspot_request_model import Hubspot_Request
 from hubspot.hubspot_authentication import require_hubspot_signature_validation
 

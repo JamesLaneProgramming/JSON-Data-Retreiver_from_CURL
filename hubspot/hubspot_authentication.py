@@ -1,4 +1,5 @@
 from flask import Blueprint, redirect, flash, make_response
+from flask_login import login_required
 from functools import wraps
 from os import environ
 import datetime
