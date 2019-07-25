@@ -2,7 +2,8 @@ from os import environ
 import requests
 from functools import reduce
 from flask import Blueprint, flash, abort
-from hubspot_requests.hubspot_request_model import Hubspot_Request, require_hubspot_signature_validation
+from hubspot_requests.hubspot_request_model import Hubspot_Request
+from hubspot.hubspot_authentication import require_hubspot_signature_validation
 
 canvas_blueprint = Blueprint('canvas', __name__)
 
