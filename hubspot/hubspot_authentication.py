@@ -48,9 +48,9 @@ def authenticate_hubspot():
                                                                                                   scope,
                                                                                                   redirect_uri))
 
-@hubspot_authentication_blueprint.route('/hubspot.request_hubspot_refresh_token', methods=['GET'])
+@hubspot_authentication_blueprint.route('/request_hubspot_refresh_token', methods=['GET'])
 @login_required
-def hubspot.request_hubspot_refresh_token():
+def request_hubspot_refresh_token():
     try:
         code = str(request.args.get('code'))
         client_id = str(environ.get('hubspot_client_id'))
@@ -91,9 +91,9 @@ def hubspot.request_hubspot_refresh_token():
                 refresh_token)
             return redirect(url_for('hubspot.request_hubspot_access_token'))
 
-@hubspot_authentication_blueprint.route('/hubspot.request_hubspot_access_token', methods=['GET'])
+@hubspot_authentication_blueprint.route('/request_hubspot_access_token', methods=['GET'])
 @login_required
-def hubspot.request_hubspot_access_token():
+def request_hubspot_access_token():
     try:
         client_id = str(environ.get('hubspot_client_id'))
         client_secret = str(environ.get('hubspot_client_secret'))
