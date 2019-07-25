@@ -64,7 +64,7 @@ def request_hubspot_refresh_token():
                                _scheme='https')
     except Exception as error:
         flash('Could not find auth code in request arguments')
-        return redirect(url_for('authenticate_hubspot'))
+        return redirect(url_for('hubspot.authenticate_hubspot'))
     else:
         _headers = {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
@@ -99,12 +99,12 @@ def request_hubspot_access_token():
         client_secret = str(environ.get('hubspot_client_secret'))
     except Exception as error:
         flash('client_id or client_secret environment variables cannot be found')
-        return redirect(url_for('refresh_access_code'))
+        return "Error"
     else:
         try:
             refresh_token = current_user.hubspot_refresh_token
         except Exception as error:
-            return redirect(url_for('authenticate_hubspot'))
+            return redirect(url_for('hubspot.authenticate_hubspot'))
         else:
             if(refresh_token != ""):
                 endpoint = "https://api.hubapi.com/oauth/v1/token"
@@ -141,7 +141,7 @@ def request_hubspot_access_token():
                     User.set_hubspot_access_token_expiry(current_user.id, access_token_expiry)
                     return response
             else:
-                return redirect(url_for('authenticate_hubspot'))
+                return redirect(url_for('hubspot.authenticate_hubspot'))
 
 '''
 Decorators
