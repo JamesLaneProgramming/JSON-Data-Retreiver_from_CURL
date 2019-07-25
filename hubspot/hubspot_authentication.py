@@ -40,7 +40,7 @@ def authenticate_hubspot():
     try:
         client_id = environ.get('hubspot_client_id')
         scope = environ.get('hubspot_scopes')
-        redirect_uri = url_for('request_hubspot_refresh_token', _external=True,
+        redirect_uri = url_for('hubspot.request_hubspot_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
         raise error
@@ -48,9 +48,9 @@ def authenticate_hubspot():
                                                                                                   scope,
                                                                                                   redirect_uri))
 
-@hubspot_authentication_blueprint.route('/request_hubspot_refresh_token', methods=['GET'])
+@hubspot_authentication_blueprint.route('/hubspot.request_hubspot_refresh_token', methods=['GET'])
 @login_required
-def request_hubspot_refresh_token():
+def hubspot.request_hubspot_refresh_token():
     try:
         code = str(request.args.get('code'))
         client_id = str(environ.get('hubspot_client_id'))
@@ -60,7 +60,7 @@ def request_hubspot_refresh_token():
         connection
 
         '''
-        redirect_uri = url_for('request_hubspot_refresh_token', _external=True,
+        redirect_uri = url_for('hubspot.request_hubspot_refresh_token', _external=True,
                                _scheme='https')
     except Exception as error:
         flash('Could not find auth code in request arguments')
@@ -89,11 +89,11 @@ def request_hubspot_refresh_token():
         else:
             User.set_hubspot_refresh_token(current_user.id,
                 refresh_token)
-            return redirect(url_for('request_hubspot_access_token'))
+            return redirect(url_for('hubspot.request_hubspot_access_token'))
 
-@hubspot_authentication_blueprint.route('/request_hubspot_access_token', methods=['GET'])
+@hubspot_authentication_blueprint.route('/hubspot.request_hubspot_access_token', methods=['GET'])
 @login_required
-def request_hubspot_access_token():
+def hubspot.request_hubspot_access_token():
     try:
         client_id = str(environ.get('hubspot_client_id'))
         client_secret = str(environ.get('hubspot_client_secret'))
@@ -188,7 +188,7 @@ def require_hubspot_access_token(func):
             https://tools.ietf.org/html/rfc6749#section-1.5
             '''
             print("Hubspot access token not in cookies")
-            return redirect(url_for('request_hubspot_access_token'))
+            return redirect(url_for('hubspot.request_hubspot_access_token'))
         else:
             try:
                 hubspot_access_token_expiry = current_user.hubspot_access_token_expiry
@@ -200,7 +200,7 @@ def require_hubspot_access_token(func):
                 print('Could not update cookie with user access token, refreshing access token')
             else:
                 if(last_hubspot_access_token_refresh + datetime.timedelta(minutes=hubspot_access_token_expiry) < datetime.datetime.utcnow()):
-                    return redirect(url_for('request_hubspot_access_token'))
+                    return redirect(url_for('hubspot.request_hubspot_access_token'))
                 else:
                     return func(*args, **kwargs)
     return update_hubspot_access_token
